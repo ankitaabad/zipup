@@ -1,0 +1,15 @@
+User Story:
+  ☐ Create a static app, i will give app name.
+  ☐ Create a dynamic app, i will give app name.
+  ☐ Rotate the secret key for my platform.
+  ☐ Deploy an app, i will pass the api key, secret key. You have to sign and upload.
+  ☐ List all my apps.
+  ☐ If my application logs then it should be availble in logs section.
+
+    
+
+Non Functional Requirements:
+  ☐ only one deployment at a time for a given app.
+  ☐ restrict number of ongoing deployment. (caddy rate limit)
+  ☐ Only one root user
+  ☐ Should we keep root user and other users separate in the db?

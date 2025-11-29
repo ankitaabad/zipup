@@ -1,0 +1,58 @@
+# version: "3.8"
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - passup
+
+  passup:
+    image: node:24-alpine
+    working_dir: /app
+    volumes:
+      - ./:/app   # <-- mount CURRENT directory
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev"
+    environment:
+      - NODE_ENV=development
+    ports:
+      - "3000:3000"
+
+    # logging:
+    #   driver: "none"   # disable default Docker logging → Vector will handle logs
+    depends_on:
+      - vector
+
+  vector:
+    image: timberio/vector:0.38.X-alpine
+    volumes:
+      - ./vector.yaml:/etc/vector/vector.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - type: bind
+        source: /var/lib/docker
+        target: /var/lib/docker
+    ports:
+      - "8686:8686"   # Vector internal API (optional)
+    depends_on:
+      - victorialogs
+    user: root
+  victorialogs:
+    image: victoriametrics/victoria-logs:latest
+    container_name: victorialogs
+    ports:
+      - "9428:9428" # VictoriaLogs HTTP ingestion + query
+    command:
+      - "--storageDataPath=/vlogs"
+    volumes:
+      - vldata:/vlogs
+volumes:
+  caddy_data:
+  caddy_config:
+  vldata:

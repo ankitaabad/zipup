@@ -1,0 +1,9 @@
+
+get http://localhost:3000
+
+### create apppost http://localhost:3000/appsContent-Type: application/json
+
+{
+  "name": "myapp",
+  "type": "static"
+}
