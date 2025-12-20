@@ -3,13 +3,24 @@ sources:
     type: "docker_logs"
     include_containers:
       - "passup-passup-1"
+
+
+transforms:
+  parse_passup_json:
+    type: "remap"
+    inputs: ["passup"]
+    source: |
+      . = parse_json!(.message)
+
 sinks:
   vlogs:
     inputs:
-      - passup
+      - parse_passup_json
     type: elasticsearch
     endpoints:
       - http://victorialogs:9428/insert/elasticsearch/
+    # encoding:
+    #   codec: "json"
     api_version: v8
     compression: gzip
     healthcheck:

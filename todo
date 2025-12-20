@@ -1,11 +1,14 @@
 User Story:
   ☐ Create a static app, i will give app name.
   ☐ Create a dynamic app, i will give app name.
-  ☐ Rotate the secret key for my platform.
+  ☐ Rotate the secret key for my platform. this is for signing the request.
   ☐ Deploy an app, i will pass the api key, secret key. You have to sign and upload.
   ☐ List all my apps.
   ☐ If my application logs then it should be availble in logs section.
+  ☐ Add app secret variables.
 
+Flow:
+  ☐ When an app is deployed, it should create a version and store it in db and volume.  maintain the progress of deployment.
     
 
 Non Functional Requirements:
@@ -13,3 +16,24 @@ Non Functional Requirements:
   ☐ restrict number of ongoing deployment. (caddy rate limit)
   ☐ Only one root user
   ☐ Should we keep root user and other users separate in the db?
+
+
+Caddy:
+  ☐ how to use caddy
+  ☐ how to change configure using api
+  ☐ how to route multiple apps
+
+Setting Up:
+  ☐ Get passup domain
+  ☐ hetzner account
+
+Docker Hub:
+  ☐ Create an account
+  ☐ Create image and push
+
+Passup Cli:
+  ☐ Cli to deploy app
+
+Auth:
+  ☐ Password auth
+  ☐ 2fa auth
