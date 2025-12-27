@@ -6,6 +6,7 @@ import { eq, sql } from "drizzle-orm";
 import fs from "fs-extra";
 import path from "path";
 import * as tar from "tar";
+import { eventBus, passupEvents } from "../events/event";
 
 export const artifactsRouter = new Hono();
 
@@ -111,6 +112,7 @@ artifactsRouter.post("/:artifactId/upload", async (c) => {
       .where(eq(artifactsTable.id, artifactId))
       .run();
     console.log("Artifact uploaded and extracted successfully");
+    eventBus.emit(passupEvents.artifact_uploaded, { artifactId: artifactId });
     return c.json({
       message: "Upload and extraction complete",
       path: finalDir

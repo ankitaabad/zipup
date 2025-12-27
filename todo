@@ -45,14 +45,21 @@ today:
   ☐ creating an endpoint in lua and calling from nodejs
   ☐ Adding the victorialogs dashboard in one of the frontend route.
   ☐ @low User auth and generating paseto token with sqlite db.
-  ☐ setup docs website with docusaurus
-  ☐ setup cli repo.
+  ✔ setup docs website with docusaurus
+  ✘ setup cli repo.
   ☐ Build frontend and serve with nodejs server.
   ☐ @low Create hetzner account and setup server.
   ☐ @low Get a domain for passup.
+
+Bugs:
+  ☐ Logs not showing up in docker logs or victorialogs
 
 later:
   ☐ hono middleware for auth
   ☐ logger for each request
   ☐ paseto secret move out to a file. how to generate.
   ☐ Auth from lua side with paseto.
+  ☐ withstand errors and crashes.
+  ☐ improve the cli
+  ☐ use the secret key to check integrity of upload.
+  ☐ should we also use csrf token.

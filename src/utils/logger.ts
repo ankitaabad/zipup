@@ -1,3 +1,36 @@
+import { AsyncLocalStorage } from "async_hooks";
 import SenseLogs from "senselogs";
-//todo: logger per request setup
-export const logger = new SenseLogs();
+import { generateId } from "./helper";
+import type { MiddlewareHandler } from "hono";
+import { createMiddleware } from "hono/factory";
+
+const asyncLocalStorage = new AsyncLocalStorage<ContextType>();
+export const appLogger = new SenseLogs(
+  { timestamp: true },
+  { service: "passup-service" }
+);
+appLogger.addFilter(["debug"]);
+type ContextType = {
+  logger: SenseLogs;
+};
+export const loggerMiddleware = (): MiddlewareHandler => {
+  return createMiddleware(async (c, next) => {
+    const requestId = c.req.header("X-Request-ID") || generateId();
+    const logger = appLogger.child({
+      requestId
+    });
+    c.header("X-Request-ID", requestId);
+    return asyncLocalStorage.run({ logger }, async () => {
+      await next();
+    });
+  });
+};
+
+// Helper to get the current logger anywhere in your async chain
+export const getLogger = () => {
+  const store = asyncLocalStorage.getStore();
+  if (!store) {
+    throw new Error("Logger accessed outside request context");
+  }
+  return store.logger;
+};

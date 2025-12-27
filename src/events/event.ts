@@ -1,19 +1,30 @@
 import EventEmitter from "events";
+import { artifactsTable } from "../db/schema";
+import { eq } from "drizzle-orm";
 
 export const eventBus = new EventEmitter();
 
-export const events = {
-  APP_DEPLOYED: "app_deployed"
+export const passupEvents = {
+  "app_deployed": "app_deployed",
+  "artifact_uploaded": "artifact_uploaded"
 };
 
-eventBus.on(events.APP_DEPLOYED, (appId: string, version: number) => {
-  console.log(`App deployed: ${appId} version ${version}`);
-});
+eventBus.on(
+  passupEvents.artifact_uploaded,
+  async (event: { artifactId: string }) => {
+    console.log(`Artifact uploaded: ${event.artifactId}`);
+    // get artifact info
+    const artifact = await db
+      .select()
+      .from(artifactsTable)
+      .where(eq(artifactsTable.id, event.artifactId))
+      .get();
+    console.log(`Artifact info: ${JSON.stringify(artifact)}`);
+    if (!artifact) {
+      console.error(`Artifact not found: ${event.artifactId}`);
+      return;
+    }
 
-export const emitAppDeployed = (appId: string, version: number) => {
-  eventBus.emit(events.APP_DEPLOYED, appId, version);
-};
-
-emitAppDeployed("my-app", 1);
-
-
+    console.log(`Artifact info: ${JSON.stringify(artifact)}`);
+  }
+);

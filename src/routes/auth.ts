@@ -16,8 +16,8 @@ import {
   verifyRefreshToken
 } from "../utils/helper";
 import { eq } from "drizzle-orm";
-import { setCookie } from "hono/cookie";
-
+import { setCookie, getCookie } from "hono/cookie";
+import { getLogger } from "../utils/logger";
 export const authRouter = new Hono();
 
 const registerSchema = type({
@@ -26,7 +26,9 @@ const registerSchema = type({
 });
 // todo: add auth  middleware for protected routes
 authRouter.post("/register", async (c) => {
-  logger.debug("Register attempt");
+  console.log("lets see");
+  const logger = getLogger();
+  logger.info("Register attempt");
   const { username, password } = await c.req.json();
   const isValid = await verifyPasswordStrength(password);
   if (!isValid) {
@@ -71,6 +73,8 @@ authRouter.post("/register", async (c) => {
 });
 
 authRouter.post("/login", async (c) => {
+  const logger = getLogger();
+
   logger.debug("Login attempt");
   const { username, password } = registerSchema.assert(await c.req.json());
   const user = await db
@@ -109,6 +113,8 @@ authRouter.post("/login", async (c) => {
 });
 
 authRouter.post("/logout", async (c) => {
+  const logger = getLogger();
+
   // optional: revoke refresh token in DB if you store them
   setCookie(c, "access_token", "", {
     httpOnly: true,
@@ -123,9 +129,6 @@ authRouter.post("/logout", async (c) => {
 
   return c.json({ message: "Logged out successfully" });
 });
-
-import { getCookie } from "hono/cookie";
-import { logger } from "../utils/logger";
 
 authRouter.post("/refresh", async (c) => {
   const refreshToken = getCookie(c, "refresh_token");
