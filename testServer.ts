@@ -1,4 +1,4 @@
-import { apps, appSchema } from "./src/db/schema";
+import { appsTable, appSchema } from "./src/db/schema";
 import { serve } from "@hono/node-server";
 import { type } from "arktype";
 import { Hono } from "hono";

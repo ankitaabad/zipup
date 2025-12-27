@@ -1,0 +1,11 @@
+{
+  "routes": [
+    {
+      "host": "localhost",
+      "path": "/",
+      "type": "dynamic",
+      "upstream": "http://passup:3000",
+      "auth_required": false
+    }
+  ]
+}

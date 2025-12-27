@@ -1,25 +1,35 @@
 # version: "3.8"
 
 services:
-  caddy:
-    image: caddy:2-alpine
+  openresty:
+    build:
+      context: ./openresty
+      dockerfile: Dockerfile
+    container_name: openresty
     ports:
-      - "80:80"
-      - "443:443"
+      - "8080:8080"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
+      - ./openresty/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
+      - ./openresty/lua:/lua:ro
+      - ./config:/config:ro
+      - ./sites:/data/sites:ro
+    networks:
+      - passup_network
+    restart: unless-stopped
     depends_on:
       - passup
-
   passup:
     image: node:24-alpine
     working_dir: /app
+    container_name: passup
+    networks:
+      - passup_network
     volumes:
-      - ./:/app   # <-- mount CURRENT directory
+      - ./:/app # <-- mount CURRENT directory
       - /app/node_modules
-    command: sh -c "npm install && npm run dev"
+      - passup_data:/data
+      - artifacts:/artifacts
+    command: sh -c "npm install  && npm run dev"
     environment:
       - NODE_ENV=development
     ports:
@@ -39,7 +49,7 @@ services:
         source: /var/lib/docker
         target: /var/lib/docker
     ports:
-      - "8686:8686"   # Vector internal API (optional)
+      - "8686:8686" # Vector internal API (optional)
     depends_on:
       - victorialogs
     user: root
@@ -53,6 +63,9 @@ services:
     volumes:
       - vldata:/vlogs
 volumes:
-  caddy_data:
-  caddy_config:
   vldata:
+  passup_data:
+  artifacts:
+networks:
+  passup_network:
+    driver: bridge

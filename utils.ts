@@ -1,14 +1,13 @@
 import crypto from "node:crypto";
 import { drizzle } from "drizzle-orm/libsql";
-
 export function generateSigningSecret() {
-  return "passup_ak" + crypto.randomBytes(64).toString("base64url");
+  return "passup_sk" + crypto.randomBytes(64).toString("base64url");
 }
 
 export function generateApiKey() {
   const bytes = crypto.randomBytes(32);
   const base = bytes.toString("base64url");
-  return `passup_sk_${base}`;
+  return `passup_ak_${base}`;
 }
 
 export const db = drizzle({
@@ -16,3 +15,5 @@ export const db = drizzle({
     url: "file:./my_database.db"
   }
 });
+
+// export const sqlDb = 

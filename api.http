@@ -1,9 +1,36 @@
+@server=http://localhost:8080
+get {{server}}
 
-get http://localhost:3000
-
-### create apppost http://localhost:3000/appsContent-Type: application/json
+### create app
+post {{server}}/apps
+Content-Type: application/json
 
 {
-  "name": "myapp",
-  "type": "static"
+  "name": "newapp",
+  "type": "dynamic"
 }
+
+
+### register user
+post {{server}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuserwi",
+  "password": "testpasS@87&89"
+}
+
+
+### login user
+post {{server}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "passup",
+  "password": "Pass@123"
+}
+
+
+### log out
+post {{server}}/auth/logout
+Content-Type: application/json

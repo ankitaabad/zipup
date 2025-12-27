@@ -37,3 +37,22 @@ Passup Cli:
 Auth:
   ☐ Password auth
   ☐ 2fa auth
+
+
+today:
+  ☐ api to setup path for static files, should work dynamically
+  ☐ 2fa auth with google authenticator
+  ☐ creating an endpoint in lua and calling from nodejs
+  ☐ Adding the victorialogs dashboard in one of the frontend route.
+  ☐ @low User auth and generating paseto token with sqlite db.
+  ☐ setup docs website with docusaurus
+  ☐ setup cli repo.
+  ☐ Build frontend and serve with nodejs server.
+  ☐ @low Create hetzner account and setup server.
+  ☐ @low Get a domain for passup.
+
+later:
+  ☐ hono middleware for auth
+  ☐ logger for each request
+  ☐ paseto secret move out to a file. how to generate.
+  ☐ Auth from lua side with paseto.

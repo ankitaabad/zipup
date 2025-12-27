@@ -1,9 +1,0 @@
-FROM caddy:builder AS builder
-
-RUN xcaddy build \
-    --with github.com/corazawaf/coraza-caddy/v2 \
-    --with github.com/greenpau/caddy-security@v1.1.23 \
-    --with github.com/caddyserver/transform-encoder
-
-FROM caddy:latest
-COPY --from=builder /usr/bin/caddy /usr/bin/caddy
