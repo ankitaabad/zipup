@@ -5,6 +5,7 @@ import { omit } from "radash";
 import { appsTable, appSchema } from "../db/schema";
 import { generateId } from "../utils/helper";
 import { eq } from "drizzle-orm";
+import { getLogger } from "../utils/logger";
 
 export const appsRouter = new Hono();
 const createAppSchema = type({
@@ -14,21 +15,22 @@ const createAppSchema = type({
 
 appsRouter.post("/", async (c) => {
   //todo: wrap inside an error handler middleware
+  const logger = getLogger();
   const { name, type } = createAppSchema.assert(await c.req.json());
   const app: typeof appSchema.infer = {
     id: generateId(),
     name,
-    api_key: generateApiKey(),
+    app_key: generateApiKey(),
     type,
     enabled: 1,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    latest_version: null,
+    // latest_version: null,
     domain: null,
     path_prefix: null
   };
   const result = await db.insert(appsTable).values(app);
-  console.log({ result });
+  logger.debug(JSON.stringify(result));
   return c.json({
     message: "App created successfully",
     data: app
@@ -39,7 +41,7 @@ appsRouter.post("/", async (c) => {
 appsRouter.get("/", async (c) => {
   const apps = await db.select().from(appsTable);
   return c.json({
-    data: apps.map((app) => omit(app, ["api_key"]))
+    data: apps.map((app) => omit(app, ["app_key"]))
   });
 });
 
@@ -56,7 +58,7 @@ appsRouter.get("/:id", async (c) => {
     return c.json({ error: "App not found" }, 404);
   }
   return c.json({
-    data: omit(app, ["api_key"])
+    data: omit(app, ["app_key"])
   });
 });
 // add domain and path prefix update route
@@ -95,7 +97,7 @@ appsRouter.patch("/:id/enable", async (c) => {
 });
 
 // get api key
-appsRouter.get("/:id/api-key", async (c) => {
+appsRouter.get("/:id/app-key", async (c) => {
   const id = c.req.param("id");
   const app = await db
     .select()
@@ -107,6 +109,6 @@ appsRouter.get("/:id/api-key", async (c) => {
     return c.json({ error: "App not found" }, 404);
   }
   return c.json({
-    api_key: app.api_key
+    api_key: app.app_key
   });
 });

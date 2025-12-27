@@ -6,10 +6,18 @@ post {{server}}/apps
 Content-Type: application/json
 
 {
-  "name": "newapp",
-  "type": "dynamic"
+  "name": "docs",
+  "type": "static"
 }
 
+### update domain. of the app
+
+patch {{server}}/apps/37QOAhsBYPJaGqXsdbAMYNWEKuL/domain
+
+{
+  "domain": "docs.localhost",
+  "path_prefix": "/"
+}
 
 ### register user
 post {{server}}/auth/register

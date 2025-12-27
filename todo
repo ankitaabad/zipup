@@ -56,7 +56,7 @@ Bugs:
 
 later:
   ☐ hono middleware for auth
-  ☐ logger for each request
+  ✔ logger for each request
   ☐ paseto secret move out to a file. how to generate.
   ☐ Auth from lua side with paseto.
   ☐ withstand errors and crashes.

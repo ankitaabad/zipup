@@ -7,10 +7,11 @@ import fs from "fs-extra";
 import path from "path";
 import * as tar from "tar";
 import { eventBus, passupEvents } from "../events/event";
+import { getLogger } from "../utils/logger";
 
 export const artifactsRouter = new Hono();
 
-const ARTIFACT_ROOT = "/artifacts"; // main volume
+const ARTIFACT_ROOT = "/static_artifacts"; // main volume
 const TEMP_DIR = path.join(ARTIFACT_ROOT, "temp");
 
 fs.ensureDirSync(ARTIFACT_ROOT);
@@ -69,6 +70,7 @@ artifactsRouter.post("/", async (c) => {
  */
 artifactsRouter.post("/:artifactId/upload", async (c) => {
   try {
+    const logger = getLogger();
     const artifactId = c.req.param("artifactId");
     fs.ensureDirSync(ARTIFACT_ROOT);
     fs.ensureDirSync(TEMP_DIR);
@@ -112,7 +114,11 @@ artifactsRouter.post("/:artifactId/upload", async (c) => {
       .where(eq(artifactsTable.id, artifactId))
       .run();
     console.log("Artifact uploaded and extracted successfully");
-    eventBus.emit(passupEvents.artifact_uploaded, { artifactId: artifactId });
+    const eventEmitted = eventBus.emit(passupEvents.artifact_uploaded, {
+      artifactId: artifactId
+    });
+    logger.debug("artifact uploaded event emitted");
+    console.log({ eventEmitted });
     return c.json({
       message: "Upload and extraction complete",
       path: finalDir

@@ -30,7 +30,6 @@ export const deployCommand = new Command("deploy")
       body: JSON.stringify({ app_key: config.APP_KEY }),
     });
 
-    if (!res.ok) throw new Error(await res.text());
 
     const { id } = (await res.json()).data;
     console.log("🚀 Deploying artifact:", id);

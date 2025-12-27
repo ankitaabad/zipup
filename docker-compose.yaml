@@ -12,7 +12,9 @@ services:
       - ./openresty/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
       - ./openresty/lua:/lua:ro
       - ./config:/config:ro
-      - ./sites:/data/sites:ro
+      - static_artifacts:/static_artifacts
+
+      # - ./sites:/data/sites:ro
     networks:
       - passup_network
     restart: unless-stopped
@@ -27,8 +29,9 @@ services:
     volumes:
       - ./:/app # <-- mount CURRENT directory
       - /app/node_modules
+      - ./config:/config
       - passup_data:/data
-      - artifacts:/artifacts
+      - static_artifacts:/static_artifacts
     command: sh -c "npm install  && npm run dev"
     environment:
       - NODE_ENV=development
@@ -65,7 +68,8 @@ services:
 volumes:
   vldata:
   passup_data:
-  artifacts:
+  static_artifacts:
+  dynamic_artifacts:
 networks:
   passup_network:
     driver: bridge

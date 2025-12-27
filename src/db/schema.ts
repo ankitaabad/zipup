@@ -18,7 +18,7 @@ export const appsTable = table("apps", {
   created_at: t.text().notNull(),
   updated_at: t.text().notNull(),
   enabled: t.integer().notNull(), // 0 or 1
-  latest_version: t.text()
+  // latest_version: t.text()
 });
 
 export const usersTable = table("users", {
@@ -46,15 +46,14 @@ export const deploymentsTable = table("deployments", {
   id: t.text().primaryKey(),
 
   app_id: t.text().notNull(),
-
+  version: t.text(),
   artifact_id: t.text().notNull(), // 🔑 reference artifact
-
+  port : t.integer(),
   status: t.text().notNull(), // pending | deploying | active | failed | rolled_back
 
   created_at: t.text().notNull(),
   updated_at: t.text().notNull()
 });
-
 
 export const secretsTable = table("secrets", {
   id: t.text().primaryKey(),
