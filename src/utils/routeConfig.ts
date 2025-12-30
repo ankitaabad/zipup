@@ -3,6 +3,7 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "../../utils";
 import { appsTable, deploymentsTable } from "../db/schema";
 import { getLogger } from "./logger";
+import { portForUserApps } from "./constants";
 
 export const updateRouteConfig = async () => {
   const logger = getLogger();
@@ -18,46 +19,63 @@ export const updateRouteConfig = async () => {
       "auth_required": false
     }
   ];
-  apps.forEach(async (app) => {
-    // get latest deployment of the app
-    //todo: get all latest deployment for all apps in one db call
-    const latestDeployment = await db
-      .select()
-      .from(deploymentsTable)
-      .where(eq(deploymentsTable.app_id, app.id))
-      .orderBy(desc(deploymentsTable.created_at))
-      .limit(1)
-      .get();
-    if (!latestDeployment) {
-      logger.debug(`No deployment found for app ${app.name}`);
-      return;
-    }
-    const { artifact_id, port } = latestDeployment;
-    if (app.type === "static") {
-      const { domain, path_prefix } = app;
-      if (!domain) {
-        logger.debug(`No domain found for app ${app.name}`);
+  await Promise.all(
+    apps.map(async (app) => {
+      // get latest deployment of the app
+      //todo: get all latest deployment for all apps in one db call
+      if (app.name === "passup") {
         return;
       }
-      if (!artifact_id) {
-        logger.debug(`No artifact found for app ${app.name}`);
+      const latestDeployment = await db
+        .select()
+        .from(deploymentsTable)
+        .where(eq(deploymentsTable.app_id, app.id))
+        .orderBy(desc(deploymentsTable.created_at))
+        .limit(1)
+        .get();
+      if (!latestDeployment) {
+        logger.debug(`No deployment found for app ${app.name}`);
         return;
       }
-      routes.push({
-        host: domain,
-        path: path_prefix || "/",
-        type: "static",
-        artifact_id,
-        port
-      });
-      logger.debug(JSON.stringify(routes));
-      // write to config/routes.json
-      fs.writeFileSync("/config/routes.json", JSON.stringify({ routes }));
-    } else if (app.type === "dynamic") {
-      //todo: need to implement
-      const { domain, path_prefix } = app;
-      const upstream = `http://${app.name}:${port}`;
-      return;
-    }
-  });
+      const { artifact_id, host_port } = latestDeployment;
+      if (app.type === "STATIC") {
+        const { domain, path_prefix } = app;
+        if (!domain) {
+          logger.debug(`No domain found for app ${app.name}`);
+          return;
+        }
+        if (!artifact_id) {
+          logger.debug(`No artifact found for app ${app.name}`);
+          return;
+        }
+        routes.push({
+          host: domain,
+          path: path_prefix || "/",
+          type: "static",
+          artifact_id,
+          port: host_port
+        });
+        logger.debug(JSON.stringify(routes));
+        // write to config/routes.json
+        fs.writeFileSync("/config/routes.json", JSON.stringify({ routes }));
+      } else if (app.type === "DYNAMIC") {
+        //todo: need to implement
+        const { domain, path_prefix } = app;
+        const upstream = `http://${latestDeployment.container_name}:${portForUserApps}`;
+        logger.debug(`upstream : ${upstream}`);
+
+        routes.push({
+          host: domain,
+          path: path_prefix || "/",
+          "type": "dynamic",
+          "upstream": upstream,
+          "auth_required": false
+        });
+        logger.debug("routes after push : " + JSON.stringify(routes));
+        return;
+      }
+    })
+  );
+  logger.debug(`Routes config : ${JSON.stringify(routes)}`);
+  fs.writeFileSync("/config/routes.json", JSON.stringify({ routes }));
 };

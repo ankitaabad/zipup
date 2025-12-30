@@ -200,3 +200,32 @@ export function cleanupExpiredRefreshTokens() {
     if (new Date(exp).getTime() <= now) refreshStore.delete(jti);
   }
 }
+/**
+ * Validates Docker container name and ensures it is URL-safe (DNS-safe)
+ * Docker rules: lowercase letters, digits, hyphens, underscores, max 63 chars, must start with letter or digit
+ */
+function isValidContainerName(name: string): boolean {
+  if (typeof name !== "string") return false;
+  if (name.length === 0 || name.length > 63) return false;
+
+  // Must start with lowercase letter or digit
+  if (!/^[a-z0-9]/.test(name)) return false;
+
+  // Only allow lowercase letters, digits, hyphen and underscore
+  if (!/^[a-z0-9-_]+$/.test(name)) return false;
+
+  // Cannot end with hyphen or underscore
+  if (/[-_]$/.test(name)) return false;
+
+  return true;
+}
+
+
+function generateShortSuffix(length = 6): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let suffix = '';
+  for (let i = 0; i < length; i++) {
+    suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return suffix;
+}

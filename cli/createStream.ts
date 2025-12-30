@@ -6,7 +6,7 @@ import { PassThrough, Readable } from "stream";
 export function createTarStream(dir: string): Readable {
   const ig = ignore()
     .add(".git")
-    .add("node_modules")
+    // .add("node_modules")
     .add(".DS_Store");
 
   if (fs.existsSync(".passupignore")) {

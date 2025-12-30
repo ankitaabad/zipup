@@ -4,16 +4,27 @@ import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import RootLayout from "./RootLayout";
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      refetchOnWindowFocus: false
+    }
+  }
+});
 export default function App() {
   return (
-    <BrowserRouter basename="/">
-      <Routes>
-        <Route element={<RootLayout />}>
-          <Route path="/" element={<Dashboard />} />
-          {/* <Route path="/users" element={<Users />} /> */}
-          <Route path="/settings" element={<Settings />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter basename="/">
+        <Routes>
+          <Route element={<RootLayout />}>
+            <Route path="/" element={<Dashboard />} />
+            {/* <Route path="/users" element={<Users />} /> */}
+            <Route path="/settings" element={<Settings />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }

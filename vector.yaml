@@ -2,7 +2,7 @@ sources:
   passup:
     type: "docker_logs"
     include_containers:
-      - "passup-passup-1"
+      - "passup"
 
 
 transforms:

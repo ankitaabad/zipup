@@ -1,6 +1,18 @@
 # version: "3.8"
 
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    networks:
+      - redis_network
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+
   openresty:
     build:
       context: ./openresty
@@ -17,6 +29,9 @@ services:
       # - ./sites:/data/sites:ro
     networks:
       - passup_network
+      - openresty_network
+      - redis_network
+      # todo: does openresty needs redis network
     restart: unless-stopped
     depends_on:
       - passup
@@ -26,12 +41,18 @@ services:
     container_name: passup
     networks:
       - passup_network
+      - redis_network
+    restart: unless-stopped
+    user: root
     volumes:
       - ./:/app # <-- mount CURRENT directory
       - /app/node_modules
       - ./config:/config
       - passup_data:/data
       - static_artifacts:/static_artifacts
+      - dynamic_artifacts:/dynamic_artifacts
+      - secrets:/secrets
+      - /var/run/docker.sock:/var/run/docker.sock
     command: sh -c "npm install  && npm run dev"
     environment:
       - NODE_ENV=development
@@ -65,11 +86,18 @@ services:
       - "--storageDataPath=/vlogs"
     volumes:
       - vldata:/vlogs
+
 volumes:
   vldata:
   passup_data:
+  redis_data:
   static_artifacts:
   dynamic_artifacts:
+  secrets:
 networks:
   passup_network:
+    driver: bridge
+  openresty_network:
+    driver: bridge
+  redis_network:
     driver: bridge

@@ -13,15 +13,11 @@ Flow:
 
 Non Functional Requirements:
   ☐ only one deployment at a time for a given app.
-  ☐ restrict number of ongoing deployment. (caddy rate limit)
+  ☐ restrict number of ongoing deployment. (openresty rate limit)
   ☐ Only one root user
   ☐ Should we keep root user and other users separate in the db?
 
 
-Caddy:
-  ☐ how to use caddy
-  ☐ how to change configure using api
-  ☐ how to route multiple apps
 
 Setting Up:
   ☐ Get passup domain
@@ -63,3 +59,37 @@ later:
   ☐ improve the cli
   ☐ use the secret key to check integrity of upload.
   ☐ should we also use csrf token.
+  ☐ use a different port for lua side http api only accessible over the network
+
+creating dynamic app:
+  ☐ use dynamic_artifacts to upload the dynamic app artifact
+  ☐ find empty port and bind with app port
+  ☐ add env and secrets to the process.env
+  ☐ create app:ro and data volume.
+  ☐ give app name + random suffix as container name, update the upstream value.
+  ☐ free the port when the deployment is done.
+  ☐ grace period and container shut down.
+
+deleting dynamic app:
+  ☐ remove the artifacts.
+  ☐ remove the entry from the app table
+
+
+init db data script:
+  ☐ Add passup app
+  ☐ add passup user
+
+server init:
+  ☐ init db.
+  ☐ create paseto keys.
+  ☐ create secret key for encrypting secret keys.
+
+Bullmq setup:
+  ☐ correct redis prefix
+  ☐ creating a task and task invocation
+  ☐ cron job run with bull
+
+Pre Deployment:
+  ☐ Ensure in cli that everything is there for the deployment. (start_command)
+  ☐ also ensure before deployment that these things exist.
+  ☐ 

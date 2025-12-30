@@ -6,7 +6,19 @@ import App from "./App";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <MantineProvider>
+    <MantineProvider
+      theme={{
+        components: {
+          Button: {
+            styles: {
+              root: {
+                minWidth: "8ch" // minimum width ~ 8 characters
+              }
+            }
+          }
+        }
+      }}
+    >
       <App />
     </MantineProvider>
     {/* <ScrollRestoration />

@@ -2,7 +2,6 @@ import crypto from "node:crypto";
 // 32 bytes = 256 bits (AES-256)
 const key = crypto.randomBytes(32);
 
-console.log(key.toString("hex"));
 
 const encKey =
   "1d3352caef90975cef0bcb77f35f8c7bc9e8c8e45e44cf44cc76fe4dfd188285";
@@ -40,7 +39,5 @@ function decrypt(ciphertextBase64, key) {
 }
 
 const encrypted = encrypt("Hello, World!", Buffer.from(encKey, "hex"));
-console.log("Encrypted:", encrypted);
 
 const decrypted = decrypt(encrypted, Buffer.from(encKey, "hex"));
-console.log("Decrypted:", decrypted);

@@ -3,6 +3,9 @@ import { Outlet } from "react-router-dom";
 import { useDisclosure } from "@mantine/hooks";
 import { Navbar } from "./components/Navabar/Navbar";
 import "@mantine/core/styles.css";
+import { AppSidebar } from "./components/Sidebar";
+// import "react-pro-sidebar/dist/css/styles.css";
+
 export default function RootLayout() {
   const [opened, { toggle }] = useDisclosure();
 
@@ -24,10 +27,16 @@ export default function RootLayout() {
         </AppShell.Header> */}
 
       <AppShell.Navbar>
-        <Navbar />
+        <AppSidebar />
       </AppShell.Navbar>
 
-      <AppShell.Main bg={"#F6F4F5"}>
+      <AppShell.Main
+        bg={"#F6F4F5"}
+        style={{
+          display: "flex",
+          flexDirection: "column"
+        }}
+      >
         <Outlet />
       </AppShell.Main>
     </AppShell>

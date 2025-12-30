@@ -8,81 +8,99 @@ import path from "path";
 import * as tar from "tar";
 import { eventBus, passupEvents } from "../events/event";
 import { getLogger } from "../utils/logger";
+import { getArtifactWithApp } from "../utils/dbQueries";
 
 export const artifactsRouter = new Hono();
 
-const ARTIFACT_ROOT = "/static_artifacts"; // main volume
-const TEMP_DIR = path.join(ARTIFACT_ROOT, "temp");
-
-fs.ensureDirSync(ARTIFACT_ROOT);
-fs.ensureDirSync(TEMP_DIR);
+const STATIC_ARTIFACT_ROOT = "/static_artifacts";
+const STATIC_TEMP_DIR = path.join(STATIC_ARTIFACT_ROOT, "temp");
+const DYNAMIC_ARTIFACT_ROOT = "/dynamic_artifacts";
+const DYNAMIC_TEMP_DIR = path.join(DYNAMIC_ARTIFACT_ROOT, "temp");
+// fs.ensureDirSync(STATIC_ARTIFACT_ROOT);
+// fs.ensureDirSync(STATIC_TEMP_DIR);
 
 /**
  * Create artifact record
  */
 artifactsRouter.post("/", async (c) => {
-  const { app_key } = await c.req.json();
+  try {
+    const logger = getLogger();
+    logger.debug("creating artifact");
+    const { app_key } = await c.req.json();
 
-  const app = await db
-    .select()
-    .from(appsTable)
-    .where(eq(appsTable.app_key, app_key))
-    .limit(1)
-    .get();
-
-  if (!app) return c.json({ error: "Invalid API key" }, 401);
-
-  const app_id = app.id;
-  const artifactId = generateId();
-  const now = new Date().toISOString();
-  let version!: number;
-
-  await db.transaction(async (tx) => {
-    const latest = await tx
-      .select({ max: sql<number>`MAX(version)` })
-      .from(artifactsTable)
-      .where(eq(artifactsTable.app_id, app_id))
+    const app = await db
+      .select()
+      .from(appsTable)
+      .where(eq(appsTable.app_key, app_key))
+      .limit(1)
       .get();
 
-    version = (latest?.max ?? 0) + 1;
+    if (!app) return c.json({ error: "Invalid API key" }, 401);
 
-    await tx.insert(artifactsTable).values({
-      id: artifactId,
-      app_id,
-      version,
-      status: "uploading",
-      created_at: now,
-      updated_at: now
+    const app_id = app.id;
+    const artifactId = generateId();
+    const now = new Date().toISOString();
+    let version!: number;
+
+    await db.transaction(async (tx) => {
+      const latest = await tx
+        .select({ max: sql<number>`MAX(version)` })
+        .from(artifactsTable)
+        .where(eq(artifactsTable.app_id, app_id))
+        .get();
+
+      version = (latest?.max ?? 0) + 1;
+
+      await tx.insert(artifactsTable).values({
+        id: artifactId,
+        app_id,
+        version,
+        status: "uploading",
+        created_at: now,
+        updated_at: now
+      });
     });
-  });
 
-  return c.json({
-    data: {
-      id: artifactId,
-      version,
-      upload_url: `/artifacts/${artifactId}/upload`
-    }
-  });
+    return c.json({
+      data: {
+        id: artifactId,
+        version,
+        upload_url: `/artifacts/${artifactId}/upload`
+      }
+    });
+  } catch (error) {
+    console.error("Error creating artifact:", error);
+    return c.json({ error: "Failed to create artifact" }, 500);
+  }
 });
 
 /**
  * Upload artifact via multipart/form-data
  */
-artifactsRouter.post("/:artifactId/upload", async (c) => {
+artifactsRouter.post("/:artifact_id/upload", async (c) => {
   try {
     const logger = getLogger();
-    const artifactId = c.req.param("artifactId");
-    fs.ensureDirSync(ARTIFACT_ROOT);
-    fs.ensureDirSync(TEMP_DIR);
+    const artifact_id = c.req.param("artifact_id");
+
     // validate artifact exists
-    const artifact = await db
-      .select()
-      .from(artifactsTable)
-      .where(eq(artifactsTable.id, artifactId))
-      .get();
+    const artifactResult = await getArtifactWithApp(artifact_id);
+    if (!artifactResult.artifact || !artifactResult.app) {
+      return c.json({ error: "Artifact not found" }, 404);
+    }
+    const { artifact, app } = artifactResult;
 
-    if (!artifact) return c.json({ error: "Artifact not found" }, 404);
-
+    let artifactRoot: string, artifactTemp: string;
+    if (app.type === "STATIC") {
+      artifactRoot = STATIC_ARTIFACT_ROOT;
+      artifactTemp = STATIC_TEMP_DIR;
+    } else if (app?.type === "DYNAMIC") {
+      artifactRoot = DYNAMIC_ARTIFACT_ROOT;
+      artifactTemp = DYNAMIC_TEMP_DIR;
+    } else {
+      return c.json({ error: "Invalid artifact type" }, 400);
+    }
+    fs.ensureDirSync(artifactRoot);
+    fs.ensureDirSync(artifactTemp);
     // parse multipart/form-data
     const body = await c.req.parseBody();
     console.log("Received body: ");
@@ -94,15 +112,16 @@ artifactsRouter.post("/:artifactId/upload", async (c) => {
     // }
 
     // save to temp as .tar.gz
-    const tempPath = path.join(TEMP_DIR, `${artifactId}.tar.gz`);
-    const finalDir = path.join(ARTIFACT_ROOT, artifactId);
+    const tempPath = path.join(artifactTemp, `${artifact_id}.tar.gz`);
+    const finalDir = path.join(artifactRoot, artifact_id);
     fs.ensureDirSync(finalDir);
 
     const arrayBuffer = await file.arrayBuffer();
     await fs.writeFile(tempPath, Buffer.from(arrayBuffer));
 
     // extract and cleanup
-    console.log({ tempPath, finalDir });
+
+    // console.log({ tempPath, finalDir });
     await tar.extract({ file: tempPath, cwd: finalDir });
 
     await fs.unlink(tempPath);
@@ -110,15 +129,19 @@ artifactsRouter.post("/:artifactId/upload", async (c) => {
     // update artifact status
     await db
       .update(artifactsTable)
-      .set({ status: "ready", updated_at: new Date().toISOString() })
-      .where(eq(artifactsTable.id, artifactId))
+      .set({ status: "SUCCESS", updated_at: new Date().toISOString() })
+      .where(eq(artifactsTable.id, artifact_id))
       .run();
     console.log("Artifact uploaded and extracted successfully");
+    //todo: use bullmq
     const eventEmitted = eventBus.emit(passupEvents.artifact_uploaded, {
-      artifactId: artifactId
+      artifact_id: artifact_id,
+      app_id: app.id,
+      type: app.type,
+      version: artifact.version,
+      start_command: app.start_command
     });
-    logger.debug("artifact uploaded event emitted");
-    console.log({ eventEmitted });
+    logger.debug(`artifact uploaded event emitted: ${eventEmitted}`);
     return c.json({
       message: "Upload and extraction complete",
       path: finalDir

@@ -10,13 +10,26 @@ Content-Type: application/json
   "type": "static"
 }
 
-### update domain. of the app
-
-patch {{server}}/apps/37QOAhsBYPJaGqXsdbAMYNWEKuL/domain
+### create dynamic app
+post {{server}}/apps
+Content-Type: application/json
 
 {
-  "domain": "docs.localhost",
-  "path_prefix": "/"
+    "name": "shortner_new",
+    "type": "DYNAMIC",
+    "start_command": "node server.js",
+    "internal_port": 3000
+
+  }
+
+### update domain. of the app
+
+patch {{server}}/apps/37W3JKWRoJzP1J6ZFEAFaLwhQKS
+
+{
+  "action": "UpdateStartCommand",
+  "start_command": "node server.js"
+
 }
 
 ### register user

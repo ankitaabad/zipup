@@ -2,7 +2,7 @@ import { type } from "arktype";
 import { Hono } from "hono";
 import { db, generateApiKey } from "../../utils";
 import { omit } from "radash";
-import { appsTable, appSchema, global_config } from "../db/schema";
+import { appsTable, appSchema, globalConfigTable } from "../db/schema";
 import { generateId } from "../utils/helper";
 
 // change global secret key
@@ -12,7 +12,7 @@ globalConfigRouter.put("/deployment_secret_key", async (c) => {
   const secret_key = generateId();
   // upsert into global_config table
   await db
-    .insert(global_config)
+    .insert(globalConfigTable)
     .values({
       key: "deployment_secret_key",
       value: secret_key,
@@ -20,7 +20,7 @@ globalConfigRouter.put("/deployment_secret_key", async (c) => {
       updated_at: new Date().toISOString()
     })
     .onConflictDoUpdate({
-      target: [global_config.key],
+      target: [globalConfigTable.key],
       set: { value: secret_key }
     });
   return c.json({
@@ -34,7 +34,7 @@ globalConfigRouter.put("/debug_logs", async (c) => {
   const { enabled } = await c.req.json();
   // upsert into global_config table
   await db
-    .insert(global_config)
+    .insert(globalConfigTable)
     .values({
       key: "debug_logs",
       value: enabled ? "1" : "0",
@@ -42,7 +42,7 @@ globalConfigRouter.put("/debug_logs", async (c) => {
       updated_at: new Date().toISOString()
     })
     .onConflictDoUpdate({
-      target: [global_config.key],
+      target: [globalConfigTable.key],
       set: { value: enabled ? "1" : "0" }
     });
   return c.json({
