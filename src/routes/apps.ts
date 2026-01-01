@@ -26,7 +26,6 @@ appsRouter.post("/", async (c) => {
     name,
     app_key: generateApiKey(),
     type,
-    internal_port,
     start_command,
     is_enabled: true,
     created_at: new Date().toISOString(),
@@ -50,7 +49,13 @@ appsRouter.post("/", async (c) => {
 appsRouter.get("/", async (c) => {
   const apps = await db.select().from(appsTable);
   return c.json({
-    data: apps.map((app) => omit(app, ["app_key"]))
+    data: apps.map((app) => {
+      const { app_key, ...rest } = app;
+      return {
+        ...rest,
+        api_key_suffix: app_key.slice(-4)
+      };
+    })
   });
 });
 
@@ -66,14 +71,10 @@ appsRouter.get("/:id", async (c) => {
   if (!app) {
     return c.json({ error: "App not found" }, 404);
   }
+  const { app_key, ...rest } = app;
   return c.json({
-    data: omit(app, ["app_key"])
+    data: { ...rest, api_key_suffix: app_key.slice(-4) }
   });
-});
-// add domain and path prefix update route
-const domainPathSchema = type({
-  domain: type.string,
-  path_prefix: type.string.or(type.null).default(null)
 });
 
 const appPatchArk = type({
@@ -101,35 +102,6 @@ appsRouter.patch("/:app_id", async (c) => {
     message: "App updated successfully"
   });
 });
-// appsRouter.patch("/:id/domain", async (c) => {
-//   const id = c.req.param("id");
-//   const { domain, path_prefix } = domainPathSchema.assert(await c.req.json());
-
-//   await db
-//     .update(appsTable)
-//     .set({ domain, path_prefix })
-//     .where(eq(appsTable.id, id));
-//   return c.json({
-//     message: "App updated successfully"
-//   });
-// });
-
-// enable disable app
-// const enableSchema = type({
-//   enabled: type.boolean
-// });
-// appsRouter.patch("/:id/enable", async (c) => {
-//   const id = c.req.param("id");
-//   const { enabled } = enableSchema.assert(await c.req.json());
-
-//   await db
-//     .update(appsTable)
-//     .set({ enabled: enabled ? 1 : 0 })
-//     .where(eq(appsTable.id, id));
-//   return c.json({
-//     message: "App enable status updated successfully"
-//   });
-// });
 
 // get api key
 appsRouter.get("/:id/app-key", async (c) => {
@@ -150,7 +122,7 @@ appsRouter.get("/:id/app-key", async (c) => {
 
 // env variables
 
-appsRouter.get("/:app_id/env", async (c) => {
+appsRouter.get("/:app_id/env-vars", async (c) => {
   const app_id = c.req.param("app_id");
 
   const envs = await db
@@ -175,7 +147,7 @@ export const updateEnvVarSchema = type({
   value: "string"
 });
 
-appsRouter.post("/:appId/env", async (c) => {
+appsRouter.post("/:appId/env-vars", async (c) => {
   const appId = c.req.param("appId");
   const logger = getLogger();
 
@@ -208,7 +180,7 @@ appsRouter.post("/:appId/env", async (c) => {
   });
 });
 
-appsRouter.put("/:appId/env/:envId", async (c) => {
+appsRouter.put("/:appId/env-vars/:envId", async (c) => {
   const appId = c.req.param("appId");
   const envId = c.req.param("envId");
 
@@ -233,7 +205,7 @@ appsRouter.put("/:appId/env/:envId", async (c) => {
   });
 });
 
-appsRouter.delete("/:appId/env/:envId", async (c) => {
+appsRouter.delete("/:appId/env-vars/:envId", async (c) => {
   const appId = c.req.param("appId");
   const envId = c.req.param("envId");
 

@@ -20,7 +20,7 @@ export const appsTable = table(
     start_command: t.text().notNull(),
     domain: t.text(),
     path_prefix: t.text(),
-    internal_port: t.integer(),
+    // internal_port: t.integer(),
     redis_prefix: t.text(),
     redis_username: t.text(),
     redis_password: t.text(),
@@ -84,7 +84,7 @@ export const deploymentsTable = table(
       .notNull()
       .references(() => artifactsTable.id),
     container_name: t.text(),
-    host_port: t.integer(),
+    // host_port: t.integer(),
     status: t.text().$type<DEPLOYMENT_STATUS>().notNull(),
 
     created_at: t.text().notNull(),
@@ -123,22 +123,7 @@ export const envVarsTable = table(
   },
   (table) => [index("env_vars_app_idx").on(table.app_id)]
 );
-export type PORT_STATUS = "ACITVE" | "RESERVED" | "AVAILABLE";
-export const portsTable = table(
-  "ports",
-  {
-    port: t.integer().primaryKey(),
-    status: t.text().$type<PORT_STATUS>().notNull(),
-    app_id: t.text().references(() => appsTable.id),
-    deployment_id: t.text().references(() => deploymentsTable.id),
-    allocated_at: t.text()
-  },
-  (table) => [
-    index("port_status_idx").on(table.status),
-    index("port_app_idx").on(table.app_id)
-    //todo: do we need index on deployment id instead.
-  ]
-);
+
 
 export const appSchema = createSelectSchema(appsTable);
 export const userSchema = createSelectSchema(usersTable);
@@ -147,4 +132,3 @@ export const globalConfigSchema = createSelectSchema(globalConfigTable);
 export const secretSchema = createSelectSchema(secretsTable);
 export const envVarSchema = createSelectSchema(envVarsTable);
 export const artifactSchema = createSelectSchema(artifactsTable);
-export const portSchema = createSelectSchema(portsTable);

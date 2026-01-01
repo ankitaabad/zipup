@@ -1,15 +1,18 @@
+// src/components/AppSettings.tsx
 import {
   Paper,
   Stack,
   Group,
   Text,
   ActionIcon,
-  Modal,
   TextInput,
   Button,
   Divider,
   Title,
-  Menu
+  Menu,
+  Badge,
+  Box,
+  useMantineTheme
 } from "@mantine/core";
 import {
   IconPencil,
@@ -17,9 +20,26 @@ import {
   IconPlayerPlay,
   IconPlayerStop,
   IconRefresh,
-  IconTrash
+  IconTrash,
+  IconX
 } from "@tabler/icons-react";
-import { useState } from "react";
+import { useState, useEffect, ReactNode } from "react";
+import { useApp, useUpdateApp } from "../apis/apps";
+import { Loader } from "./Loader";
+import { CustomModal } from "./CustomModal";
+
+/* ------------------- Custom Modal Component ------------------- */
+interface CustomModalProps {
+  opened: boolean;
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+  padding?: string | number;
+}
+
+
+
+/* ------------------- AppSettings Component ------------------- */
 
 type EditTarget =
   | "appName"
@@ -28,19 +48,39 @@ type EditTarget =
   | "startCommand"
   | null;
 
-export function AppSettings() {
+export function AppSettings({ app_id }: { app_id: string }) {
+  const appQuery = useApp(app_id);
+  const updateApp = useUpdateApp(app_id);
+
+  // ------------------- State -------------------
   const [editTarget, setEditTarget] = useState<EditTarget>(null);
+  const [appName, setAppName] = useState<string | null>(null);
+  const [domain, setDomain] = useState<string | null>(null);
+  const [path, setPath] = useState<string | null>(null);
+  const [redisPrefix, setRedisPrefix] = useState<string | null>(null);
+  const [startCommand, setStartCommand] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState<string | null>(null);
 
-  // Mock data
-  const [appName, setAppName] = useState("my-service");
-  const [domain, setDomain] = useState("example.com");
-  const [path, setPath] = useState("/api");
-  const [redisPrefix, setRedisPrefix] = useState("app:prod");
-  const [startCommand, setStartCommand] = useState("npm run start");
-  const [apiKey] = useState("abcd-1234-efgh-5678");
+  // ------------------- Sync data when loaded -------------------
+  useEffect(() => {
+    if (appQuery.isSuccess && appQuery.data?.data) {
+      const app = appQuery.data.data;
+      setAppName(app.name || null);
+      setDomain(app.domain || null);
+      setPath(app.path || null);
+      setStartCommand(app.start_command || null);
+      setRedisPrefix(app.redis_prefix || null);
+      setApiKey(app.api_key_suffix || null);
+    }
+  }, [appQuery.isSuccess, appQuery.data]);
 
+  // ------------------- Loading / Error -------------------
+  if (appQuery.isLoading) return <Loader fullPage label="Loading app settings..." />;
+  if (appQuery.isError) return <Text color="red">Failed to load app settings</Text>;
+
+  // ------------------- Render -------------------
   return (
-    <Paper withBorder p="lg" radius="md" bg={"gray.0"}>
+    <Paper withBorder p="lg" radius="md" bg="gray.0">
       <Stack gap="lg">
         {/* Header */}
         <Group justify="space-between">
@@ -50,250 +90,137 @@ export function AppSettings() {
             <Menu.Target>
               <Button variant="outline">Actions</Button>
             </Menu.Target>
-
             <Menu.Dropdown>
-              <Menu.Item leftSection={<IconPlayerPlay size={16} />}>
-                Start
-              </Menu.Item>
-              <Menu.Item leftSection={<IconPlayerStop size={16} />}>
-                Stop
-              </Menu.Item>
-              <Menu.Item leftSection={<IconRefresh size={16} />}>
-                Restart
-              </Menu.Item>
-
+              <Menu.Item leftSection={<IconPlayerPlay size={16} />}>Start</Menu.Item>
+              <Menu.Item leftSection={<IconPlayerStop size={16} />}>Stop</Menu.Item>
+              <Menu.Item leftSection={<IconRefresh size={16} />}>Restart</Menu.Item>
               <Menu.Divider />
-
-              <Menu.Item color="red" leftSection={<IconTrash size={16} />}>
-                Delete App
-              </Menu.Item>
+              <Menu.Item color="red" leftSection={<IconTrash size={16} />}>Delete App</Menu.Item>
             </Menu.Dropdown>
           </Menu>
         </Group>
 
         <Divider />
 
-        <SettingRow
-          label="App Name"
-          value={appName}
-          onEdit={() => setEditTarget("appName")}
-        />
-
+        {/* Settings rows */}
+        <SettingRow label="App Name" value={appName} onEdit={() => setEditTarget("appName")} />
         <Divider />
-
         <SettingRow
           label="Domain"
-          value={`${domain}${path}`}
+          value={domain && path ? `${domain}${path}` : null}
           onEdit={() => setEditTarget("domainPath")}
         />
-
+        <Divider />
+        <SettingRow label="Redis Prefix" value={redisPrefix} onEdit={() => setEditTarget("redisPrefix")} />
+        <Divider />
+        <SettingRow label="Start Command" value={startCommand} onEdit={() => setEditTarget("startCommand")} />
         <Divider />
 
-        <SettingRow
-          label="Redis Prefix"
-          value={redisPrefix}
-          onEdit={() => setEditTarget("redisPrefix")}
-        />
-
-        <Divider />
-
-        <SettingRow
-          label="Start Command"
-          value={startCommand}
-          onEdit={() => setEditTarget("startCommand")}
-        />
-
-        <Divider />
-
-        {/* API Key (menu justified) */}
-        <Group justify="space-between">
-          <div>
-            <Text size="sm" fw={500}>
-              API Key
-            </Text>
-            <Text size="sm" c="dimmed">
-              •••• •••• •••• {apiKey.slice(-4)}
-            </Text>
-          </div>
-
-          <Menu position="bottom-end">
+        {/* API Key */}
+        <Group align="flex-start" gap="sm">
+          <Menu position="bottom-start">
             <Menu.Target>
-              <ActionIcon variant="subtle">
+              <ActionIcon variant="subtle" color="gray" mt={2} aria-label="API key actions">
                 <IconDotsVertical size={16} />
               </ActionIcon>
             </Menu.Target>
-
             <Menu.Dropdown>
               <Menu.Item>Get API Key</Menu.Item>
               <Menu.Item color="orange">Rotate API Key</Menu.Item>
             </Menu.Dropdown>
           </Menu>
+
+          <div style={{ flex: 1 }}>
+            <Text size="sm" fw={500}>API Key</Text>
+            {apiKey ? (
+              <Text size="sm" c="dimmed">•••• •••• •••• {apiKey.slice(-4)}</Text>
+            ) : (
+              <Badge color="red" variant="light">Not set</Badge>
+            )}
+          </div>
         </Group>
 
-        {/* Modals */}
-        <EditModal
-          opened={editTarget === "appName"}
-          title="Update App Name"
-          label="App Name"
-          value={appName}
-          description="Shown in dashboards and logs"
-          onClose={() => setEditTarget(null)}
-          onSave={(v) => {
-            setAppName(v);
-            setEditTarget(null);
-          }}
-        />
+        {/* ------------------- Modals ------------------- */}
+        {editTarget === "appName" && (
+          <CustomModal title="Update App Name" opened onClose={() => setEditTarget(null)}>
+            <TextInput
+              label="App Name"
+              description="Shown in dashboards and logs"
+              value={appName || ""}
+              onChange={(e) => setAppName(e.currentTarget.value)}
+            />
+            <Group justify="flex-end" mt="md">
+              <Button onClick={() => setEditTarget(null)}>Save</Button>
+            </Group>
+          </CustomModal>
+        )}
 
-        <DomainPathModal
-          opened={editTarget === "domainPath"}
-          domain={domain}
-          path={path}
-          onClose={() => setEditTarget(null)}
-          onSave={(d, p) => {
-            setDomain(d);
-            setPath(p);
-            setEditTarget(null);
-          }}
-        />
+        {editTarget === "domainPath" && (
+          <CustomModal title="Update Domain & Path" opened onClose={() => setEditTarget(null)}>
+            <TextInput
+              label="Domain"
+              value={domain || ""}
+              onChange={(e) => setDomain(e.currentTarget.value)}
+            />
+            <TextInput
+              label="Path"
+              value={path || ""}
+              onChange={(e) => setPath(e.currentTarget.value)}
+            />
+            <Text size="xs" c="dimmed">This will change the public URL of your application.</Text>
+            <Group justify="flex-end" mt="md">
+              <Button onClick={() => setEditTarget(null)}>Save</Button>
+            </Group>
+          </CustomModal>
+        )}
 
-        <EditModal
-          opened={editTarget === "redisPrefix"}
-          title="Update Redis Prefix"
-          label="Redis Prefix"
-          value={redisPrefix}
-          description="Changing this may invalidate existing cache keys"
-          onClose={() => setEditTarget(null)}
-          onSave={(v) => {
-            setRedisPrefix(v);
-            setEditTarget(null);
-          }}
-        />
+        {editTarget === "redisPrefix" && (
+          <CustomModal title="Update Redis Prefix" opened onClose={() => setEditTarget(null)}>
+            <TextInput
+              label="Redis Prefix"
+              description="Changing this may invalidate existing cache keys"
+              value={redisPrefix || ""}
+              onChange={(e) => setRedisPrefix(e.currentTarget.value)}
+            />
+            <Group justify="flex-end" mt="md">
+              <Button onClick={() => setEditTarget(null)}>Save</Button>
+            </Group>
+          </CustomModal>
+        )}
 
-        <EditModal
-          opened={editTarget === "startCommand"}
-          title="Update Start Command"
-          label="Start Command"
-          value={startCommand}
-          description="Executed when the app container starts"
-          onClose={() => setEditTarget(null)}
-          onSave={(v) => {
-            setStartCommand(v);
-            setEditTarget(null);
-          }}
-        />
+        {editTarget === "startCommand" && (
+          <CustomModal title="Update Start Command" opened onClose={() => setEditTarget(null)}>
+            <TextInput
+              label="Start Command"
+              description="Executed when the app container starts"
+              value={startCommand || ""}
+              onChange={(e) => setStartCommand(e.currentTarget.value)}
+            />
+            <Group justify="flex-end" mt="md">
+              <Button onClick={() => setEditTarget(null)}>Save</Button>
+            </Group>
+          </CustomModal>
+        )}
       </Stack>
     </Paper>
   );
 }
 
-/* ---------------------------- Components ---------------------------- */
-
-function SettingRow({
-  label,
-  value,
-  onEdit
-}: {
-  label: string;
-  value: string;
-  onEdit: () => void;
-}) {
+/* ------------------- Setting Row Component ------------------- */
+function SettingRow({ label, value, onEdit }: { label: string; value: string | null; onEdit: () => void }) {
   return (
-    <Group justify="space-between">
-      <div>
-        <Text size="sm" fw={500}>
-          {label}
-        </Text>
-        <Text size="sm" c="dimmed">
-          {value}
-        </Text>
-      </div>
-
-      <ActionIcon variant="subtle" onClick={onEdit}>
+    <Group align="flex-start" gap="sm">
+      <ActionIcon variant="subtle" color="gray" mt={2} onClick={onEdit} aria-label={`Edit ${label}`}>
         <IconPencil size={16} />
       </ActionIcon>
+      <div style={{ flex: 1 }}>
+        <Text size="sm" fw={500}>{label}</Text>
+        {value ? (
+          <Text size="sm" c="dimmed">{value}</Text>
+        ) : (
+          <Badge color="red" variant="light">Not set</Badge>
+        )}
+      </div>
     </Group>
-  );
-}
-
-function EditModal({
-  opened,
-  title,
-  label,
-  value,
-  description,
-  onClose,
-  onSave
-}: {
-  opened: boolean;
-  title: string;
-  label: string;
-  value: string;
-  description?: string;
-  onClose: () => void;
-  onSave: (value: string) => void;
-}) {
-  const [v, setV] = useState(value);
-
-  return (
-    <Modal opened={opened} onClose={onClose} title={title} centered>
-      <Stack>
-        <TextInput
-          label={label}
-          description={description}
-          value={v}
-          onChange={(e) => setV(e.currentTarget.value)}
-        />
-        <Group justify="flex-end">
-          <Button onClick={() => onSave(v)}>Save</Button>
-        </Group>
-      </Stack>
-    </Modal>
-  );
-}
-
-function DomainPathModal({
-  opened,
-  domain,
-  path,
-  onClose,
-  onSave
-}: {
-  opened: boolean;
-  domain: string;
-  path: string;
-  onClose: () => void;
-  onSave: (domain: string, path: string) => void;
-}) {
-  const [d, setD] = useState(domain);
-  const [p, setP] = useState(path);
-
-  return (
-    <Modal
-      opened={opened}
-      onClose={onClose}
-      title="Update Domain & Path"
-      centered
-    >
-      <Stack>
-        <TextInput
-          label="Domain"
-          value={d}
-          onChange={(e) => setD(e.currentTarget.value)}
-        />
-        <TextInput
-          label="Path"
-          value={p}
-          onChange={(e) => setP(e.currentTarget.value)}
-        />
-
-        <Text size="xs" c="dimmed">
-          This will change the public URL of your application.
-        </Text>
-
-        <Group justify="flex-end">
-          <Button onClick={() => onSave(d, p)}>Save</Button>
-        </Group>
-      </Stack>
-    </Modal>
   );
 }

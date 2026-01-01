@@ -63,7 +63,7 @@ export default function Dashboard() {
     >
       <Tabs
         // value={activeTab}
-        onTabChange={(val) => setActiveTab(val || "env")}
+        onTabChange={(val) => setActiveTab(val || "settings")}
         defaultValue="env"
         keepMounted
         style={{ flex: 1, display: "flex", flexDirection: "column" }}

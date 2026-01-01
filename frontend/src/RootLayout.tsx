@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import { useDisclosure } from "@mantine/hooks";
 import { Navbar } from "./components/Navabar/Navbar";
 import "@mantine/core/styles.css";
+import "./styles/loader.css";
 import { AppSidebar } from "./components/Sidebar";
 // import "react-pro-sidebar/dist/css/styles.css";
 

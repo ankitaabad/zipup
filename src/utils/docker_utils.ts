@@ -24,7 +24,6 @@ import {
   artifactsTable,
   deploymentsTable,
   envVarsTable,
-  portsTable,
   secretsTable
 } from "../db/schema";
 import { eq } from "drizzle-orm";
@@ -58,30 +57,7 @@ export async function deployDynamicApp(event: {
     const { deployment_id, artifact_id, app_id, internal_port, start_command } =
       event;
     logger.debug(`start command ${start_command}`);
-    // get free port and reserve it
-    let port: number;
-    await db.transaction(async (tx) => {
-      const ports = await tx
-        .select()
-        .from(portsTable)
-        .where(eq(portsTable.status, "AVAILABLE"))
-        .limit(1);
-      port = ports[0]?.port;
-      if (!port) {
-        throw new Error("No free port found");
-      }
-      await tx
-        .update(portsTable)
-        .set({
-          status: "RESERVED",
-          deployment_id: event.deployment_id
-        })
-        .where(eq(portsTable.port, port));
-    });
-    if (!port) {
-      logger.error("No free port found");
-      return;
-    }
+
     const [env_vars, secrets] = await Promise.all([
       db
         .select()
@@ -186,23 +162,10 @@ export async function deployDynamicApp(event: {
     await container.start();
     logger.debug("container started successfully.");
     logger.debug("updating port status");
-    // make port active
-    await db
-      .update(portsTable)
-      .set({
-        status: "ACITVE",
-        allocated_at: new Date().toISOString()
-      })
-      .where(eq(portsTable.port, port));
+
 
     logger.debug("port status updated to active successfully.");
-    // check if the container is in running state
-    await db.update(deploymentsTable).set({
-      status: "SUCCESS",
-      host_port: port,
-      container_name: containerName,
-      updated_at: new Date().toISOString()
-    });
+
     await updateRouteConfig();
     await fetch(`${reverseProxyURL}/__reload__`, {
       method: "POST",

@@ -1,10 +1,6 @@
-import { useState } from "react";
-import {
-  Sidebar,
-  Menu,
-  MenuItem,
-  SubMenu,
-} from "react-pro-sidebar";
+import { useState, useEffect } from "react";
+
+import { Sidebar, Menu, MenuItem, SubMenu } from "react-pro-sidebar";
 import {
   IconLayoutDashboard,
   IconWorld,
@@ -13,8 +9,7 @@ import {
   IconSettings,
   IconLogout,
   IconSwitchHorizontal,
-  IconPlus,
-  IconChevronRight,
+  IconPlus
 } from "@tabler/icons-react";
 import {
   Box,
@@ -25,21 +20,64 @@ import {
   Modal,
   Stack,
   TextInput,
-  Button,
+  Button
 } from "@mantine/core";
+import { useApps } from "../apis/apps";
+import { nanoid } from "nanoid";
+import { useNavigate, useLocation } from "react-router-dom";
+import { CustomModal } from "./CustomModal";
 
 /* ----------------------------- Sidebar ----------------------------- */
 
-export function AppSidebar() {
-  const [active, setActive] = useState<string | null>("Dashboard");
+type Site = {
+  id: string;
+  name: string;
+};
 
-  const [staticSites, setStaticSites] = useState(["Marketing", "Docs"]);
-  const [webApps, setWebApps] = useState(["API", "Admin"]);
+export function AppSidebar() {
+  const appsQuery = useApps();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [staticSites, setStaticSites] = useState<Site[]>([]);
+  const [webApps, setWebApps] = useState<Site[]>([]);
 
   const [modalOpened, setModalOpened] = useState(false);
   const [modalFor, setModalFor] = useState<"static" | "web" | null>(null);
   const [newName, setNewName] = useState("");
 
+  /* ---------------- derive active from route ---------------- */
+  let activeSection: string = "Dashboard"; // Dashboard / Logs / Settings / Apps
+  let activeAppId: string | null = null; // if inside static/web app
+
+  const pathParts = location.pathname.split("/").filter(Boolean);
+  if (pathParts[0] === "logs") activeSection = "Logs";
+  else if (pathParts[0] === "settings") activeSection = "Settings";
+  else if (pathParts[0] === "apps") {
+    activeSection = "Apps";
+    activeAppId = pathParts[2] || null; // apps/static/:appId or apps/web/:appId
+  } else {
+    activeSection = "Dashboard";
+  }
+
+  /* ---------------- update apps state when query succeeds ---------------- */
+  useEffect(() => {
+    if (appsQuery.isSuccess && appsQuery.data?.data) {
+      const data = appsQuery.data.data;
+      setStaticSites(
+        data
+          .filter((a) => a.type === "STATIC")
+          .map((a) => ({ id: a.id, name: a.name }))
+      );
+      setWebApps(
+        data
+          .filter((a) => a.type !== "STATIC")
+          .map((a) => ({ id: a.id, name: a.name }))
+      );
+    }
+  }, [appsQuery.data, appsQuery.isSuccess]);
+
+  /* ---------------- create new site/app ---------------- */
   const openCreate = (type: "static" | "web") => {
     setModalFor(type);
     setNewName("");
@@ -49,13 +87,16 @@ export function AppSidebar() {
   const saveItem = () => {
     if (!newName.trim()) return;
 
-    if (modalFor === "static") {
-      setStaticSites((s) => [...s, newName]);
-    } else {
-      setWebApps((s) => [...s, newName]);
-    }
+    const newItem: Site = { id: nanoid(), name: newName.trim() };
+    if (modalFor === "static") setStaticSites((s) => [...s, newItem]);
+    else if (modalFor === "web") setWebApps((s) => [...s, newItem]);
 
     setModalOpened(false);
+  };
+
+  /* ---------------- handle app click ---------------- */
+  const onSelectApp = (appType: "static" | "web", appId: string) => {
+    navigate(`/apps/${appType}/${appId}/settings`);
   };
 
   return (
@@ -81,31 +122,26 @@ export function AppSidebar() {
         <Divider />
 
         <Menu>
-
+          {/* Dashboard */}
           <MenuItem
             icon={<IconLayoutDashboard size={18} />}
-            active={active === "Dashboard"}
-            onClick={() => setActive("Dashboard")}
+            active={activeSection === "Dashboard"}
+            onClick={() => navigate("/dashboard")}
           >
             Dashboard
           </MenuItem>
 
           {/* Static Sites */}
-          <SubMenu
-            label="Static Sites"
-            icon={<IconWorld size={18} />}
-            // suffix={<IconChevronRight size={14} />}
-          >
+          <SubMenu label="Static Sites" icon={<IconWorld size={18} />}>
             {staticSites.map((site) => (
               <MenuItem
-                key={site}
-                active={active === site}
-                onClick={() => setActive(site)}
+                key={site.id}
+                active={activeAppId === site.id}
+                onClick={() => onSelectApp("static", site.id)}
               >
-                {site}
+                {site.name}
               </MenuItem>
             ))}
-
             <MenuItem
               icon={<IconPlus size={16} />}
               onClick={() => openCreate("static")}
@@ -116,21 +152,16 @@ export function AppSidebar() {
           </SubMenu>
 
           {/* Web Apps */}
-          <SubMenu
-            label="Web Apps"
-            icon={<IconAppWindow size={18} />}
-            // suffix={<IconChevronRight size={14} />}
-          >
+          <SubMenu label="Web Apps" icon={<IconAppWindow size={18} />}>
             {webApps.map((app) => (
               <MenuItem
-                key={app}
-                active={active === app}
-                onClick={() => setActive(app)}
+                key={app.id}
+                active={activeAppId === app.id}
+                onClick={() => onSelectApp("web", app.id)}
               >
-                {app}
+                {app.name}
               </MenuItem>
             ))}
-
             <MenuItem
               icon={<IconPlus size={16} />}
               onClick={() => openCreate("web")}
@@ -140,18 +171,20 @@ export function AppSidebar() {
             </MenuItem>
           </SubMenu>
 
+          {/* Logs */}
           <MenuItem
             icon={<IconFileText size={18} />}
-            active={active === "Logs"}
-            onClick={() => setActive("Logs")}
+            active={activeSection === "Logs"}
+            onClick={() => navigate("/logs")}
           >
             Logs
           </MenuItem>
 
+          {/* Settings */}
           <MenuItem
             icon={<IconSettings size={18} />}
-            active={active === "Settings"}
-            onClick={() => setActive("Settings")}
+            active={activeSection === "Settings"}
+            onClick={() => navigate("/settings")}
           >
             Settings
           </MenuItem>
@@ -161,9 +194,6 @@ export function AppSidebar() {
         <Box mt="auto" px="md" py="sm">
           <Divider mb="sm" />
           <Menu>
-            <MenuItem icon={<IconSwitchHorizontal size={18} />}>
-              Change account
-            </MenuItem>
             <MenuItem
               icon={<IconLogout size={18} />}
               style={{ color: "var(--mantine-color-red-6)" }}
@@ -173,17 +203,11 @@ export function AppSidebar() {
           </Menu>
         </Box>
       </Sidebar>
-
-      {/* Create Modal */}
-      <Modal
+      {/* Create Modal using CustomModal */}
+      <CustomModal
         opened={modalOpened}
         onClose={() => setModalOpened(false)}
-        title={
-          modalFor === "static"
-            ? "Create static site"
-            : "Create web app"
-        }
-        centered
+        title={modalFor === "static" ? "Create static site" : "Create web app"}
       >
         <Stack>
           <TextInput
@@ -192,9 +216,11 @@ export function AppSidebar() {
             value={newName}
             onChange={(e) => setNewName(e.currentTarget.value)}
           />
-          <Button onClick={saveItem}>Create</Button>
+          <Group justify="flex-end" mt="sm">
+            <Button onClick={saveItem}>Create</Button>
+          </Group>
         </Stack>
-      </Modal>
+      </CustomModal>
     </>
   );
 }

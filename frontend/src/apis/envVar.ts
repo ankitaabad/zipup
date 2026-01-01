@@ -1,4 +1,6 @@
+// src/apis/envVar.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { api } from "./axios"; // your axios instance
 
 export interface EnvVar {
   id: string;
@@ -6,76 +8,59 @@ export interface EnvVar {
   value: string;
 }
 
-async function api<T>(
-  url: string,
-  options?: RequestInit
-): Promise<T> {
-  const res = await fetch(url, {
-    headers: { "Content-Type": "application/json" },
-    ...options
-  });
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.message ?? "Request failed");
-  }
-
-  return res.json();
-}
-
-/* -------- Queries -------- */
+/* ---------------- Queries ---------------- */
 
 export function useEnvVars(appId: string) {
   return useQuery({
     queryKey: ["env-vars", appId],
-    queryFn: () =>
-      api<{ data: EnvVar[] }>(`/apps/${appId}/env-vars`)
-        .then((r) => r.data)
+    queryFn: async () => {
+      const res = await api.get<{ data: EnvVar[] }>(`/apps/${appId}/env-vars`);
+      return res.data.data;
+    },
+    enabled: !!appId,
   });
 }
 
-/* -------- Mutations -------- */
+/* ---------------- Mutations ---------------- */
 
 export function useCreateEnvVar(appId: string) {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { key: string; value: string }) =>
-      api(`/apps/${appId}/env-vars`, {
-        method: "POST",
-        body: JSON.stringify(data)
-      }),
+    mutationFn: async (data: { key: string; value: string }) => {
+      const res = await api.post(`/apps/${appId}/env-vars`, data);
+      return res.data;
+    },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["env-vars", appId] });
-    }
+      queryClient.invalidateQueries({ queryKey: ["env-vars", appId] });
+    },
   });
 }
 
 export function useUpdateEnvVar(appId: string) {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { id: string; value: string }) =>
-      api(`/apps/${appId}/env-vars/${data.id}`, {
-        method: "PUT",
-        body: JSON.stringify({ value: data.value })
-      }),
+    mutationFn: async (data: { id: string; value: string }) => {
+      const res = await api.put(`/apps/${appId}/env-vars/${data.id}`, { value: data.value });
+      return res.data;
+    },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["env-vars", appId] });
-    }
+      queryClient.invalidateQueries({ queryKey: ["env-vars", appId] });
+    },
   });
 }
 
 export function useDeleteEnvVar(appId: string) {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) =>
-      api(`/apps/${appId}/env-vars/${id}`, {
-        method: "DELETE"
-      }),
+    mutationFn: async (id: string) => {
+      const res = await api.delete(`/apps/${appId}/env-vars/${id}`);
+      return res.data;
+    },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["env-vars", appId] });
-    }
+      queryClient.invalidateQueries({ queryKey: ["env-vars", appId] });
+    },
   });
 }
