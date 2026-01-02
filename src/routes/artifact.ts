@@ -139,7 +139,8 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
       app_id: app.id,
       type: app.type,
       version: artifact.version,
-      start_command: app.start_command
+      start_command: app.start_command,
+      app_name: app.name
     });
     logger.debug(`artifact uploaded event emitted: ${eventEmitted}`);
     return c.json({

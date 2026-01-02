@@ -3,6 +3,7 @@ import * as t from "drizzle-orm/sqlite-core";
 import { createSelectSchema } from "drizzle-arktype";
 import { index } from "drizzle-orm/sqlite-core";
 import { unique } from "drizzle-orm/sqlite-core";
+import { eq } from "drizzle-orm";
 export const globalConfigTable = table("global_config", {
   key: t.text().primaryKey(),
   value: t.text().notNull(),
@@ -26,6 +27,7 @@ export const appsTable = table(
     redis_password: t.text(),
     created_at: t.text().notNull(),
     updated_at: t.text().notNull(),
+    private : t.integer({mode:"boolean"}),
     is_enabled: t.integer({ mode: "boolean" }).notNull() // 0 or 1
     // latest_version: t.text()
   },

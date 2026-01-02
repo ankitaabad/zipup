@@ -12,7 +12,6 @@ export default function Logs() {
         flex: 1
       }}
     >
-      <Title order={3}>Logs</Title>
       <Stack
         style={{
           flex: 1, // fill remaining space

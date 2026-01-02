@@ -23,6 +23,7 @@ eventBus.on(
     version: string;
     internal_port: number;
     start_command: string;
+    app_name: string;
   }) => {
     try {
       const logger = getLogger();
@@ -35,7 +36,8 @@ eventBus.on(
         artifact_id,
         type,
         start_command,
-        internal_port
+        internal_port,
+        app_name
       } = event;
 
       // create entry in deployment
@@ -66,14 +68,14 @@ eventBus.on(
           .set({
             status: "SUCCESS",
             updated_at: now
-          }) 
+          })
           .where(eq(deploymentsTable.id, deploymentId));
       } else if (type === "DYNAMIC") {
         await deployDynamicApp({
           deployment_id: deploymentId,
           artifact_id,
           app_id,
-
+          app_name,
           start_command,
           internal_port: 3000
         });

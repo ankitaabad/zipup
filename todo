@@ -22,12 +22,18 @@ Features:
   frontend:
     ☐ Create a static app.
     ☐ create a dynamic app.
-    ☐ show the apps by fetching from server.
-    ☐ embed victorialogs.
+    ✔ show the apps by fetching from server.
+    ✔ Env Variable integration
+    ✔ Dashboard stats integration
+    ✔ embed victorialogs.
   Bullmq setup:
     ☐ correct redis prefix
     ☐ creating a task and task invocation
     ☐ cron job run with bull
+  Auth Proxy:
+    ☐ Maintain session in openresty for user apps.
+    ☐ User Apis
+    ☐ Apis for User Groups
 
   passup cli: 
     ☐ improve the cli

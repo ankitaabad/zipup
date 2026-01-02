@@ -12,6 +12,9 @@ services:
     command: ["redis-server", "--appendonly", "yes"]
     ports:
       - "6379:6379"
+    labels:
+      - app_type=system
+      - app_name=redis
 
   openresty:
     build:
@@ -35,6 +38,9 @@ services:
     restart: unless-stopped
     depends_on:
       - passup
+    labels:
+      - app_type=system
+      - app_name=openresty
   passup:
     image: node:24-alpine
     working_dir: /app
@@ -58,7 +64,10 @@ services:
       - NODE_ENV=development
     ports:
       - "3000:3000"
-
+    labels:
+      - app_type=system
+      - app_name=passup
+  
     # logging:
     #   driver: "none"   # disable default Docker logging → Vector will handle logs
     depends_on:
@@ -77,6 +86,10 @@ services:
     depends_on:
       - victorialogs
     user: root
+    labels:
+      - app_type=system
+      - app_name=vector
+     
   victorialogs:
     image: victoriametrics/victoria-logs:latest
     container_name: victorialogs
@@ -86,6 +99,10 @@ services:
       - "--storageDataPath=/vlogs"
     volumes:
       - vldata:/vlogs
+    labels:
+      - app_type=system
+      - app_name=victorialogs
+        
 
 volumes:
   vldata:

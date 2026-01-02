@@ -1,8 +1,8 @@
-import { AppShell, Burger } from "@mantine/core";
+import { AppShell } from "@mantine/core";
 import { Outlet } from "react-router-dom";
 import { useDisclosure } from "@mantine/hooks";
-import { Navbar } from "./components/Navabar/Navbar";
 import "@mantine/core/styles.css";
+import '@mantine/charts/styles.css';
 import "./styles/loader.css";
 import { AppSidebar } from "./components/Sidebar";
 // import "react-pro-sidebar/dist/css/styles.css";

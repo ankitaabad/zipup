@@ -26,7 +26,6 @@ const registerSchema = type({
 });
 // todo: add auth  middleware for protected routes
 authRouter.post("/register", async (c) => {
-  console.log("lets see");
   const logger = getLogger();
   logger.info("Register attempt");
   const { username, password } = await c.req.json();

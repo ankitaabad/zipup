@@ -55,3 +55,7 @@ Content-Type: application/json
 ### log out
 post {{server}}/auth/logout
 Content-Type: application/json
+
+### get docker stats
+
+get {{server}}/stats

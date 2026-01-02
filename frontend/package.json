@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@mantine/charts": "^8.3.10",
     "@mantine/core": "8.3.9",
     "@mantine/form": "^8.3.9",
     "@mantine/hooks": "^8.3.9",
@@ -18,7 +19,8 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-pro-sidebar": "^1.1.0",
-    "react-router-dom": "^7.10.0"
+    "react-router-dom": "^7.10.0",
+    "recharts": "^3.6.0"
   },
   "devDependencies": {
     "@types/react": "^19.1.13",

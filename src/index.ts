@@ -7,6 +7,7 @@ import { appsRouter } from "./routes/apps";
 import { globalConfigRouter } from "./routes/globalConfig";
 import { artifactsRouter } from "./routes/artifact";
 import { loggerMiddleware } from "./utils/logger";
+import { statsRouter } from "./routes/stats";
 const app = new Hono();
 app.use(
   "*",
@@ -22,7 +23,7 @@ app.route("/auth", authRouter);
 app.route("/apps", appsRouter);
 app.route("/global_config", globalConfigRouter);
 app.route("/artifacts", artifactsRouter);
-
+app.route("/stats", statsRouter);
 serve(
   {
     fetch: app.fetch,

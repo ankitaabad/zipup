@@ -51,11 +51,18 @@ export async function deployDynamicApp(event: {
   app_id: string;
   start_command: string;
   internal_port: number;
+  app_name: string;
 }) {
   try {
     const logger = getLogger();
-    const { deployment_id, artifact_id, app_id, internal_port, start_command } =
-      event;
+    const {
+      deployment_id,
+      artifact_id,
+      app_id,
+      internal_port,
+      start_command,
+      app_name
+    } = event;
     logger.debug(`start command ${start_command}`);
 
     const [env_vars, secrets] = await Promise.all([
@@ -151,7 +158,9 @@ export async function deployDynamicApp(event: {
       Labels: {
         "passup.app_id": app_id,
         "passup.deployment_id": deployment_id,
-        "passup.artifact_id": artifact_id
+        "passup.artifact_id": artifact_id,
+        "app_type": "user",
+        "app_name": app_name
       }
     });
     logger.debug("container created successfully.");
@@ -162,7 +171,6 @@ export async function deployDynamicApp(event: {
     await container.start();
     logger.debug("container started successfully.");
     logger.debug("updating port status");
-
 
     logger.debug("port status updated to active successfully.");
 
@@ -176,5 +184,77 @@ export async function deployDynamicApp(event: {
     //todo: remove existing container
   } catch (error) {
     console.error("Error deploying artifact:", error);
+  }
+}
+
+export async function getDockerStats() {
+  try {
+    // Fetch all containers
+    const containers = await docker.listContainers({ all: false });
+    console.log({ containers: JSON.stringify(containers) });
+    // Prepare stats promises
+    const statsPromises = containers.map(async (containerInfo) => {
+      const container = docker.getContainer(containerInfo.Id);
+      console.log({ container: JSON.stringify(container) });
+      // Fetch live stats (non-streaming)
+      const statsStream = await container.stats({ stream: false });
+      // statsStream.memory_stats, cpu_stats, networks, etc.
+      console.log({ statsStream: JSON.stringify(statsStream) });
+      // Calculate CPU %
+      const cpuDelta =
+        statsStream.cpu_stats.cpu_usage.total_usage -
+        statsStream.precpu_stats.cpu_usage.total_usage;
+      const systemDelta =
+        statsStream.cpu_stats.system_cpu_usage -
+        statsStream.precpu_stats.system_cpu_usage;
+      let cpuPercent = 0;
+      if (systemDelta > 0 && cpuDelta > 0) {
+        cpuPercent =
+          (cpuDelta / systemDelta) * statsStream.cpu_stats.online_cpus * 100;
+      }
+
+      // Memory usage
+      const memoryUsage = statsStream.memory_stats.usage || 0;
+      const memoryLimit = statsStream.memory_stats.limit || 1;
+      const memoryPercent = (memoryUsage / memoryLimit) * 100;
+
+      // Network I/O
+      const networks = statsStream.networks || {};
+      let networkRx = 0,
+        networkTx = 0;
+      Object.values(networks).forEach((net: any) => {
+        networkRx += net.rx_bytes || 0;
+        networkTx += net.tx_bytes || 0;
+      });
+
+      // Labels to distinguish app type
+      const labels = containerInfo.Labels || {};
+      console.log({ labels: JSON.stringify(labels) });
+
+      const appName = labels["app_name"] || containerInfo.Names[0];
+      const appType = labels["app_type"] || "user";
+      const instance = labels["passup.deployment_id"] || "1";
+      
+      return {
+        id: containerInfo.Id,
+        name: containerInfo.Names[0].replace("/", ""),
+        appName,
+        appType,
+        instance,
+        cpuPercent: parseFloat(cpuPercent.toFixed(2)),
+        memoryUsage,
+        memoryLimit,
+        memoryPercent: parseFloat(memoryPercent.toFixed(2)),
+        networkRx,
+        networkTx
+      };
+    });
+
+    const stats = await Promise.all(statsPromises);
+
+    return stats;
+  } catch (err) {
+    console.error(err);
+    throw err;
   }
 }
