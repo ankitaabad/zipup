@@ -1,1 +1,1 @@
-{"routes":[{"host":"localhost","path":"/","type":"dynamic","upstream":"http://passup:3000","auth_required":false},{"host":"short.localhost","path":"/","type":"dynamic","upstream":"http://null:3000","auth_required":false}]}
+{"routes":[{"host":"localhost","path":"/","type":"dynamic","upstream":"http://passup:3000","auth_required":false},{"host":"short.localhost","path":"/","type":"dynamic","upstream":"http://passup_37W3JKWRoJzP1J6ZFEAFaLwhQKS_Q5StYtSC:3000","auth_required":false}]}

@@ -2,10 +2,11 @@ import { type } from "arktype";
 import { Hono } from "hono";
 import { db, generateApiKey } from "../../utils";
 import { omit } from "radash";
-import { appsTable, appSchema, usersTable } from "../db/schema";
+import { appsTable, appSchema, platformAdminsTable } from "../db/schema";
 import {
   ACCESS_AUD,
   generateAccessToken,
+  generateCSRFToken,
   generateId,
   generateRefreshToken,
   hashPassword,
@@ -18,14 +19,15 @@ import {
 import { eq } from "drizzle-orm";
 import { setCookie, getCookie } from "hono/cookie";
 import { getLogger } from "../utils/logger";
-export const authRouter = new Hono();
+export const adminAuthRouter = new Hono();
 
 const registerSchema = type({
   username: type.string,
   password: type.string
 });
 // todo: add auth  middleware for protected routes
-authRouter.post("/register", async (c) => {
+adminAuthRouter.post("/register", async (c) => {
+  return c.json({ message: "blocked for now" });
   const logger = getLogger();
   logger.info("Register attempt");
   const { username, password } = await c.req.json();
@@ -36,8 +38,8 @@ authRouter.post("/register", async (c) => {
   // check if user already exists
   const existingUser = await db
     .select()
-    .from(usersTable)
-    .where(eq(usersTable.username, username))
+    .from(platformAdminsTable)
+    .where(eq(platformAdminsTable.username, username))
     .limit(1)
     .execute();
   if (existingUser.length > 0) {
@@ -47,8 +49,8 @@ authRouter.post("/register", async (c) => {
   //   // check if there is any admin user already
   //   const adminUser = await db
   //     .select()
-  //     .from(usersTable)
-  //     .where(eq(usersTable.is_admin, 1))
+  //     .from(platformAdminsTable)
+  //     .where(eq(platformAdminsTable.is_admin, 1))
   //     .limit(1)
   //     .execute();
   //   if (adminUser.length > 0) {
@@ -64,24 +66,27 @@ authRouter.post("/register", async (c) => {
     updated_at: new Date().toISOString(),
     is_admin: 0
   };
-  await db.insert(usersTable).values(user);
+  await db.insert(platformAdminsTable).values(user);
   return c.json({
     message: "User registered successfully",
     data: omit(user, ["password_hash"])
   });
 });
 
-authRouter.post("/login", async (c) => {
+adminAuthRouter.post("/login", async (c) => {
+  const protocol = c.header("x-forwarded-proto");
+  console.log({ protocol });
   const logger = getLogger();
 
   logger.debug("Login attempt");
   const { username, password } = registerSchema.assert(await c.req.json());
   const user = await db
     .select()
-    .from(usersTable)
-    .where(eq(usersTable.username, username))
+    .from(platformAdminsTable)
+    .where(eq(platformAdminsTable.username, username))
     .limit(1)
     .get();
+    console.log({fetchedUser: user})
   if (!user) {
     logger.error("Login failed: User not found", { username });
     return c.json({ error: "Invalid username or password" }, 401);
@@ -95,23 +100,26 @@ authRouter.post("/login", async (c) => {
   if (!isPasswordValid) {
     return c.json({ error: "Invalid username or password" }, 401);
   }
-  const [access_token, refresh_token] = await Promise.all([
+  const [access_token, refresh_token, csrf_token] = await Promise.all([
     generateAccessToken(user.id, ACCESS_AUD),
-    generateRefreshToken(user.id)
+    generateRefreshToken(user.id),
+    generateCSRFToken(user.id)
   ]);
+  //todo: what happen when you are only on http to start with.
   setCookie(c, "access_token", access_token, { httpOnly: true, secure: true });
   setCookie(c, "refresh_token", refresh_token.token, {
     httpOnly: true,
     secure: true,
     path: "/auth/refresh"
   });
+  setCookie(c, "csrf_token", csrf_token, { httpOnly: false, secure: true });
   return c.json({
     message: "Login successful"
     // data: omit(user, ["password_hash"])
   });
 });
 
-authRouter.post("/logout", async (c) => {
+adminAuthRouter.post("/logout", async (c) => {
   const logger = getLogger();
 
   // optional: revoke refresh token in DB if you store them
@@ -129,7 +137,7 @@ authRouter.post("/logout", async (c) => {
   return c.json({ message: "Logged out successfully" });
 });
 
-authRouter.post("/refresh", async (c) => {
+adminAuthRouter.post("/refresh", async (c) => {
   const refreshToken = getCookie(c, "refresh_token");
 
   if (!refreshToken) {
@@ -161,7 +169,7 @@ authRouter.post("/refresh", async (c) => {
   return c.json({ message: "Token refreshed" });
 });
 
-authRouter.get("/verify", async (c) => {
+adminAuthRouter.get("/verify", async (c) => {
   const accessToken =
     getCookie(c, "access_token") ??
     c.req.header("authorization")?.replace("Bearer ", "");
@@ -179,12 +187,12 @@ authRouter.get("/verify", async (c) => {
 
   const user = await db
     .select({
-      id: usersTable.id,
-      username: usersTable.username,
-      is_admin: usersTable.is_admin
+      id: platformAdminsTable.id,
+      username: platformAdminsTable.username
+      // is_admin: platformAdminsTable.is_admin
     })
-    .from(usersTable)
-    .where(eq(usersTable.id, payload.sub))
+    .from(platformAdminsTable)
+    .where(eq(platformAdminsTable.id, payload.sub))
     .limit(1)
     .get();
 
@@ -195,7 +203,7 @@ authRouter.get("/verify", async (c) => {
   // Forward identity to upstream app
   c.header("X-User-Id", user.id);
   c.header("X-User-Name", user.username);
-  c.header("X-User-Role", user.is_admin ? "admin" : "user");
+  // c.header("X-User-Role", user.is_admin ? "admin" : "user");
 
   return c.json({ message: "User verified" }, 200);
 });
@@ -205,7 +213,7 @@ const changePasswordSchema = type({
   new_password: type.string
 });
 
-authRouter.post("/change-password", async (c) => {
+adminAuthRouter.post("/change-password", async (c) => {
   const accessToken = getCookie(c, "access_token");
   if (!accessToken) {
     return c.json({ error: "Unauthorized" }, 401);
@@ -224,8 +232,8 @@ authRouter.post("/change-password", async (c) => {
 
   const user = await db
     .select()
-    .from(usersTable)
-    .where(eq(usersTable.id, payload.sub))
+    .from(platformAdminsTable)
+    .where(eq(platformAdminsTable.id, payload.sub))
     .limit(1)
     .get();
 
@@ -247,12 +255,12 @@ authRouter.post("/change-password", async (c) => {
   const newHash = await hashPassword(new_password);
 
   await db
-    .update(usersTable)
+    .update(platformAdminsTable)
     .set({
       password_hash: newHash,
       updated_at: new Date().toISOString()
     })
-    .where(eq(usersTable.id, user.id));
+    .where(eq(platformAdminsTable.id, user.id));
 
   // Optional: force logout everywhere
   setCookie(c, "access_token", "", { maxAge: 0 });

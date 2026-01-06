@@ -1,15 +1,15 @@
 import { appSchema, appsTable } from "./../src/db/schema";
-import {  usersTable } from "../src/db/schema";
+import {  platformAdminsTable } from "../src/db/schema";
 import { generateId, hashPassword } from "../src/utils/helper";
 import { db } from "../utils";
 
 async function initDB() {
   // Initialize the database
-  const password = "Passup@123";
+  const password = "Paasup@123";
   const password_hash = await hashPassword(password);
   const user = {
     id: generateId(),
-    username: "passup",
+    username: "paasup",
     password_hash,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -23,6 +23,7 @@ async function initDB() {
     start_command: "node server.js",
     domain: "localhost", //todo: get the ip address of the machine
     app_key: generateId(),
+    private: false,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     is_enabled: true,
@@ -33,7 +34,7 @@ async function initDB() {
   };
   await db.transaction(async (tx) => {
     await Promise.all([
-      tx.insert(usersTable).values(user),
+      tx.insert(platformAdminsTable).values(user),
       tx.insert(appsTable).values(app)
     ]);
   });

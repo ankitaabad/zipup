@@ -26,6 +26,7 @@ import { useApps } from "../apis/apps";
 import { nanoid } from "nanoid";
 import { useNavigate, useLocation } from "react-router-dom";
 import { CustomModal } from "./CustomModal";
+import { useAdminLogout } from "../apis/adminAuth";
 
 /* ----------------------------- Sidebar ----------------------------- */
 
@@ -38,7 +39,7 @@ export function AppSidebar() {
   const appsQuery = useApps();
   const navigate = useNavigate();
   const location = useLocation();
-
+  const logoutMutation = useAdminLogout();
   const [staticSites, setStaticSites] = useState<Site[]>([]);
   const [webApps, setWebApps] = useState<Site[]>([]);
 
@@ -197,6 +198,13 @@ export function AppSidebar() {
             <MenuItem
               icon={<IconLogout size={18} />}
               style={{ color: "var(--mantine-color-red-6)" }}
+              onClick={() => {
+                logoutMutation.mutate(undefined, {
+                  onSuccess: () => {
+                    navigate("/login");
+                  }
+                });
+              }}
             >
               Logout
             </MenuItem>

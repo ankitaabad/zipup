@@ -7,6 +7,7 @@ import RootLayout from "./RootLayout";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AppStatsDashboard from "./components/AppStatsDashboard";
+import { Login } from "./components/Login";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,6 +23,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter basename="/">
         <Routes>
+          <Route path="/login" element={<Login />} />
           <Route element={<RootLayout />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<AppStatsDashboard />} />

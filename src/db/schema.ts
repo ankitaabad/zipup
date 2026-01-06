@@ -4,6 +4,7 @@ import { createSelectSchema } from "drizzle-arktype";
 import { index } from "drizzle-orm/sqlite-core";
 import { unique } from "drizzle-orm/sqlite-core";
 import { eq } from "drizzle-orm";
+import { primaryKey } from "drizzle-orm/sqlite-core";
 export const globalConfigTable = table("global_config", {
   key: t.text().primaryKey(),
   value: t.text().notNull(),
@@ -27,7 +28,7 @@ export const appsTable = table(
     redis_password: t.text(),
     created_at: t.text().notNull(),
     updated_at: t.text().notNull(),
-    private : t.integer({mode:"boolean"}),
+    private: t.integer({ mode: "boolean" }),
     is_enabled: t.integer({ mode: "boolean" }).notNull() // 0 or 1
     // latest_version: t.text()
   },
@@ -38,19 +39,65 @@ export const appsTable = table(
   ]
 );
 
-export const usersTable = table(
-  "users",
+
+export const platformAdminsTable = table(
+  "platform_admins",
   {
     id: t.text().primaryKey(),
     username: t.text().notNull().unique(),
     password_hash: t.text().notNull(),
-    is_admin: t.integer({ mode: "boolean" }).notNull(), // 0 or 1
-    authenticator_secret: t.text(),
+    is_2fa_enabled: t.integer({ mode: "boolean" }).notNull().default(false),
+    authenticator_secret: t.text(), // encrypted TOTP secret
+    status: t.text().notNull().default("active"), // active, disabled
     created_at: t.text().notNull(),
     updated_at: t.text().notNull()
   },
-  (table) => [unique("users_username_idx").on(table.username)]
+  (table) => [unique("platform_admins_username_idx").on(table.username)]
 );
+export const platformAdminSchema = createSelectSchema(platformAdminsTable);
+
+export const usersTable = table("users", {
+  id: t.text().primaryKey(),
+  username: t.text().notNull().unique(),
+  password_hash: t.text().notNull(),
+  status: t.text().notNull().default("active"), // active, suspended
+  created_at: t.text().notNull(),
+  updated_at: t.text().notNull()
+}, (table) => [unique("users_username_idx").on(table.username)]);
+
+export const groupsTable = table("groups", {
+  id: t.text().primaryKey(),
+  name: t.text().notNull(),
+  description: t.text(),
+  created_at: t.text().notNull(),
+  updated_at: t.text().notNull()
+}, (table) => [unique("groups_name_idx").on(table.name)]);
+
+export const userGroupsTable = table(
+  "user_groups",
+  {
+    user_id: t.text().notNull().references(() => usersTable.id),
+    group_id: t.text().notNull().references(() => groupsTable.id),
+    created_at: t.text().notNull()
+  },
+  (table) => [
+    primaryKey({ columns: [table.user_id, table.group_id] })
+  ]
+);
+
+export const groupAppsTable = table(
+  "group_apps",
+  {
+    group_id: t.text().notNull().references(() => groupsTable.id),
+    app_id: t.text().notNull().references(() => appsTable.id),
+    created_at: t.text().notNull()
+  },
+  (table) => [
+    primaryKey({ columns: [table.group_id, table.app_id] })
+  ]
+);
+
+
 type ARTIFACT_STATUS = "UPLOADING" | "SUCCESS" | "FAILED";
 export const artifactsTable = table(
   "artifacts",
@@ -126,9 +173,8 @@ export const envVarsTable = table(
   (table) => [index("env_vars_app_idx").on(table.app_id)]
 );
 
-
 export const appSchema = createSelectSchema(appsTable);
-export const userSchema = createSelectSchema(usersTable);
+export const userSchema = createSelectSchema(platformAdminsTable);
 export const deploymentSchema = createSelectSchema(deploymentsTable);
 export const globalConfigSchema = createSelectSchema(globalConfigTable);
 export const secretSchema = createSelectSchema(secretsTable);

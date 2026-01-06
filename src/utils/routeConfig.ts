@@ -3,7 +3,7 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "../../utils";
 import { appsTable, deploymentsTable } from "../db/schema";
 import { getLogger } from "./logger";
-import { portForUserApps } from "./constants";
+import { PORT_FOR_USER_APPS } from "./constants";
 
 export const updateRouteConfig = async () => {
   const logger = getLogger();
@@ -37,7 +37,7 @@ export const updateRouteConfig = async () => {
         logger.debug(`No deployment found for app ${app.name}`);
         return;
       }
-      const { artifact_id, host_port } = latestDeployment;
+      const { artifact_id } = latestDeployment;
       if (app.type === "STATIC") {
         const { domain, path_prefix } = app;
         if (!domain) {
@@ -53,7 +53,7 @@ export const updateRouteConfig = async () => {
           path: path_prefix || "/",
           type: "static",
           artifact_id,
-          port: host_port
+          port: PORT_FOR_USER_APPS
         });
         logger.debug(JSON.stringify(routes));
         // write to config/routes.json
@@ -61,9 +61,12 @@ export const updateRouteConfig = async () => {
       } else if (app.type === "DYNAMIC") {
         //todo: need to implement
         const { domain, path_prefix } = app;
-        const upstream = `http://${latestDeployment.container_name}:${portForUserApps}`;
+        const upstream = `http://${latestDeployment.container_name}:${PORT_FOR_USER_APPS}`;
         logger.debug(`upstream : ${upstream}`);
-
+        if (!domain) {
+          logger.debug(`No domain found for app ${app.name}`);
+          return;
+        }
         routes.push({
           host: domain,
           path: path_prefix || "/",

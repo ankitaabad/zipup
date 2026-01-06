@@ -29,7 +29,7 @@ import {
 import { eq } from "drizzle-orm";
 import { getLogger } from "./logger";
 import { updateRouteConfig } from "./routeConfig";
-import { portForUserApps } from "./constants";
+import { PORT_FOR_USER_APPS } from "./constants";
 var docker = new Docker({ socketPath: "/var/run/docker.sock" });
 export const reverseProxyURL = "http://openresty:8080";
 
@@ -115,12 +115,12 @@ export async function deployDynamicApp(event: {
       Cmd: ["sh", "-c", start_command],
 
       Env: [
-        `PORT=${portForUserApps}`,
+        `PORT=${PORT_FOR_USER_APPS}`,
         ...Object.entries(envs).map(([k, v]) => `${k}=${v}`)
       ],
 
       ExposedPorts: {
-        [`${portForUserApps}/tcp`]: {}
+        [`${PORT_FOR_USER_APPS}/tcp`]: {}
       },
       NetworkingConfig: {
         EndpointsConfig: {
@@ -169,11 +169,43 @@ export async function deployDynamicApp(event: {
     //   return;
     // }
     await container.start();
+
     logger.debug("container started successfully.");
-    logger.debug("updating port status");
+    // ----- container has been started -----
+    const startupTimeoutMs = 8000; // wait up to 8 seconds for container to be stable
+    const pollIntervalMs = 1000;
+    let elapsed = 0;
 
-    logger.debug("port status updated to active successfully.");
+    // Poll container state
+    while (elapsed < startupTimeoutMs) {
+      const info = await container.inspect();
 
+      // Check if container exited or dead immediately
+      if (info.State.Status === "exited" || info.State.Status === "dead") {
+        throw new Error(
+          `Container ${containerName} failed to start. ExitCode: ${info.State.ExitCode}`
+        );
+      }
+
+      // Check for early restart (crash-loop)
+      if (info.RestartCount > 0) {
+        throw new Error(`Container ${containerName} restarted during startup`);
+      }
+
+      // Still running? wait next poll
+      await new Promise((r) => setTimeout(r, pollIntervalMs));
+      elapsed += pollIntervalMs;
+    }
+
+    console.log(
+      `Container ${containerName} is running after ${startupTimeoutMs / 1000}s`
+    );
+
+    // -----------------------------
+    // Update config / route traffic
+    // -----------------------------
+    // Your app-specific logic to update config, reverse proxy, or route traffic
+    // e.g., update openresty or nginx upstream to point to this container
     await updateRouteConfig();
     await fetch(`${reverseProxyURL}/__reload__`, {
       method: "POST",
@@ -181,6 +213,40 @@ export async function deployDynamicApp(event: {
         "Content-Type": "application/json"
       }
     });
+    // ----------------------------------------
+    // Stop and remove old containers for same app
+    // ----------------------------------------
+    const existingContainers = await docker.listContainers({
+      all: true,
+      filters: { label: [`passup.app_id=${app_id}`] }
+    });
+    const existingContainerNames = existingContainers.map((c) => c.Names[0]);
+    console.log("Existing container names:", existingContainerNames);
+    console.log("NEw containe Name: ", `${containerName}`);
+    for (const c of existingContainers) {
+      // skip the new container
+      logger.debug(`container names: ${c.Names}`);
+      if (c.Names.includes(`/${containerName}`)) continue;
+
+      const oldContainer = docker.getContainer(c.Id);
+      console.log(`Stopping old container ${c.Names[0]}`);
+
+      try {
+        await oldContainer.stop({ t: 5 }); // graceful stop
+      } catch (err) {
+        console.warn(`Error stopping container ${c.Names[0]}: ${err.message}`);
+      }
+
+      try {
+        await oldContainer.remove({ force: true });
+        console.log(`Removed old container ${c.Names[0]}`);
+      } catch (err) {
+        console.warn(`Error removing container ${c.Names[0]}: ${err.message}`);
+      }
+    }
+
+    console.log("Old containers cleaned up, deployment complete.");
+
     //todo: remove existing container
   } catch (error) {
     console.error("Error deploying artifact:", error);
@@ -234,7 +300,7 @@ export async function getDockerStats() {
       const appName = labels["app_name"] || containerInfo.Names[0];
       const appType = labels["app_type"] || "user";
       const instance = labels["passup.deployment_id"] || "1";
-      
+
       return {
         id: containerInfo.Id,
         name: containerInfo.Names[0].replace("/", ""),
@@ -255,6 +321,6 @@ export async function getDockerStats() {
     return stats;
   } catch (err) {
     console.error(err);
-    throw err;
+    // throw err;
   }
 }

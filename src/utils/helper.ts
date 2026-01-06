@@ -4,6 +4,7 @@ import { hash, verify } from "@node-rs/argon2";
 import { sha1 } from "@oslojs/crypto/sha1";
 import { encodeHexLowerCase } from "@oslojs/encoding";
 import { V4 } from "paseto";
+import { AUD, ISSUER, TokenPurpose } from "./constants";
 export const generateId = () => {
   return KSUID.randomSync().string;
 };
@@ -54,31 +55,39 @@ export async function verifyPasswordStrength(
 }
 
 //todo: move to env variables
-const paseto_public = "k4.public.A6MGiHZr7HSerutizAV1OrD_Yetd7RxL3M7dBz2_tts";
-const paseto_secret =
+export const paseto_public =
+  "k4.public.A6MGiHZr7HSerutizAV1OrD_Yetd7RxL3M7dBz2_tts";
+export const paseto_secret =
   "k4.secret.6kiOV7jlw_rThVXqqUC-AtxznaZPwodA6geN1EogdnoDowaIdmvsdJ6u62LMBXU6sP9h613tHEvczt0HPb-22w";
 
 const ACCESS_TTL = 20 * 60; // seconds
 const REFRESH_TTL = 24 * 60 * 60;
 
-export const ISSUER = "passup_server";
 export const ACCESS_AUD = "passup_api";
 export const APP_AUD = "app_access";
 export const REFRESH_AUD = "token_refresh";
 
+export type TokenPayload = {
+  sub: string;
+  aud: AUD;
+  iss: typeof ISSUER;
+  purpose: TokenPurpose;
+  iat: string;
+  exp: string;
+};
 export const generateAccessToken = async (user_id: string, aud: string) => {
   const iat = new Date().toISOString();
   const exp = new Date(Date.now() + ACCESS_TTL).toISOString();
   const payload = {
     sub: user_id,
-    aud,
+    aud: AUD.PASSUP_API,
     iss: ISSUER,
-    purpose: "access",
+    purpose: TokenPurpose.ACCESS,
     iat,
     exp
   };
 
-  return V4.sign(payload, paseto_secret as string);
+  return await V4.sign(payload, paseto_secret as string);
 };
 //todo: check for rigth value of aud and purpose
 export const generateRefreshToken = async (user_id: string) => {
@@ -87,9 +96,9 @@ export const generateRefreshToken = async (user_id: string) => {
   const jti = generateId();
   const payload = {
     sub: user_id,
-    aud: REFRESH_AUD,
+    aud: AUD.PASSUP_API,
     iss: ISSUER,
-    purpose: "refresh",
+    purpose: TokenPurpose.REFRESH,
     jti,
     iat,
     exp
@@ -99,6 +108,19 @@ export const generateRefreshToken = async (user_id: string) => {
     jti,
     token: await V4.sign(payload, paseto_secret as string)
   };
+};
+export const generateCSRFToken = async (user_id: string) => {
+  const iat = new Date().toISOString();
+  const exp = new Date(Date.now() + ACCESS_TTL + 5000).toISOString();
+  const payload = {
+    sub: user_id,
+    aud: AUD.PASSUP_API,
+    iss: ISSUER,
+    purpose: TokenPurpose.CSRF,
+    iat,
+    exp
+  };
+  return await V4.sign(payload, paseto_secret as string);
 };
 
 export type AccessTokenPayload = {
@@ -220,10 +242,9 @@ function isValidContainerName(name: string): boolean {
   return true;
 }
 
-
 function generateShortSuffix(length = 6): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let suffix = '';
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let suffix = "";
   for (let i = 0; i < length; i++) {
     suffix += chars.charAt(Math.floor(Math.random() * chars.length));
   }

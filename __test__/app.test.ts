@@ -2,7 +2,7 @@ import { vi, describe, it, expect, beforeAll, afterAll } from "vitest";
 import { faker } from "@faker-js/faker";
 import { appsRouter } from "../src/routes/apps";
 import { omit } from "radash";
-import { authRouter } from "../src/routes/auth";
+import { adminAuthRouter } from "../src/routes/adminAuth";
 // vi.mock("ksuid", () => {
 //   return {
 //     default: {
@@ -36,7 +36,7 @@ describe("Sample Test", () => {
     // Register user
     const username = faker.person.firstName();
     const password = faker.internet.password({ length: 12 });
-    const registerRes = await authRouter.fetch(
+    const registerRes = await adminAuthRouter.fetch(
       new Request("http://localhost/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -48,7 +48,7 @@ describe("Sample Test", () => {
     expect(registerData.message).toBe("User registered successfully");
 
     // Login user
-    const loginRes = await authRouter.fetch(
+    const loginRes = await adminAuthRouter.fetch(
       new Request("http://localhost/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -70,7 +70,7 @@ describe("Sample Test", () => {
     const loginData = await loginRes.json();
     expect(loginData.message).toBe("Login successful");
     // refresh token
-    const refreshRes = await authRouter.fetch(
+    const refreshRes = await adminAuthRouter.fetch(
       new Request("http://localhost/refresh", {
         method: "POST",
         headers: {

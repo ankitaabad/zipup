@@ -50,7 +50,8 @@ eventBus.on(
         id: deploymentId,
         created_at: now,
         updated_at: now,
-        version
+        version,
+        container_name: `passup_${app_id}_${deploymentId.slice(-8)}`
       });
       if (type === "STATIC") {
         // static deployment
