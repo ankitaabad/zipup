@@ -103,7 +103,7 @@ export async function deployDynamicApp(event: {
         Name: dataVolumeName
       });
     }
-    const containerName = `passup_${app_id}_${deployment_id.slice(-8)}`;
+    const containerName = `paasup_${app_id}_${deployment_id.slice(-8)}`;
     logger.debug(`creating container ${containerName}`);
     //wait 8 seconds
     // await new Promise((resolve) => setTimeout(resolve, 8000));
@@ -124,8 +124,8 @@ export async function deployDynamicApp(event: {
       },
       NetworkingConfig: {
         EndpointsConfig: {
-          passup_redis_network: {},
-          passup_openresty_network: {}
+          paasup_redis_network: {},
+          paasup_openresty_network: {}
         }
       },
       WorkingDir: `/app/${artifact_id}`,
@@ -137,7 +137,7 @@ export async function deployDynamicApp(event: {
           {
             Type: "volume",
             // todo: any better approach instead of mounting whole volume
-            Source: "passup_dynamic_artifacts",
+            Source: "paasup_dynamic_artifacts",
             Target: "/app",
             ReadOnly: true
             // VolumeOptions: {
@@ -156,9 +156,9 @@ export async function deployDynamicApp(event: {
       },
 
       Labels: {
-        "passup.app_id": app_id,
-        "passup.deployment_id": deployment_id,
-        "passup.artifact_id": artifact_id,
+        "paasup.app_id": app_id,
+        "paasup.deployment_id": deployment_id,
+        "paasup.artifact_id": artifact_id,
         "app_type": "user",
         "app_name": app_name
       }
@@ -218,7 +218,7 @@ export async function deployDynamicApp(event: {
     // ----------------------------------------
     const existingContainers = await docker.listContainers({
       all: true,
-      filters: { label: [`passup.app_id=${app_id}`] }
+      filters: { label: [`paasup.app_id=${app_id}`] }
     });
     const existingContainerNames = existingContainers.map((c) => c.Names[0]);
     console.log("Existing container names:", existingContainerNames);
@@ -299,7 +299,7 @@ export async function getDockerStats() {
 
       const appName = labels["app_name"] || containerInfo.Names[0];
       const appType = labels["app_type"] || "user";
-      const instance = labels["passup.deployment_id"] || "1";
+      const instance = labels["paasup.deployment_id"] || "1";
 
       return {
         id: containerInfo.Id,

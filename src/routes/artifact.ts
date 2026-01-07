@@ -6,7 +6,7 @@ import { eq, sql } from "drizzle-orm";
 import fs from "fs-extra";
 import path from "path";
 import * as tar from "tar";
-import { eventBus, passupEvents } from "../events/event";
+import { eventBus, paasupEvents } from "../events/event";
 import { getLogger } from "../utils/logger";
 import { getArtifactWithApp } from "../utils/dbQueries";
 
@@ -134,7 +134,7 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
       .run();
     console.log("Artifact uploaded and extracted successfully");
     //todo: use bullmq
-    const eventEmitted = eventBus.emit(passupEvents.artifact_uploaded, {
+    const eventEmitted = eventBus.emit(paasupEvents.artifact_uploaded, {
       artifact_id: artifact_id,
       app_id: app.id,
       type: app.type,

@@ -18,7 +18,7 @@ async function initDB() {
 
   const app: typeof appSchema.infer = {
     id: generateId(),
-    name: "passup",
+    name: "paasup",
     type: "DYNAMIC",
     start_command: "node server.js",
     domain: "localhost", //todo: get the ip address of the machine
@@ -27,7 +27,7 @@ async function initDB() {
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     is_enabled: true,
-    redis_prefix: "passup",
+    redis_prefix: "paasup",
     redis_username: null,
     redis_password: null,
     path_prefix: "/"

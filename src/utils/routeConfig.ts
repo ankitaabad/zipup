@@ -15,7 +15,7 @@ export const updateRouteConfig = async () => {
       "host": "localhost",
       "path": "/",
       "type": "dynamic",
-      "upstream": "http://passup:3000",
+      "upstream": "http://paasup:3000",
       "auth_required": false
     }
   ];
@@ -23,7 +23,7 @@ export const updateRouteConfig = async () => {
     apps.map(async (app) => {
       // get latest deployment of the app
       //todo: get all latest deployment for all apps in one db call
-      if (app.name === "passup") {
+      if (app.name === "paasup") {
         return;
       }
       const latestDeployment = await db

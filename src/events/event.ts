@@ -9,13 +9,13 @@ import { deployDynamicApp } from "../utils/docker_utils";
 
 export const eventBus = new EventEmitter();
 export const reverseProxyURL = "http://openresty:8080";
-export const passupEvents = {
+export const paasupEvents = {
   "app_deployed": "app_deployed",
   "artifact_uploaded": "artifact_uploaded"
 };
 
 eventBus.on(
-  passupEvents.artifact_uploaded,
+  paasupEvents.artifact_uploaded,
   async (event: {
     artifact_id: string;
     app_id: string;
@@ -51,7 +51,7 @@ eventBus.on(
         created_at: now,
         updated_at: now,
         version,
-        container_name: `passup_${app_id}_${deploymentId.slice(-8)}`
+        container_name: `paasup_${app_id}_${deploymentId.slice(-8)}`
       });
       if (type === "STATIC") {
         // static deployment

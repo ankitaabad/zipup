@@ -60,10 +60,10 @@ export const paseto_public =
 export const paseto_secret =
   "k4.secret.6kiOV7jlw_rThVXqqUC-AtxznaZPwodA6geN1EogdnoDowaIdmvsdJ6u62LMBXU6sP9h613tHEvczt0HPb-22w";
 
-const ACCESS_TTL = 20 * 60; // seconds
-const REFRESH_TTL = 24 * 60 * 60;
+const ACCESS_TTL = 20 * 60 * 1000; // seconds
+const REFRESH_TTL = 24 * 60 * 60 * 1000;
 
-export const ACCESS_AUD = "passup_api";
+export const ACCESS_AUD = "paasup_api";
 export const APP_AUD = "app_access";
 export const REFRESH_AUD = "token_refresh";
 
@@ -80,7 +80,7 @@ export const generateAccessToken = async (user_id: string, aud: string) => {
   const exp = new Date(Date.now() + ACCESS_TTL).toISOString();
   const payload = {
     sub: user_id,
-    aud: AUD.PASSUP_API,
+    aud: AUD.paasup_API,
     iss: ISSUER,
     purpose: TokenPurpose.ACCESS,
     iat,
@@ -96,7 +96,7 @@ export const generateRefreshToken = async (user_id: string) => {
   const jti = generateId();
   const payload = {
     sub: user_id,
-    aud: AUD.PASSUP_API,
+    aud: AUD.paasup_API,
     iss: ISSUER,
     purpose: TokenPurpose.REFRESH,
     jti,
@@ -114,7 +114,7 @@ export const generateCSRFToken = async (user_id: string) => {
   const exp = new Date(Date.now() + ACCESS_TTL + 5000).toISOString();
   const payload = {
     sub: user_id,
-    aud: AUD.PASSUP_API,
+    aud: AUD.paasup_API,
     iss: ISSUER,
     purpose: TokenPurpose.CSRF,
     iat,

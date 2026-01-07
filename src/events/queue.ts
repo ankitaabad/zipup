@@ -7,7 +7,7 @@ const myQueue = new Queue("myqueue", {
   connection: {
     host: redisUrl,
     port: redisPort,
-    keyPrefix: "passup"
+    keyPrefix: "paasup"
   }
 });
 
@@ -15,6 +15,6 @@ const myWorker = new Worker("myqueue", async (job) => {}, {
   connection: {
     host: redisUrl,
     port: redisPort,
-    keyPrefix: "passup"
+    keyPrefix: "paasup"
   }
 });

@@ -8,17 +8,17 @@ export const ConfigSchema = z.object({
   SECRET_KEY: z.string()
 });
 
-export type PassupConfig = z.infer<typeof ConfigSchema>;
+export type paasupConfig = z.infer<typeof ConfigSchema>;
 
-export function loadConfig(): PassupConfig {
-  if (fs.existsSync(".passup.env")) {
-    dotenv.config({ path: ".passup.env" });
+export function loadConfig(): paasupConfig {
+  if (fs.existsSync(".paasup.env")) {
+    dotenv.config({ path: ".paasup.env" });
   }
 
   const parsed = ConfigSchema.safeParse(process.env);
 
   if (!parsed.success) {
-    console.error("❌ Invalid Passup config:");
+    console.error("❌ Invalid paasup config:");
     console.error(parsed.error.format());
     process.exit(1);
   }

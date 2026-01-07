@@ -114,7 +114,7 @@ export function AppSidebar() {
         <Box px="md" py="sm">
           <Group justify="space-between">
             <Text fw={700} size="lg" style={{ letterSpacing: -0.3 }}>
-              Passup
+              paasup
             </Text>
             <Code size="xs">v3.1.2</Code>
           </Group>

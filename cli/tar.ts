@@ -7,8 +7,8 @@ import { PassThrough } from "stream";
 export function createTarStream(dir: string) {
   const ig = ignore().add(".git").add("node_modules").add(".DS_Store");
 
-  if (fs.existsSync(".passupignore")) {
-    ig.add(fs.readFileSync(".passupignore", "utf8"));
+  if (fs.existsSync(".paasupignore")) {
+    ig.add(fs.readFileSync(".paasupignore", "utf8"));
   }
 
   const files = fs.readdirSync(dir).filter((f) => !ig.ignores(f));

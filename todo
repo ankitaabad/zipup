@@ -9,7 +9,7 @@ Features:
     ☐ app can connect to the shared redis instance.
     ☐ we are able to make http calls to the outside world.
     ☐ cache headers handling.
-  passup:
+  paasup:
     ☐ helmet headers.
     ☐ apply cors.
     ☐ hono middleware for auth.
@@ -35,7 +35,7 @@ Features:
     ☐ User Apis
     ☐ Apis for User Groups
 
-  passup cli: 
+  paasup cli: 
     ☐ improve the cli
     ☐ use the secret key to check integrity of upload.
     ☐ show warning if start_command is not set.
@@ -49,9 +49,9 @@ CI/CD:
   ☐ init server : create paseto keys
   ☐ init server : create secret key for encrypting secret keys
   ☐ get hetzner account
-  ☐ get a domain name for passup
+  ☐ get a domain name for paasup
   ☐ build frontend ane serve from node js.
-  ☐ docker hub create passup image
+  ☐ docker hub create paasup image
   ☐ Release artifact 
   ☐ Separate docker for dev and prod.
 Testing:
@@ -65,11 +65,11 @@ Integrity and Constraints:
   ☐ only one deployment at a time for a given app. (concurrency with bullmq)
   ☐ what unique constraints we need in our db. (app_name, app_id+env_key, app_id + secret_key, )
   ☐ how can we add more typesafety.
-  ☐ most apis should not work for passup app. like adding env variable.
+  ☐ most apis should not work for paasup app. like adding env variable.
 
 Security Improvements:
   ☐ Should we use podman instead of docker, as daemon is not required.
-  ☐ passup and vector both running as root for now.
+  ☐ paasup and vector both running as root for now.
   ☐ should we use mtls for container network communication for added security.
   ☐ should we inject the secrets in file instead of env varibles.
   ☐ implement rate limiting, and can we provide some interface to users to configure rate limiting as well.

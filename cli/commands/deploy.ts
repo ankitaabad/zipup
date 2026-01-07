@@ -43,7 +43,7 @@ export const deployCommand = new Command("deploy")
     const { id } = (await res.json()).data;
     console.log(`artifact_id ${id}`);
     // 2️⃣ Create tar.gz
-    const tarPath = path.resolve(`passup_artifact_${id}.tgz`);
+    const tarPath = path.resolve(`paasup_artifact_${id}.tgz`);
     const files = fs.readdirSync(dir);
 
     await tar.c(

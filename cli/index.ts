@@ -5,8 +5,8 @@ import { deployCommand } from "./commands/deploy";
 const program = new Command();
 
 program
-  .name("passup")
-  .description("Passup PaaS CLI")
+  .name("paasup")
+  .description("paasup PaaS CLI")
   .version("0.1.0");
 
 program.addCommand(deployCommand);
