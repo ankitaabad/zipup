@@ -50,7 +50,7 @@ CI/CD:
   ☐ init server : create secret key for encrypting secret keys
   ☐ get hetzner account
   ☐ get a domain name for paasup
-  ☐ build frontend ane serve from node js.
+  ☐ build frontend and serve from node js.
   ☐ docker hub create paasup image
   ☐ Release artifact 
   ☐ Separate docker for dev and prod.

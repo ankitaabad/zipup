@@ -17,7 +17,7 @@ import { useApp } from "../apis/apps";
 import { AppSettings } from "../components/AppSettings";
 import Deployment from "../components/Deployment";
 import { EnvVarsTab } from "../components/EnvVars";
-import { Loader } from "../components/Loader";
+import { CustomLoader } from "../components/CustomLoader";
 
 export default function AppLayout() {
   const { type, appId, tab } = useParams<{
@@ -35,7 +35,7 @@ export default function AppLayout() {
   const [tempValue, setTempValue] = useState("");
 
   if (appQuery.isLoading) {
-    return <Loader label="Loading app..." />;
+    return <CustomLoader label="Loading app..." />;
   }
 
   if (appQuery.isError) {

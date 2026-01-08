@@ -6,7 +6,7 @@ type LoaderProps = {
   fullPage?: boolean;
 };
 
-export function Loader({ label, fullPage = false }: LoaderProps) {
+export function CustomLoader({ label, fullPage = false }: LoaderProps) {
   return (
     <Center
       style={{

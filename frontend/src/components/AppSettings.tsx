@@ -25,7 +25,7 @@ import {
 } from "@tabler/icons-react";
 import { useState, useEffect, ReactNode } from "react";
 import { useApp, useUpdateApp } from "../apis/apps";
-import { Loader } from "./Loader";
+import { CustomLoader } from "./CustomLoader";
 import { CustomModal } from "./CustomModal";
 
 /* ------------------- Custom Modal Component ------------------- */
@@ -75,7 +75,7 @@ export function AppSettings({ app_id }: { app_id: string }) {
   }, [appQuery.isSuccess, appQuery.data]);
 
   // ------------------- Loading / Error -------------------
-  if (appQuery.isLoading) return <Loader fullPage label="Loading app settings..." />;
+  if (appQuery.isLoading) return <CustomLoader fullPage label="Loading app settings..." />;
   if (appQuery.isError) return <Text color="red">Failed to load app settings</Text>;
 
   // ------------------- Render -------------------

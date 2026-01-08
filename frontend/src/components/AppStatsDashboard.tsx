@@ -14,6 +14,7 @@ import {
   SimpleGrid,
 } from "@mantine/core";
 import { useAppStats } from "../apis/stats";
+import { CustomLoader } from "./CustomLoader";
 
 function StatRow({
   label,
@@ -81,7 +82,7 @@ export default function AppStatsDashboard() {
   if (isLoading) {
     return (
       <Center h={300}>
-        <Loader />
+        <CustomLoader label="Loading app stats..."/>
       </Center>
     );
   }

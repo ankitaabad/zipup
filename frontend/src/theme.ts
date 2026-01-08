@@ -1,10 +1,11 @@
 import {
   MantineProvider,
   createTheme,
-  MantineColorsTuple
+  MantineColorsTuple,
+  Input
 } from "@mantine/core";
-
-const myColor: MantineColorsTuple = [
+import classes from "../src/styles/custom.module.css";
+const primaryColor: MantineColorsTuple = [
   "#ecefff",
   "#d5dafb",
   "#a9b1f1",
@@ -19,7 +20,14 @@ const myColor: MantineColorsTuple = [
 
 export const theme = createTheme({
   colors: {
-    myColor
+    primaryColor
   },
-  primaryColor: "myColor"
+  components: {
+    Input: Input.extend({
+      classNames: {
+        input: classes.input
+      }
+    })
+  },
+  primaryColor: "primaryColor"
 });
