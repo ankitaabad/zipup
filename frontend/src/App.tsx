@@ -1,6 +1,5 @@
 import { Routes, Route, BrowserRouter } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
-import Settings from "./pages/Settings";
 import Logs from "./pages/Logs";
 import AppLayout from "./pages/AppLayout"; // New page for app details with tabs
 import RootLayout from "./RootLayout";
@@ -8,6 +7,7 @@ import RootLayout from "./RootLayout";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AppStatsDashboard from "./components/AppStatsDashboard";
 import { Login } from "./components/Login";
+import { Settings } from "./pages/Settings";
 
 const queryClient = new QueryClient({
   defaultOptions: {

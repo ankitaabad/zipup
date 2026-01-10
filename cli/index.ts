@@ -5,9 +5,9 @@ import { deployCommand } from "./commands/deploy";
 const program = new Command();
 
 program
-  .name("paasup")
-  .description("paasup PaaS CLI")
-  .version("0.1.0");
+  .name("zipup")
+  .description("zipup CLI")
+  .version("0.0.1");
 
 program.addCommand(deployCommand);
 

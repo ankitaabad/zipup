@@ -1,0 +1,6 @@
+{
+  "HOST": "http://localhost:8080",
+  "APP_KEY": "zipup_ak_uvf3NfjdXUM7WHYG8weDgxGKiEuSkoZ2EbhKH46gYdw",
+  "SECRET_KEY": "zipup_sk_test",
+  "tags": ["v1.2.3"]
+}

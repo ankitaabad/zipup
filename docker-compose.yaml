@@ -31,22 +31,22 @@ services:
 
       # - ./sites:/data/sites:ro
     networks:
-      - paasup_network
+      - zipup_network
       - openresty_network
       - redis_network
       # todo: does openresty needs redis network
     restart: unless-stopped
     depends_on:
-      - paasup
+      - zipup
     labels:
       - app_type=system
       - app_name=openresty
-  paasup:
+  zipup:
     image: node:24-alpine
     working_dir: /app
-    container_name: paasup
+    container_name: zipup
     networks:
-      - paasup_network
+      - zipup_network
       - redis_network
     restart: unless-stopped
     user: root
@@ -54,7 +54,7 @@ services:
       - ./:/app # <-- mount CURRENT directory
       - /app/node_modules
       - ./config:/config
-      - paasup_data:/data
+      - zipup_data:/data
       - static_artifacts:/static_artifacts
       - dynamic_artifacts:/dynamic_artifacts
       - secrets:/secrets
@@ -66,7 +66,7 @@ services:
       - "3000:3000"
     labels:
       - app_type=system
-      - app_name=paasup
+      - app_name=zipup
   
     # logging:
     #   driver: "none"   # disable default Docker logging → Vector will handle logs
@@ -106,13 +106,13 @@ services:
 
 volumes:
   vldata:
-  paasup_data:
+  zipup_data:
   redis_data:
   static_artifacts:
   dynamic_artifacts:
   secrets:
 networks:
-  paasup_network:
+  zipup_network:
     driver: bridge
   openresty_network:
     driver: bridge

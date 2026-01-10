@@ -6,9 +6,10 @@ import { eq, sql } from "drizzle-orm";
 import fs from "fs-extra";
 import path from "path";
 import * as tar from "tar";
-import { eventBus, paasupEvents } from "../events/event";
+import { eventBus, zipupEvents } from "../events/event";
 import { getLogger } from "../utils/logger";
 import { getArtifactWithApp } from "../utils/dbQueries";
+import { errorHandler } from "../utils/errorHandler";
 
 export const artifactsRouter = new Hono();
 
@@ -69,8 +70,7 @@ artifactsRouter.post("/", async (c) => {
       }
     });
   } catch (error) {
-    console.error("Error creating artifact:", error);
-    return c.json({ error: "Failed to create artifact" }, 500);
+    return errorHandler(c, error);
   }
 });
 
@@ -134,7 +134,7 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
       .run();
     console.log("Artifact uploaded and extracted successfully");
     //todo: use bullmq
-    const eventEmitted = eventBus.emit(paasupEvents.artifact_uploaded, {
+    const eventEmitted = eventBus.emit(zipupEvents.artifact_uploaded, {
       artifact_id: artifact_id,
       app_id: app.id,
       type: app.type,
@@ -148,7 +148,6 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
       path: finalDir
     });
   } catch (error) {
-    console.error("Error uploading artifact:", error);
-    return c.json({ error: "Failed to upload artifact" }, 500);
+    return errorHandler(c, error);
   }
 });

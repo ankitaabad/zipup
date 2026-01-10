@@ -1,1 +1,1 @@
-{"routes":[{"host":"localhost","path":"/","type":"dynamic","upstream":"http://paasup:3000","auth_required":false},{"host":"short.localhost","path":"/","type":"dynamic","upstream":"http://paasup_37W3JKWRoJzP1J6ZFEAFaLwhQKS_Q5StYtSC:3000","auth_required":false}]}
+{"routes":[{"host":"localhost","path":"/","type":"dynamic","upstream":"http://zipup:3000","auth_required":false},{"host":"short.localhost","path":"/","type":"dynamic","upstream":"http://zipup_37W3JKWRoJzP1J6ZFEAFaLwhQKS_Q5StYtSC:3000","auth_required":false}]}

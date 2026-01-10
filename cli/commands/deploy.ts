@@ -1,83 +1,166 @@
+import { hash } from "@node-rs/argon2";
 import * as tar from "tar";
 import { Command } from "commander";
 import fs from "fs";
 import path from "path";
 import ora from "ora";
-import { loadConfig } from "../config";
+import { loadConfig, zipupConfig } from "../config";
+import { sha256, signPayload } from "../../secret";
+
 function formatBytes(bytes: number, decimals = 2) {
   if (bytes === 0) return "0 Bytes";
 
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
   const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
-
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }
-export const deployCommand = new Command("deploy")
-  .argument("<dir>", "build directory")
-  .description("Deploy an artifact")
-  .action(async (dir) => {
-    const artifactCreationSpinner = ora("Preparing deployment...").start();
 
-    if (!fs.existsSync(dir)) {
-      artifactCreationSpinner.fail("Directory does not exist");
+export const deployCommand = new Command("deploy")
+  .argument("<dir>", "build directory (overrides BUILD_FOLDER)")
+  .description("Deploy an artifact")
+  .option("--host <url>", "API host")
+  .option("--app-key <key>", "Application key")
+  .option("--secret-key <key>", "Secret key (discouraged; prefer env vars)")
+  .option("--build-folder <path>", "Build folder location")
+  .option(
+    "--tag <tag>",
+    "Tag (repeatable)",
+    (val, acc) => {
+      acc.push(val);
+      return acc;
+    },
+    [] as string[]
+  )
+  .action(async (dir: string, options) => {
+    const spinner = ora("Preparing deployment...").start();
+
+    /**
+     * Normalize CLI options → internal config keys
+     */
+    const cliConfig: Partial<zipupConfig> = {
+      HOST: options.host,
+      APP_KEY: options.appKey,
+      SECRET_KEY: options.secretKey,
+      BUILD_FOLDER: options.buildFolder,
+      TAGS: options.tag?.length ? options.tag : undefined
+    };
+
+    /**
+     * <dir> argument always wins for build folder
+     */
+    cliConfig.BUILD_FOLDER = dir;
+
+    let config: zipupConfig;
+
+    try {
+      config = loadConfig(cliConfig);
+    } catch {
+      spinner.fail("Invalid configuration");
       process.exit(1);
     }
 
-    const config = loadConfig();
+    const buildDir = path.resolve(config.BUILD_FOLDER);
 
-    // 1️⃣ Create artifact
-    artifactCreationSpinner.text = "Creating artifact...";
-    const res = await fetch(`${config.HOST}/artifacts`, {
+    if (!fs.existsSync(buildDir)) {
+      spinner.fail(`Build directory does not exist: ${buildDir}`);
+      process.exit(1);
+    }
+
+    // 1️⃣ Create artifact record
+    spinner.text = "Creating artifact...";
+    const body = JSON.stringify({
+      app_key: config.APP_KEY,
+      tags: config.TAGS
+    });
+
+    const timestamp = Date.now().toString();
+    const bodyHash = sha256(body);
+
+    const signature = signPayload(
+      "POST",
+      "/artifacts",
+      timestamp,
+      bodyHash,
+      config.SECRET_KEY
+    );
+
+    const res = await fetch(`${config.HOST}${path}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-App-Key": config.APP_KEY,
-        "X-Secret-Key": config.SECRET_KEY
+        "X-Timestamp": timestamp,
+        "X-Signature": signature
       },
-      body: JSON.stringify({ app_key: config.APP_KEY })
+      body
     });
 
+    if (!res.ok) {
+      spinner.fail(`Failed to create artifact (${res.status})`);
+      process.exit(1);
+    }
+
     const { id } = (await res.json()).data;
-    console.log(`artifact_id ${id}`);
+    spinner.text = `Creating artifact archive (id: ${id})...`;
+
     // 2️⃣ Create tar.gz
-    const tarPath = path.resolve(`paasup_artifact_${id}.tgz`);
-    const files = fs.readdirSync(dir);
+    const tarPath = path.resolve(`zipup_artifact_${id}.tgz`);
+    const files = fs.readdirSync(buildDir);
 
     await tar.c(
       {
         gzip: true,
-        cwd: dir,
+        cwd: buildDir,
         portable: true,
         file: tarPath
       },
       files
     );
 
-    // 3️⃣ Convert to Blob (IMPORTANT)
-
     const buffer = fs.readFileSync(tarPath);
     const size = formatBytes(buffer.length);
-    artifactCreationSpinner.succeed(
-      `Artifact created successfully, size : ${size}`
-    );
-    const uploadingArtifactSpinner = ora("Uploading artifact...").start();
-    const blob = new Blob([buffer], { type: "application/gzip" });
 
+    spinner.succeed(`Artifact created successfully (${size})`);
+
+    // 3️⃣ Upload artifact
+    const uploadSpinner = ora("Uploading artifact...").start();
+    const bodyHashForUpload = sha256(buffer); // hash the file contents
+    const uploadPath = `/artifacts/${id}/upload`;
+    const signatureForUpload = signPayload(
+      "POST",
+      uploadPath,
+      new Date().toISOString(),
+      bodyHashForUpload,
+      config.SECRET_KEY
+    );
+
+    const blob = new Blob([buffer], { type: "application/gzip" });
     const form = new FormData();
     form.append("artifact", blob, path.basename(tarPath));
 
-    const uploadRes = await fetch(`${config.HOST}/artifacts/${id}/upload`, {
+    const uploadRes = await fetch(`${config.HOST}${uploadPath}`, {
       method: "POST",
-      body: form
+      body: form,
+      headers: {
+        "Content-Type": "application/json",
+        "X-App-Key": config.APP_KEY,
+        "X-Timestamp": timestamp,
+        "X-Signature": signatureForUpload
+      }
     });
 
-    uploadingArtifactSpinner.succeed("Artifact Successfully uploaded");
-    const deletingLocalArtifactSpinner = ora(
-      "Deleting local artifact..."
-    ).start();
+    if (!uploadRes.ok) {
+      uploadSpinner.fail(`Upload failed (${uploadRes.status})`);
+      process.exit(1);
+    }
+
+    uploadSpinner.succeed("Artifact successfully uploaded");
+
+    // 4️⃣ Cleanup
+    const cleanupSpinner = ora("Cleaning up local files...").start();
     fs.unlinkSync(tarPath);
-    deletingLocalArtifactSpinner.succeed("Local artifact deleted");
+    cleanupSpinner.succeed("Local artifact deleted");
   });

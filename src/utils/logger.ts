@@ -7,7 +7,7 @@ import { createMiddleware } from "hono/factory";
 const asyncLocalStorage = new AsyncLocalStorage<ContextType>();
 export const appLogger = new SenseLogs(
   { timestamp: true },
-  { service: "paasup-service" }
+  { service: "zipup-service" }
 );
 appLogger.addFilter(["debug"]);
 type ContextType = {

@@ -1,15 +1,15 @@
+import { notifications } from "@mantine/notifications";
 import axios from "axios";
 
 export const api = axios.create({
   baseURL: "http://localhost:8080",
   headers: {
-    "Content-Type": "application/json",
+    "Content-Type": "application/json"
   },
-  withCredentials: true,
+  withCredentials: true
 });
 
-/* ---------------- CSRF ---------------- */
-
+// ---------------- CSRF ----------------
 api.interceptors.request.use((config) => {
   const csrf = document.cookie
     .split("; ")
@@ -23,46 +23,78 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-/* ---------------- REFRESH ---------------- */
-
+// ---------------- REFRESH ----------------
 api.interceptors.response.use(
-  (res) => res,
+  (res) => res, // return response if ok
   async (error) => {
     const originalRequest = error.config;
 
-    // Network / CORS / timeout errors
+    // Network / CORS / timeout
     if (!error.response) {
+      notifications.show({
+        position: "top-center",
+
+        title: "Network Error",
+        message: "Please check your connection",
+        color: "red"
+      });
       return Promise.reject(error);
     }
 
-    // Only handle 401
-    if (error.response.status !== 401) {
-      return Promise.reject(error);
+    const status = error.response.status;
+    const data = error.response.data;
+
+    // 401 refresh logic (your existing)
+    if (status === 401) {
+      const url = originalRequest.url ?? "";
+      if (!url.includes("/admin/login") && !url.includes("/admin/refresh")) {
+        if (!originalRequest._retry) {
+          originalRequest._retry = true;
+          try {
+            await api.post("/admin/refresh");
+            return api.request(originalRequest);
+          } catch {
+            window.location.href = "/login";
+            return Promise.reject(error);
+          }
+        }
+      }
     }
 
-    // Do not refresh on auth routes
-    const url = originalRequest.url ?? "";
-    if (
-      url.includes("/admin/login") ||
-      url.includes("/admin/refresh")
-    ) {
-      return Promise.reject(error);
+    // Show Mantine notification for all API errors
+    if (data?.error) {
+      const errorPayload = data.error;
+      notifications.show({
+        position: "top-center",
+
+        title: `Error ${status} – ${errorPayload.code}`,
+        message: errorPayload.message,
+        color: "red"
+      });
+
+      // Optional: show field-level validation details
+      if (errorPayload.details && typeof errorPayload.details === "object") {
+        Object.entries(errorPayload.details).forEach(([field, msg]) => {
+          notifications.show({
+            position: "top-center",
+
+            title: `Field: ${field}`,
+            message: msg as string,
+            color: "red"
+          });
+        });
+      }
+    } else {
+      // fallback if data.error missing
+      notifications.show({
+        position: "top-center",
+
+        title: `Error ${status}`,
+        message: error.message,
+        color: "red"
+      });
     }
 
-    // Prevent infinite loop
-    if (originalRequest._retry) {
-      return Promise.reject(error);
-    }
-
-    originalRequest._retry = true;
-
-    try {
-      await api.post("/admin/refresh");
-      return api.request(originalRequest);
-    } catch {
-      window.location.href = "/login";
-      return Promise.reject(error);
-    }
+    return Promise.reject(error);
   }
 );
-

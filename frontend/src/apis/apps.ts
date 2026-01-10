@@ -45,7 +45,7 @@ export function useCreateApp() {
     mutationFn: async (payload: {
       name: string;
       type: string;
-      start_command: string;
+      // start_command: string;
       // internal_port?: number;
     }) => {
       const res = await api.post("/apps", payload);
@@ -63,9 +63,10 @@ export function useUpdateApp(appId: string) {
   return useMutation({
     mutationFn: async (
       payload:
-        | { action: "UpdateDomain"; domain: string; path: string }
+        | { action: "UpdateDomain"; domain: string; }
         | { action: "UpdateStartCommand"; start_command: string }
         | { action: "UpdateAppName"; name: string }
+        | { action: "UpdateRedisPrefix"; redis_prefix: string }
     ) => {
       const res = await api.patch(`/apps/${appId}`, payload);
       return res.data;

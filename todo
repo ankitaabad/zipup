@@ -9,12 +9,12 @@ Features:
     ☐ app can connect to the shared redis instance.
     ☐ we are able to make http calls to the outside world.
     ☐ cache headers handling.
-  paasup:
+  zipup:
     ☐ helmet headers.
     ☐ apply cors.
-    ☐ hono middleware for auth.
+    ✔ hono middleware for auth.
     ☐ 2fa implementation.
-    ☐ paseto secret move out to a file. how to generate.
+    ☐ paseto secret keep in db only encrypted. 
     ☐ take additional tags from the user for an artifact that can be displayed with the version (can be used for parity with user's git tags.)
   openresty:
     ☐ Auth from lua side with paseto.
@@ -35,7 +35,7 @@ Features:
     ☐ User Apis
     ☐ Apis for User Groups
 
-  paasup cli: 
+  zipup cli: 
     ☐ improve the cli
     ☐ use the secret key to check integrity of upload.
     ☐ show warning if start_command is not set.
@@ -49,9 +49,9 @@ CI/CD:
   ☐ init server : create paseto keys
   ☐ init server : create secret key for encrypting secret keys
   ☐ get hetzner account
-  ☐ get a domain name for paasup
+  ☐ get a domain name for zipup
   ☐ build frontend and serve from node js.
-  ☐ docker hub create paasup image
+  ☐ docker hub create zipup image
   ☐ Release artifact 
   ☐ Separate docker for dev and prod.
 Testing:
@@ -65,11 +65,11 @@ Integrity and Constraints:
   ☐ only one deployment at a time for a given app. (concurrency with bullmq)
   ☐ what unique constraints we need in our db. (app_name, app_id+env_key, app_id + secret_key, )
   ☐ how can we add more typesafety.
-  ☐ most apis should not work for paasup app. like adding env variable.
+  ☐ most apis should not work for zipup app. like adding env variable.
 
 Security Improvements:
   ☐ Should we use podman instead of docker, as daemon is not required.
-  ☐ paasup and vector both running as root for now.
+  ☐ zipup and vector both running as root for now.
   ☐ should we use mtls for container network communication for added security.
   ☐ should we inject the secrets in file instead of env varibles.
   ☐ implement rate limiting, and can we provide some interface to users to configure rate limiting as well.
@@ -84,6 +84,14 @@ Cleanup:
     ☐ delete the docker volumes
     ☐ delete the entries in the db (cascade delete). or we want to keep some history
 
+Today:
+  ✔ Remove zipup entry in app table.
+  ☐ change app name in db.
+  ☐ Remove path prefix from app table.
+  ☐ set redis prefix
+  ☐ set start command
+  ☐ Get API and secret key
+  ☐ Rotate API/ secret key
 
 Done:
   ✔ setup docs website with docusaurus

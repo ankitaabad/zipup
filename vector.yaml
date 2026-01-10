@@ -1,21 +1,21 @@
 sources:
-  paasup:
+  zipup:
     type: "docker_logs"
     include_containers:
-      - "paasup"
+      - "zipup"
 
 
 transforms:
-  parse_paasup_json:
+  parse_zipup_json:
     type: "remap"
-    inputs: ["paasup"]
+    inputs: ["zipup"]
     source: |
       . = parse_json!(.message)
 
 sinks:
   vlogs:
     inputs:
-      - parse_paasup_json
+      - parse_zipup_json
     type: elasticsearch
     endpoints:
       - http://victorialogs:9428/insert/elasticsearch/

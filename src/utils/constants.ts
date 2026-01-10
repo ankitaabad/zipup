@@ -1,7 +1,7 @@
 export const PORT_FOR_USER_APPS = 3000;
-export const ISSUER = "paasup_server";
+export const ISSUER = "zipup_server";
 export enum AUD {
-  paasup_API = "paasup_api",
+  zipup_API = "zipup_api",
 }
 export enum CookieType {
   ACCESS_TOKEN = "access_token",

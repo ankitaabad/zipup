@@ -47,8 +47,8 @@ post {{server}}/admin/login
 Content-Type: application/json
 
 {
-  "username": "paasup",
-  "password": "paasup@123"
+  "username": "zipup",
+  "password": "zipup@123"
 }
 
 

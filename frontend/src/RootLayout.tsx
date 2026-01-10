@@ -3,7 +3,9 @@ import { Outlet } from "react-router-dom";
 import { useDisclosure } from "@mantine/hooks";
 import "@mantine/core/styles.css";
 import '@mantine/charts/styles.css';
+import '@mantine/notifications/styles.css'; 
 import "./styles/loader.css";
+
 import { AppSidebar } from "./components/Sidebar";
 // import "react-pro-sidebar/dist/css/styles.css";
 

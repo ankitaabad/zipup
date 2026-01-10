@@ -5,7 +5,7 @@ import { index } from "drizzle-orm/sqlite-core";
 import { unique } from "drizzle-orm/sqlite-core";
 import { eq } from "drizzle-orm";
 import { primaryKey } from "drizzle-orm/sqlite-core";
-export const globalConfigTable = table("global_config", {
+export const settings = table("settings", {
   key: t.text().primaryKey(),
   value: t.text().notNull(),
   created_at: t.text().notNull(),
@@ -18,10 +18,12 @@ export const appsTable = table(
     id: t.text().primaryKey(),
     name: t.text().notNull(),
     app_key: t.text().notNull(),
+    secret_key: t.text().notNull(),
     type: t.text().$type<APP_TYPE>().notNull(),
-    start_command: t.text().notNull(),
+    start_command: t.text(),
     domain: t.text(),
-    path_prefix: t.text(),
+    //todo: do we need a status here or do we infer from deployment and container status.
+    // path_prefix: t.text(),
     // internal_port: t.integer(),
     redis_prefix: t.text(),
     redis_username: t.text(),
@@ -34,11 +36,12 @@ export const appsTable = table(
   },
   (table) => [
     unique("apps_app_key_idx").on(table.app_key),
+    unique("apps_name_idx").on(table.name),
+    unique("apps_secret_key_idx").on(table.secret_key),
     unique("apps_redis_prefix_idx").on(table.redis_prefix)
     //todo: an index on domain + path prefix
   ]
 );
-
 
 export const platformAdminsTable = table(
   "platform_admins",
@@ -56,47 +59,62 @@ export const platformAdminsTable = table(
 );
 export const platformAdminSchema = createSelectSchema(platformAdminsTable);
 
-export const usersTable = table("users", {
-  id: t.text().primaryKey(),
-  username: t.text().notNull().unique(),
-  password_hash: t.text().notNull(),
-  status: t.text().notNull().default("active"), // active, suspended
-  created_at: t.text().notNull(),
-  updated_at: t.text().notNull()
-}, (table) => [unique("users_username_idx").on(table.username)]);
+export const usersTable = table(
+  "users",
+  {
+    id: t.text().primaryKey(),
+    username: t.text().notNull().unique(),
+    password_hash: t.text().notNull(),
+    status: t.text().notNull().default("active"), // active, suspended
+    created_at: t.text().notNull(),
+    updated_at: t.text().notNull()
+  },
+  (table) => [unique("users_username_idx").on(table.username)]
+);
 
-export const groupsTable = table("groups", {
-  id: t.text().primaryKey(),
-  name: t.text().notNull(),
-  description: t.text(),
-  created_at: t.text().notNull(),
-  updated_at: t.text().notNull()
-}, (table) => [unique("groups_name_idx").on(table.name)]);
+export const groupsTable = table(
+  "groups",
+  {
+    id: t.text().primaryKey(),
+    name: t.text().notNull(),
+    description: t.text(),
+    created_at: t.text().notNull(),
+    updated_at: t.text().notNull()
+  },
+  (table) => [unique("groups_name_idx").on(table.name)]
+);
 
 export const userGroupsTable = table(
   "user_groups",
   {
-    user_id: t.text().notNull().references(() => usersTable.id),
-    group_id: t.text().notNull().references(() => groupsTable.id),
+    user_id: t
+      .text()
+      .notNull()
+      .references(() => usersTable.id),
+    group_id: t
+      .text()
+      .notNull()
+      .references(() => groupsTable.id),
     created_at: t.text().notNull()
   },
-  (table) => [
-    primaryKey({ columns: [table.user_id, table.group_id] })
-  ]
+  (table) => [primaryKey({ columns: [table.user_id, table.group_id] })]
 );
 
 export const groupAppsTable = table(
   "group_apps",
   {
-    group_id: t.text().notNull().references(() => groupsTable.id),
-    app_id: t.text().notNull().references(() => appsTable.id),
+    group_id: t
+      .text()
+      .notNull()
+      .references(() => groupsTable.id),
+    app_id: t
+      .text()
+      .notNull()
+      .references(() => appsTable.id),
     created_at: t.text().notNull()
   },
-  (table) => [
-    primaryKey({ columns: [table.group_id, table.app_id] })
-  ]
+  (table) => [primaryKey({ columns: [table.group_id, table.app_id] })]
 );
-
 
 type ARTIFACT_STATUS = "UPLOADING" | "SUCCESS" | "FAILED";
 export const artifactsTable = table(
@@ -176,7 +194,7 @@ export const envVarsTable = table(
 export const appSchema = createSelectSchema(appsTable);
 export const userSchema = createSelectSchema(platformAdminsTable);
 export const deploymentSchema = createSelectSchema(deploymentsTable);
-export const globalConfigSchema = createSelectSchema(globalConfigTable);
+export const globalConfigSchema = createSelectSchema(settings);
 export const secretSchema = createSelectSchema(secretsTable);
 export const envVarSchema = createSelectSchema(envVarsTable);
 export const artifactSchema = createSelectSchema(artifactsTable);

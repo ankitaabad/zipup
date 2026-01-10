@@ -1,4 +1,3 @@
-import loginSvg from "./login.svg";
 import React, { useState } from "react";
 import {
   Button,
@@ -14,7 +13,7 @@ import {
   Group,
   useMantineTheme
 } from "@mantine/core";
-import { IconUser, IconLock, IconCloudBolt } from "@tabler/icons-react";
+import { IconUser, IconLock } from "@tabler/icons-react";
 import { useAdminLogin } from "../apis/adminAuth";
 import { useNavigate } from "react-router-dom";
 
@@ -67,14 +66,15 @@ export const Login: React.FC = () => {
                 color={theme.colors.primaryColor[7]}
               /> */}
               <Title order={2} c="#1e293b">
-                Paas<span style={{ color: theme.colors.primaryColor[7] }}>Up</span>
+                zip
+                <span style={{ color: theme.colors.primaryColor[7] }}>up</span>
               </Title>
             </Group>
           </Box>
 
           {/* Error */}
           {loginMutation.isError && (
-            <Text color="red" size="sm" align="center" mb="sm">
+            <Text c="red" size="sm" align="center" mb="sm">
               {(loginMutation.error as any)?.response?.data?.error ??
                 "Login failed"}
             </Text>

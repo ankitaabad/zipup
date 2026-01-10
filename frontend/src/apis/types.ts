@@ -15,4 +15,5 @@ export interface App {
 
 export interface AppListItem extends App {
   api_key_suffix: string;
+  secret_key_suffix: string;
 }

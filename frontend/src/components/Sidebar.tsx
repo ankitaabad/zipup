@@ -7,23 +7,18 @@ import {
   IconAppWindow,
   IconFileText,
   IconSettings,
-  IconLogout,
-  IconSwitchHorizontal,
-  IconPlus
+  IconLogout, IconPlus
 } from "@tabler/icons-react";
 import {
   Box,
   Group,
   Text,
   Code,
-  Divider,
-  Modal,
-  Stack,
+  Divider, Stack,
   TextInput,
   Button
 } from "@mantine/core";
-import { useApps } from "../apis/apps";
-import { nanoid } from "nanoid";
+import { useApps, useCreateApp } from "../apis/apps";
 import { useNavigate, useLocation } from "react-router-dom";
 import { CustomModal } from "./CustomModal";
 import { useAdminLogout } from "../apis/adminAuth";
@@ -42,7 +37,7 @@ export function AppSidebar() {
   const logoutMutation = useAdminLogout();
   const [staticSites, setStaticSites] = useState<Site[]>([]);
   const [webApps, setWebApps] = useState<Site[]>([]);
-
+  const createAppMutation = useCreateApp();
   const [modalOpened, setModalOpened] = useState(false);
   const [modalFor, setModalFor] = useState<"static" | "web" | null>(null);
   const [newName, setNewName] = useState("");
@@ -86,13 +81,26 @@ export function AppSidebar() {
   };
 
   const saveItem = () => {
-    if (!newName.trim()) return;
+    if (!newName.trim() || !modalFor) return;
 
-    const newItem: Site = { id: nanoid(), name: newName.trim() };
-    if (modalFor === "static") setStaticSites((s) => [...s, newItem]);
-    else if (modalFor === "web") setWebApps((s) => [...s, newItem]);
+    createAppMutation.mutate(
+      {
+        name: newName.trim(),
+        type: modalFor === "static" ? "STATIC" : "DYNAMIC"
+      },
+      {
+        onSuccess: (data) => {
+          setModalOpened(false);
+          setNewName("");
 
-    setModalOpened(false);
+          // Optional: navigate to the newly created app
+          const appId = data?.data?.id;
+          if (appId) {
+            navigate(`/apps/${modalFor}/${appId}/settings`);
+          }
+        }
+      }
+    );
   };
 
   /* ---------------- handle app click ---------------- */
@@ -106,15 +114,15 @@ export function AppSidebar() {
         width="260px"
         style={{
           height: "100vh",
-          borderRight: "1px solid var(--mantine-color-gray-0)",
-          backgroundColor: "#F8F9FA"
+          borderRight: "1px solid var(--mantine-color-gray-3)",
+          backgroundColor: "var(--mantine-color-gray-0)"
         }}
       >
         {/* Brand */}
         <Box px="md" py="sm">
           <Group justify="space-between">
             <Text fw={700} size="lg" style={{ letterSpacing: -0.3 }}>
-              paasup
+              zipup
             </Text>
             <Code size="xs">v3.1.2</Code>
           </Group>
@@ -219,6 +227,7 @@ export function AppSidebar() {
       >
         <Stack>
           <TextInput
+            data-autofocus
             label="Name"
             placeholder="eg. marketing-site"
             value={newName}

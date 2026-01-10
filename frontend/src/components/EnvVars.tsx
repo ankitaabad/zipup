@@ -193,13 +193,14 @@ export function EnvVarsTab({ appId }: { appId: string }) {
       )}
 
       {/* Add Environment Variable Modal */}
-      <CustomModal
+      <CustomModal  
         opened={addOpen}
         title="Add Environment Variable"
         onClose={() => setAddOpen(false)}
       >
         <Stack>
           <TextInput
+          data-autofocus
             label="Key"
             placeholder="MY_VARIABLE"
             value={newKey}
@@ -218,7 +219,7 @@ export function EnvVarsTab({ appId }: { appId: string }) {
       </CustomModal>
 
       {/* Delete Confirmation Modal */}
-      <CustomModal
+      <CustomModal 
         opened={deleteOpen}
         title="Delete Environment Variable"
         onClose={() => setDeleteOpen(false)}

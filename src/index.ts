@@ -4,7 +4,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { adminAuthRouter } from "./routes/adminAuth";
 import { appsRouter } from "./routes/apps";
-import { globalConfigRouter } from "./routes/globalConfig";
+import { settingsRouter } from "./routes/settings";
 import { artifactsRouter } from "./routes/artifact";
 import { loggerMiddleware } from "./utils/logger";
 import { statsRouter } from "./routes/stats";
@@ -24,7 +24,7 @@ app.use("*", loggerMiddleware());
 app.use("*", (c, next) => authMiddleware(c, next));
 app.route("/admin", adminAuthRouter);
 app.route("/apps", appsRouter);
-app.route("/global_config", globalConfigRouter);
+app.route("/global_config", settingsRouter);
 app.route("/artifacts", artifactsRouter);
 app.route("/stats", statsRouter);
 serve(
