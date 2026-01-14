@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { artifactsRouter, deploymentsRouter } from "../src/routes/artifact";
+import { artifactsRouter, deploymentsRouter } from "../server/src/routes/artifact";
 
 describe("Deploy app test", () => {
   it("deploys an app", async () => {

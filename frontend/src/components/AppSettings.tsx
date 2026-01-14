@@ -27,6 +27,9 @@ import { useState, useEffect, ReactNode } from "react";
 import { useApp, useUpdateApp } from "../apis/apps";
 import { CustomLoader } from "./CustomLoader";
 import { CustomModal } from "./CustomModal";
+import { useForm } from "@mantine/form";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { AppCredentialsDialogBox } from "./AppCredentialsDialogBox";
 
 /* ------------------- Custom Modal Component ------------------- */
 interface CustomModalProps {
@@ -44,6 +47,7 @@ type EditTarget =
   | "domainPath"
   | "redisPrefix"
   | "startCommand"
+  | "appKey"
   | null;
 
 export function AppSettings({ app_id }: { app_id: string }) {
@@ -53,22 +57,28 @@ export function AppSettings({ app_id }: { app_id: string }) {
   // ------------------- State -------------------
   const [editTarget, setEditTarget] = useState<EditTarget>(null);
   const [appName, setAppName] = useState<string | null>(null);
-  const [domain, setDomain] = useState<string | null>(null);
-  // const [path, setPath] = useState<string | null>(null);
-  const [redisPrefix, setRedisPrefix] = useState<string | null>(null);
-  const [startCommand, setStartCommand] = useState<string | null>(null);
-  const [apiKey, setApiKey] = useState<string | null>(null);
-  
+  const appForm = useForm({
+    initialValues: {
+      domain: "",
+      redis_prefix: "",
+      start_command: "",
+      api_key_suffix: "",
+      app_name: ""
+    }
+    // validate: zod4Resolver(appFormSchema)
+  });
   // ------------------- Sync data when loaded -------------------
   useEffect(() => {
     if (appQuery.isSuccess && appQuery.data?.data) {
       const app = appQuery.data.data;
-      setAppName(app.name || null);
-      setDomain(app.domain || null);
-      // setPath(app.path || null);
-      setStartCommand(app.start_command || null);
-      setRedisPrefix(app.redis_prefix || null);
-      setApiKey(app.api_key_suffix || null);
+      appForm.setInitialValues({
+        app_name: app.name || "",
+        domain: app.domain || "",
+        start_command: app.start_command || "",
+        redis_prefix: app.redis_prefix || "",
+        api_key_suffix: app.api_key_suffix || ""
+      });
+      appForm.reset();
     }
   }, [appQuery.isSuccess, appQuery.data]);
 
@@ -113,25 +123,25 @@ export function AppSettings({ app_id }: { app_id: string }) {
         {/* Settings rows */}
         <SettingRow
           label="App Name"
-          value={appName}
+          value={appForm.getInitialValues().app_name}
           onEdit={() => setEditTarget("appName")}
         />
         <Divider />
         <SettingRow
           label="Domain"
-          value={domain || null}
+          value={appForm.getInitialValues().domain}
           onEdit={() => setEditTarget("domainPath")}
         />
         <Divider />
         <SettingRow
           label="Redis Prefix"
-          value={redisPrefix}
+          value={appForm.getInitialValues().redis_prefix}
           onEdit={() => setEditTarget("redisPrefix")}
         />
         <Divider />
         <SettingRow
           label="Start Command"
-          value={startCommand}
+          value={appForm.getInitialValues().start_command}
           onEdit={() => setEditTarget("startCommand")}
         />
         <Divider />
@@ -150,7 +160,13 @@ export function AppSettings({ app_id }: { app_id: string }) {
               </ActionIcon>
             </Menu.Target>
             <Menu.Dropdown>
-              <Menu.Item>Get API Key</Menu.Item>
+              <Menu.Item
+                onClick={() => {
+                  setEditTarget("appKey");
+                }}
+              >
+                Get API Key
+              </Menu.Item>
               <Menu.Item color="orange">Rotate API Key</Menu.Item>
             </Menu.Dropdown>
           </Menu>
@@ -159,9 +175,9 @@ export function AppSettings({ app_id }: { app_id: string }) {
             <Text size="sm" fw={500}>
               API Key
             </Text>
-            {apiKey ? (
+            {appForm.getInitialValues().api_key_suffix ? (
               <Text size="sm" c="dimmed">
-                •••• •••• •••• {apiKey.slice(-4)}
+                .... .... .... {appForm.getInitialValues().api_key_suffix}
               </Text>
             ) : (
               <Badge color="red" variant="light">
@@ -172,25 +188,44 @@ export function AppSettings({ app_id }: { app_id: string }) {
         </Group>
 
         {/* ------------------- Modals ------------------- */}
+        {editTarget === "appKey" && (
+          <CustomModal
+            opened
+            onClose={() => {
+              setEditTarget(null);
+            }}
+            title="App Credentials"
+          >
+            <AppCredentialsDialogBox
+              onClose={() => {
+                setEditTarget(null);
+              }}
+              appId={app_id}
+            />
+          </CustomModal>
+        )}
         {editTarget === "appName" && (
           <CustomModal
             title="Update App Name"
             opened
-            onClose={() => setEditTarget(null)}
+            onClose={() => {
+              appForm.reset();
+              setEditTarget(null);
+            }}
           >
             <TextInput
               data-autofocus
               label="App Name"
               description="Shown in dashboards and logs"
-              value={appName || ""}
-              onChange={(e) => setAppName(e.currentTarget.value)}
+              key={appForm.key("app_name")}
+              {...appForm.getInputProps("app_name")}
             />
             <Group justify="flex-end" mt="md">
               <Button
                 onClick={() => {
                   updateApp.mutate({
                     action: "UpdateAppName",
-                    name: appName || ""
+                    name: appForm.values.app_name
                   });
                   setEditTarget(null);
                 }}
@@ -203,17 +238,18 @@ export function AppSettings({ app_id }: { app_id: string }) {
 
         {editTarget === "domainPath" && (
           <CustomModal
-            title="Update Domain & Path"
+            title="Update Domain"
             opened
             onClose={() => {
+              appForm.reset();
               setEditTarget(null);
             }}
           >
             <TextInput
               data-autofocus
               label="Domain"
-              value={domain || ""}
-              onChange={(e) => setDomain(e.currentTarget.value)}
+              key={appForm.key("domain")}
+              {...appForm.getInputProps("domain")}
             />
 
             <Text size="xs" c="dimmed" mt={5}>
@@ -224,7 +260,7 @@ export function AppSettings({ app_id }: { app_id: string }) {
                 onClick={() => {
                   updateApp.mutate({
                     action: "UpdateDomain",
-                    domain: domain
+                    domain: appForm.values.domain
                   });
                   setEditTarget(null);
                 }}
@@ -239,21 +275,24 @@ export function AppSettings({ app_id }: { app_id: string }) {
           <CustomModal
             title="Update Redis Prefix"
             opened
-            onClose={() => setEditTarget(null)}
+            onClose={() => {
+              appForm.reset();
+              setEditTarget(null);
+            }}
           >
             <TextInput
               data-autofocus
               label="Redis Prefix"
               description="Changing this may invalidate existing cache keys"
-              value={redisPrefix || ""}
-              onChange={(e) => setRedisPrefix(e.currentTarget.value)}
+              key={appForm.key("redis_prefix")}
+              {...appForm.getInputProps("redis_prefix")}
             />
             <Group justify="flex-end" mt="md">
               <Button
                 onClick={() => {
                   updateApp.mutate({
                     action: "UpdateRedisPrefix",
-                    redis_prefix: redisPrefix
+                    redis_prefix: appForm.values.redis_prefix
                   });
                   setEditTarget(null);
                 }}
@@ -268,17 +307,30 @@ export function AppSettings({ app_id }: { app_id: string }) {
           <CustomModal
             title="Update Start Command"
             opened
-            onClose={() => setEditTarget(null)}
+            onClose={() => {
+              appForm.reset();
+              setEditTarget(null);
+            }}
           >
             <TextInput
               data-autofocus
               label="Start Command"
               description="Executed when the app container starts"
-              value={startCommand || ""}
-              onChange={(e) => setStartCommand(e.currentTarget.value)}
+              key={appForm.key("start_command")}
+              {...appForm.getInputProps("start_command")}
             />
             <Group justify="flex-end" mt="md">
-              <Button onClick={() => setEditTarget(null)}>Save</Button>
+              <Button
+                onClick={() => {
+                  updateApp.mutate({
+                    action: "UpdateStartCommand",
+                    start_command: appForm.values.start_command
+                  });
+                  setEditTarget(null);
+                }}
+              >
+                Save
+              </Button>
             </Group>
           </CustomModal>
         )}

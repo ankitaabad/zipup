@@ -44,7 +44,6 @@ api.interceptors.response.use(
     const status = error.response.status;
     const data = error.response.data;
 
-    // 401 refresh logic (your existing)
     if (status === 401) {
       const url = originalRequest.url ?? "";
       if (!url.includes("/admin/login") && !url.includes("/admin/refresh")) {

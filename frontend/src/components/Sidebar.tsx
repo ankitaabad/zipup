@@ -7,14 +7,16 @@ import {
   IconAppWindow,
   IconFileText,
   IconSettings,
-  IconLogout, IconPlus
+  IconLogout,
+  IconPlus
 } from "@tabler/icons-react";
 import {
   Box,
   Group,
   Text,
   Code,
-  Divider, Stack,
+  Divider,
+  Stack,
   TextInput,
   Button
 } from "@mantine/core";
@@ -31,6 +33,7 @@ type Site = {
 };
 
 export function AppSidebar() {
+  console.log("AppSidebar called");
   const appsQuery = useApps();
   const navigate = useNavigate();
   const location = useLocation();
@@ -135,7 +138,7 @@ export function AppSidebar() {
           <MenuItem
             icon={<IconLayoutDashboard size={18} />}
             active={activeSection === "Dashboard"}
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/")}
           >
             Dashboard
           </MenuItem>
@@ -211,6 +214,7 @@ export function AppSidebar() {
                   onSuccess: () => {
                     navigate("/login");
                   }
+                  
                 });
               }}
             >

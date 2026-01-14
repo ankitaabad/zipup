@@ -1,8 +1,8 @@
 import { vi, describe, it, expect, beforeAll, afterAll } from "vitest";
 import { faker } from "@faker-js/faker";
-import { appsRouter } from "../src/routes/apps";
+import { appsRouter } from "../server/src/routes/apps";
 import { omit } from "radash";
-import { adminAuthRouter } from "../src/routes/adminAuth";
+import { adminAuthRouter } from "../server/src/routes/adminAuth";
 // vi.mock("ksuid", () => {
 //   return {
 //     default: {

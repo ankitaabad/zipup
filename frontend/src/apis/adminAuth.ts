@@ -31,7 +31,7 @@ export function useAdminVerifySession() {
       return res.data;
     },
     retry: false,
-    staleTime: 60_000,
+    staleTime: 60_000
   });
 }
 
@@ -52,10 +52,9 @@ export function useAdminLogin() {
       return res.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["admin", "auth", "verify"],
-      });
-    },
+      // todo: should we invalidate everything here.
+      queryClient.invalidateQueries();
+    }
   });
 }
 
@@ -69,10 +68,9 @@ export function useAdminLogout() {
     mutationFn: async () => {
       const res = await api.post("/admin/logout");
       return res.data;
-    },
-    onSuccess: () => {
-      queryClient.clear();
-    },
+    }
+    // onSuccess: () => {
+    // },
   });
 }
 
@@ -85,7 +83,7 @@ export function useAdminRefreshToken() {
     mutationFn: async () => {
       const res = await api.post("/admin/refresh");
       return res.data;
-    },
+    }
   });
 }
 
@@ -97,6 +95,6 @@ export function useAdminChangePassword() {
     mutationFn: async (payload: AdminChangePasswordPayload) => {
       const res = await api.post("/admin/change-password", payload);
       return res.data;
-    },
+    }
   });
 }

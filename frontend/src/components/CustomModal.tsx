@@ -58,7 +58,7 @@ export function CustomModal({
           alignItems: "center",
           borderBottom: `1px solid ${
             theme.colorScheme === "dark"
-              ? theme.colors.dark[5]
+              ? theme.colors.dark[7]
               : theme.colors.gray[3]
           }`
         }}

@@ -18,6 +18,7 @@ import { AppSettings } from "../components/AppSettings";
 import Deployment from "../components/Deployment";
 import { EnvVarsTab } from "../components/EnvVars";
 import { CustomLoader } from "../components/CustomLoader";
+import { theme } from "@frontend/theme";
 
 export default function AppLayout() {
   const { type, appId, tab } = useParams<{
@@ -74,8 +75,16 @@ export default function AppLayout() {
       }}
     >
       <Stack style={{ flex: 1 }}>
-        <Title order={3}>{app.name}</Title>
-
+        <Title
+          order={3}
+          fw={600}
+          c="gray.7"
+          fs={"italic"}
+          mx={"auto"}
+          style={{ letterSpacing: "-0.2px" }}
+        >
+          {app.name}
+        </Title>
         <Tabs
           // value={activeTab}
           // defaultValue={"settings"}

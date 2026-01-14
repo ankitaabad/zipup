@@ -59,7 +59,7 @@ services:
       - dynamic_artifacts:/dynamic_artifacts
       - secrets:/secrets
       - /var/run/docker.sock:/var/run/docker.sock
-    command: sh -c "npm install  && npm run dev"
+    command: sh -c "npm install -g pnpm && pnpm install  && pnpm --filter backend run dev"
     environment:
       - NODE_ENV=development
     ports:

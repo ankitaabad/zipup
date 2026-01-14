@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@common/*": [
+        "common/src/*"
+      ],
+      "@backend/*": [
+        "backend/src/*"
+      ],
+      "@frontend/*": [
+        "frontend/src/*"
+      ]
+    },
+    "strict": true,
+    "skipLibCheck": true,
+  }
+}

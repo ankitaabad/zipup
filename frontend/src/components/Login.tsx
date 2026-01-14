@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useForm } from "@mantine/form";
 import {
   Button,
   Card,
@@ -16,17 +17,27 @@ import {
 import { IconUser, IconLock } from "@tabler/icons-react";
 import { useAdminLogin } from "../apis/adminAuth";
 import { useNavigate } from "react-router-dom";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { AdminLoginSchema } from "@common/index";
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const theme = useMantineTheme();
   const loginMutation = useAdminLogin();
+  const loginForm = useForm({
+    initialValues: {
+      username: "",
+      password: ""
+    },
+    validate: zod4Resolver(AdminLoginSchema)
+  });
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (
+    { username, password }: typeof loginForm.values,
+    e: React.FormEvent<HTMLFormElement> | undefined
+  ) => {
+    e?.preventDefault();
 
     loginMutation.mutate(
       { username, password },
@@ -65,10 +76,20 @@ export const Login: React.FC = () => {
                 stroke={2}
                 color={theme.colors.primaryColor[7]}
               /> */}
-              <Title order={2} c="#1e293b">
-                zip
-                <span style={{ color: theme.colors.primaryColor[7] }}>up</span>
-              </Title>
+              <Text
+                component="h2"
+                size={"35px"}
+                fw={700}
+                variant="gradient"
+                gradient={{
+                  from: theme.colors.primaryColor[7],
+                  to: "black",
+                  deg: 30
+                }}
+                mb={20}
+              >
+                zipup
+              </Text>
             </Group>
           </Box>
 
@@ -81,29 +102,29 @@ export const Login: React.FC = () => {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={loginForm.onSubmit(handleSubmit)}>
             <Stack gap="md">
               <TextInput
                 label="Username"
                 autoFocus
                 placeholder="Enter your username"
-                value={username}
-                onChange={(e) => setUsername(e.currentTarget.value)}
                 required
                 radius="sm"
                 size="md"
                 leftSection={<IconUser size={20} />}
+                key={loginForm.key("username")}
+                {...loginForm.getInputProps("username")}
               />
 
               <PasswordInput
                 label="Password"
                 placeholder="Enter your password"
-                value={password}
                 leftSection={<IconLock size={20} />}
-                onChange={(e) => setPassword(e.currentTarget.value)}
                 required
                 radius="sm"
                 size="md"
+                key={loginForm.key("password")}
+                {...loginForm.getInputProps("password")}
               />
 
               <Button

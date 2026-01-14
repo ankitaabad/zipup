@@ -25,11 +25,13 @@ export function useApp(appId: string) {
   });
 }
 
-export function useAppApiKey(appId: string) {
+export function useAppAppKey(appId: string) {
   return useQuery({
-    queryKey: ["apps", appId, "api-key"],
+    queryKey: ["apps", appId, "app-key"],
     queryFn: async () => {
-      const res = await api.get<{ api_key: string }>(`/apps/${appId}/app-key`);
+      const res = await api.get<{ app_key: string; secret_key: string }>(
+        `/apps/${appId}/app-key`
+      );
       return res.data;
     },
     enabled: !!appId
@@ -63,7 +65,7 @@ export function useUpdateApp(appId: string) {
   return useMutation({
     mutationFn: async (
       payload:
-        | { action: "UpdateDomain"; domain: string; }
+        | { action: "UpdateDomain"; domain: string }
         | { action: "UpdateStartCommand"; start_command: string }
         | { action: "UpdateAppName"; name: string }
         | { action: "UpdateRedisPrefix"; redis_prefix: string }
@@ -72,7 +74,7 @@ export function useUpdateApp(appId: string) {
       return res.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["apps"] });
+      // queryClient.invalidateQueries({ queryKey: ["apps"] });
       queryClient.invalidateQueries({ queryKey: ["apps", appId] });
     }
   });

@@ -25,8 +25,8 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route element={<RootLayout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/dashboard" element={<AppStatsDashboard />} />
+            <Route path="/" element={<AppStatsDashboard />} />
+            {/* <Route path="/dashboard" element={<AppStatsDashboard />} /> */}
             <Route path="/settings" element={<Settings />} />
             <Route path="/logs" element={<Logs />} />
 
