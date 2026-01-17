@@ -9,7 +9,10 @@ import { artifactsRouter } from "./routes/artifact";
 import { loggerMiddleware } from "./utils/logger";
 import { statsRouter } from "./routes/stats";
 import { authMiddleware } from "./utils/middlewares";
+import { secureHeaders } from "hono/secure-headers";
 const app = new Hono();
+app.use(secureHeaders());
+//todo: only same origin.
 app.use(
   "*",
   cors({
@@ -20,8 +23,8 @@ app.use(
   })
 );
 
-app.use("*", loggerMiddleware());
-app.use("*", (c, next) => authMiddleware(c, next));
+app.use(loggerMiddleware());
+app.use((c, next) => authMiddleware(c, next));
 app.route("/admin", adminAuthRouter);
 app.route("/apps", appsRouter);
 app.route("/global_config", settingsRouter);
@@ -36,4 +39,3 @@ serve(
     console.log(`Server is running on http://localhost:${info.port}`);
   }
 );
-

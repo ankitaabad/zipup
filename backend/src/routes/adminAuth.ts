@@ -73,10 +73,7 @@ adminAuthRouter.post(
       path: "/auth/refresh"
     });
     setCookie(c, "csrf_token", csrf_token, { httpOnly: false, secure: true });
-    return c.json({
-      message: "Login successful"
-      // data: omit(user, ["password_hash"])
-    });
+    return c.json({});
   })
 );
 
@@ -97,7 +94,7 @@ adminAuthRouter.post(
       maxAge: 0
     });
 
-    return c.json({ message: "Logged out successfully" });
+    return c.json({});
   })
 );
 

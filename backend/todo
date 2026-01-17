@@ -61,11 +61,11 @@ Integrity and Constraints:
   ☐ branded ids
   ☐ grace period to stop the already running container.
   ☐ Pre deployment check (start_command exist, warning only in cli).
-  ☐ should we also use csrf token.
+  ✔ use csrf token.
   ☐ only one deployment at a time for a given app. (concurrency with bullmq)
   ☐ what unique constraints we need in our db. (app_name, app_id+env_key, app_id + secret_key, )
   ☐ how can we add more typesafety.
-  ☐ most apis should not work for zipup app. like adding env variable.
+  ✔ Don't expose zipup as app like other apps.
 
 Security Improvements:
   ☐ Should we use podman instead of docker, as daemon is not required.
@@ -90,8 +90,8 @@ Today:
   ✔ Remove path prefix from app table.
   ✔ set redis prefix
   ✔ set start command
-  ☐ Get API and secret key
-  ☐ Rotate API/ secret key
+  ✔ Get API and secret key
+  ☐ @low Rotate API/ secret key
 
 Done:
   ✔ setup docs website with docusaurus

@@ -23,6 +23,23 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// show success message
+
+api.interceptors.response.use((res) => {
+  if (res.status === 200) {
+    if (res.data.message) {
+      notifications.show({
+        position: "top-center",
+
+        title: "Success",
+        message: res.data.message,
+        color: "green"
+      });
+    }
+  }
+  return res;
+});
+
 // ---------------- REFRESH ----------------
 api.interceptors.response.use(
   (res) => res, // return response if ok
