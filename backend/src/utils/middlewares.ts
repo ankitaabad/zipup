@@ -5,6 +5,7 @@ import { V4 } from "paseto";
 import { paseto_public, TokenPayload } from "./helper";
 import { errorHandler } from "./errorHandler";
 import { Context, Hono } from "hono";
+import { getLogger } from "./logger";
 const loginPath = "/admin/login";
 const refreshTokenPath = "/admin/refresh";
 
@@ -37,7 +38,8 @@ async function verifyPasetoToken(
 
 export const authMiddleware = createMiddleware(async (c, next) => {
   const { method, path } = c.req;
-  console.log({ method, path });
+  const logger = getLogger();
+  logger.debug("Method and path", { method, path });
 
   // 1️⃣ Login route → no auth
   if (path === loginPath) {
@@ -97,7 +99,6 @@ export const withErrorHandler =
   <C extends Context>(handler: (c: C) => Promise<Response>) =>
   async (c: C): Promise<Response> => {
     try {
-      
       return await handler(c);
     } catch (err) {
       return errorHandler(c, err);

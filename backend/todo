@@ -12,7 +12,6 @@ Features:
   zipup:
     ☐ helmet headers.
     ☐ apply cors.
-    ✔ hono middleware for auth.
     ☐ 2fa implementation.
     ☐ paseto secret keep in db only encrypted. 
     ☐ take additional tags from the user for an artifact that can be displayed with the version (can be used for parity with user's git tags.)
@@ -22,11 +21,7 @@ Features:
   frontend:
     ☐ Create a static app.
     ☐ create a dynamic app.
-    ✔ show the apps by fetching from server.
-    ✔ Env Variable integration
-    ✔ Dashboard stats integration
-    ✔ embed victorialogs.
-  Bullmq setup:
+  @out_of_scope Bullmq setup:
     ☐ correct redis prefix
     ☐ creating a task and task invocation
     ☐ cron job run with bull
@@ -61,11 +56,9 @@ Integrity and Constraints:
   ☐ branded ids
   ☐ grace period to stop the already running container.
   ☐ Pre deployment check (start_command exist, warning only in cli).
-  ✔ use csrf token.
   ☐ only one deployment at a time for a given app. (concurrency with bullmq)
   ☐ what unique constraints we need in our db. (app_name, app_id+env_key, app_id + secret_key, )
   ☐ how can we add more typesafety.
-  ✔ Don't expose zipup as app like other apps.
 
 Security Improvements:
   ☐ Should we use podman instead of docker, as daemon is not required.
@@ -85,15 +78,23 @@ Cleanup:
     ☐ delete the entries in the db (cascade delete). or we want to keep some history
 
 Today:
+  ☐ @low Rotate API/ secret key
+  ☐ @low Remove setting redis prefix , let user do it themselves.
+
+Done:
+  ✔ hono middleware for auth.
+  ✔ show the apps by fetching from server.
+  ✔ Env Variable integration
+  ✔ Dashboard stats integration
+  ✔ embed victorialogs.
+  ✔ use csrf token.
+  ✔ Don't expose zipup as app like other apps.
   ✔ Remove zipup entry in app table.
   ✔ change app name in db.
   ✔ Remove path prefix from app table.
   ✔ set redis prefix
   ✔ set start command
   ✔ Get API and secret key
-  ☐ @low Rotate API/ secret key
-
-Done:
   ✔ setup docs website with docusaurus
   ✘ setup cli repo.
   ✔ logger for each request
@@ -102,7 +103,4 @@ Done:
   ✔ create app:ro and data volume.
   ✔ give app name + random suffix as container name, update the upstream value.
   ✘ free the port when the deployment is done.
-
-
-
 
