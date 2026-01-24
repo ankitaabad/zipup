@@ -21,10 +21,6 @@ Features:
   frontend:
     ☐ Create a static app.
     ☐ create a dynamic app.
-  @out_of_scope Bullmq setup:
-    ☐ correct redis prefix
-    ☐ creating a task and task invocation
-    ☐ cron job run with bull
   Auth Proxy:
     ☐ Maintain session in openresty for user apps.
     ☐ User Apis
@@ -82,6 +78,9 @@ Today:
   ☐ @low Remove setting redis prefix , let user do it themselves.
 
 Done:
+  ✘ create redis prefix
+  ✘ creating a task and task invocation
+  ✘ cron job run with bull
   ✔ hono middleware for auth.
   ✔ show the apps by fetching from server.
   ✔ Env Variable integration

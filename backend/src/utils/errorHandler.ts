@@ -1,4 +1,3 @@
-import { TraversalError } from "arktype";
 import { Context } from "hono";
 import { getLogger } from "./logger";
 import { ContentfulStatusCode } from "hono/utils/http-status";
@@ -59,17 +58,17 @@ export function errorHandler(c: Context, error: unknown) {
     );
   }
   // 2. ArkType validation errors
-  if (error instanceof TraversalError) {
-    return c.json(
-      {
-        error: {
-          code: "BAD_REQUEST",
-          message: "Invalid request payload"
-        }
-      },
-      400
-    );
-  }
+  // if (error instanceof TraversalError) {
+  //   return c.json(
+  //     {
+  //       error: {
+  //         code: "BAD_REQUEST",
+  //         message: "Invalid request payload"
+  //       }
+  //     },
+  //     400
+  //   );
+  // }
 
   return c.json(
     {

@@ -1,9 +1,6 @@
-import { type } from "arktype";
 import { Hono } from "hono";
 import { db } from "@backend/db/dbClient";
-import { omit } from "radash";
-import { appsTable, appSchema, settings } from "../db/schema";
-import { generateId } from "../utils/helper";
+import { settings } from "../db/schema";
 import { errorHandler } from "../utils/errorHandler";
 
 // change global secret key
