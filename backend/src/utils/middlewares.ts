@@ -6,8 +6,8 @@ import { paseto_public, TokenPayload } from "./helper";
 import { errorHandler } from "./errorHandler";
 import { Context, Hono } from "hono";
 import { getLogger } from "./logger";
-const loginPath = "/admin/login";
-const refreshTokenPath = "/admin/refresh";
+const loginPath = "/api/admin/login";
+const refreshTokenPath = "/api/admin/refresh";
 
 async function verifyPasetoToken(
   token: string | undefined,

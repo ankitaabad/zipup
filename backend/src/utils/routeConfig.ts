@@ -15,7 +15,7 @@ export const updateRouteConfig = async () => {
       "host": "localhost",
       "path": "/",
       "type": "dynamic",
-      "upstream": "http://zipup:3000",
+      "upstream": "http://zipup:8080",
       "auth_required": false
     }
   ];

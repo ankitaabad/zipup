@@ -30,3 +30,4 @@ lerna-debug.log*
 backend/.pnpm-store
 *.pnpm-store
 backend/dist
+backend/dist-frontend

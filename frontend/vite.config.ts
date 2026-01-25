@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
-// https://vitejs.dev/config/
+
 export default defineConfig({
   plugins: [
     react(),
@@ -9,9 +9,22 @@ export default defineConfig({
       projects: ["../tsconfig.base.json"]
     })
   ],
+
+  // 👇 THIS is the important part
+  build: {
+    outDir: "../backend/dist-frontend",
+    emptyOutDir: true // recommended
+  },
+
   server: {
+    proxy: {
+      "/api": {
+        target: "http://localhost:8080",
+        changeOrigin: true
+      }
+    },
     fs: {
-      allow: [".."] // 👈 allow monorepo root
+      allow: [".."] // monorepo root
     }
   }
 });
