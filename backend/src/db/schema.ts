@@ -1,6 +1,6 @@
 import { sqliteTable as table } from "drizzle-orm/sqlite-core";
 import * as t from "drizzle-orm/sqlite-core";
-import { createSelectSchema } from "drizzle-arktype";
+import { createSelectSchema } from "drizzle-zod";
 import { index } from "drizzle-orm/sqlite-core";
 import { unique } from "drizzle-orm/sqlite-core";
 import { eq } from "drizzle-orm";

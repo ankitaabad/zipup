@@ -6,7 +6,8 @@
     "ui": "pnpm -F frontend dev",
     "frontend": "pnpm -F frontend dev",
     "server": "pnpm -F backend dev",
-    "dbinit": "pnpm -F backend dbinit"
+    "dbinit": "pnpm -F backend dbinit",
+    "build": "pnpm -F frontend build && pnpm -F backend build"
   },
   "dependencies": {
     "zod": "^4.2.1"

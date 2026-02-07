@@ -17,8 +17,7 @@ import { fileURLToPath } from "url";
 // const __filename = fileURLToPath(import.meta.url)
 // const __dirname = path.dirname(__filename)
 
-const dist = path.join(".", "dist-frontend");
-
+const frontendDir = path.resolve(process.cwd(), "dist-frontend");
 /**
  * 1️⃣ Serve static assets FIRST
  */
@@ -27,22 +26,14 @@ const app = new Hono();
 app.use(
   "/assets/*",
   serveStatic({
-    root: dist,
-    onFound: (_path, c) => {
+    root: frontendDir,
+    onFound: (_, c) => {
       c.header("Cache-Control", "public, max-age=31536000, immutable");
     }
   })
 );
 
-app.use(
-  "/",
-  serveStatic({
-    path: path.join(dist, "index.html"),
-    onFound: (_path, c) => {
-      c.header("Cache-Control", "no-cache");
-    }
-  })
-);
+
 
 app.use(secureHeaders());
 //todo: only same origin.
@@ -64,6 +55,15 @@ app.route("/api/global_config", settingsRouter);
 app.route("/api/artifacts", artifactsRouter);
 app.route("/api/stats", statsRouter);
 
+app.get("*", async (c) => {
+  const indexHtml = await fs.promises.readFile(
+    path.join(frontendDir, "index.html"),
+    "utf-8"
+  );
+
+  c.header("Cache-Control", "no-cache");
+  return c.html(indexHtml);
+});
 serve(
   {
     fetch: app.fetch,
