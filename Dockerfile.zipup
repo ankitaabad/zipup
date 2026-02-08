@@ -1,0 +1,46 @@
+# ---------- Builder ----------
+FROM node:24-alpine AS builder
+
+WORKDIR /app
+
+# Install pnpm explicitly (Corepack is removed in Node 24)
+RUN npm install -g pnpm
+
+# Copy workspace manifests first for better caching
+COPY tsconfig.base.json tsconfig.base.json
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY frontend/package.json frontend/package.json
+COPY backend/package.json backend/package.json
+# Install all deps (needed to build frontend + backend)
+RUN pnpm install --frozen-lockfile
+
+# Copy source
+COPY frontend frontend
+COPY backend backend
+
+# Build frontend (Vite -> static assets)
+RUN pnpm --filter frontend build
+
+# Build backend (ts -> js, if applicable)
+RUN pnpm --filter backend build
+
+# Create production-only backend bundle (deps + dist)
+RUN pnpm --filter backend deploy --prod /out
+
+
+# ---------- Runtime ----------
+FROM node:24-alpine
+
+WORKDIR /app
+ENV FRONTEND_DIST_DIR=/app/frontend/dist
+# Copy only what runtime needs
+COPY --from=builder /out ./backend
+COPY --from=builder /app/frontend/dist ./frontend/dist
+
+# Optional: run as non-root for security
+RUN addgroup -S app && adduser -S app -G app
+USER app
+
+EXPOSE 3000
+
+CMD ["node", "backend/dist/index.js"]

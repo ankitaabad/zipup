@@ -203,18 +203,6 @@ export default function AppLayout() {
             </Stack>
           </Tabs.Panel>
 
-          {/* Logs */}
-          <Tabs.Panel
-            value="logs"
-            pt="md"
-            style={{ flex: 1, overflow: "hidden" }}
-          >
-            <iframe
-              src={`http://localhost:9428/select/vmui/${appId}`} // VMUI logs for this app
-              style={{ width: "100%", height: "100%", border: "none" }}
-              title="VictoriaLogs"
-            />
-          </Tabs.Panel>
         </Tabs>
       </Stack>
     </Paper>

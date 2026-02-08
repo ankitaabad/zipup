@@ -19,7 +19,7 @@ export default function Logs() {
         }}
       >
         <iframe
-          src="http://localhost:9428/select/vmui/" // your VMUI logs URL
+          src="/api/logs/select/vmui/" // your VMUI logs URL
           style={{
             flex: 1, // fill stack
             border: "none",

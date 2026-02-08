@@ -14,11 +14,13 @@ import { serveStatic } from "@hono/node-server/serve-static";
 import path from "path";
 import { fileURLToPath } from "url";
 
+import fs from "fs";
 // const __filename = fileURLToPath(import.meta.url)
 // const __dirname = path.dirname(__filename)
 
-const frontendDir = path.resolve(process.cwd(), "dist-frontend");
-/**
+const frontendDir =
+  process.env.FRONTEND_DIST_DIR ??
+  path.join(process.cwd(), "frontend", "dist");/**
  * 1️⃣ Serve static assets FIRST
  */
 
@@ -33,19 +35,18 @@ app.use(
   })
 );
 
-
-
 app.use(secureHeaders());
+
 //todo: only same origin.
-app.use(
-  "*",
-  cors({
-    origin: "http://localhost:5173",
-    credentials: true,
-    allowMethods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"]
-  })
-);
+// app.use(
+//   "*",
+//   cors({
+//     origin: "http://localhost:5173",
+//     credentials: true,
+//     allowMethods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+//     allowHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"]
+//   })
+// );
 
 app.use("/api/*", loggerMiddleware());
 app.use("/api/*", (c, next) => authMiddleware(c, next));
