@@ -1,55 +1,119 @@
-name: Build & Release Artifact
+name: Create Tag and Release
 
-# Trigger only on tags
 on:
-  push:
-    tags:
-      - 'v*'   # any tag starting with "v", e.g., v1.0.0
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump type"
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
 
 permissions:
   contents: write  # required to create releases
-  actions: write
 
 jobs:
   release:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout repo with full history so tags are available
-      - uses: actions/checkout@v4
+      # 1️⃣ Checkout repo with full history
+      - name: Checkout repo
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # needed for tags
 
-      # 2️⃣ Setup pnpm (skip auto install)
+      # 2️⃣ Fetch all tags
+      - name: Fetch all tags
+        run: git fetch --tags
+
+      # 3️⃣ Get latest tag
+      - name: Get latest tag
+        id: latest
+        run: |
+          TAG=$(git tag --list 'v*.*.*' --sort=-v:refname | head -n 1)
+          echo "latest=$TAG" >> $GITHUB_OUTPUT
+          echo "Latest tag: $TAG"
+
+      # 4️⃣ Compute next version
+      - name: Compute next version
+        id: next
+        run: |
+          LATEST="${{ steps.latest.outputs.latest }}"
+
+          if [ -z "$LATEST" ]; then
+            MAJOR=0
+            MINOR=0
+            PATCH=0
+          else
+            VERSION=${LATEST#v}
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          fi
+
+          case "${{ github.event.inputs.bump }}" in
+            patch)
+              PATCH=$((PATCH+1))
+              ;;
+            minor)
+              MINOR=$((MINOR+1))
+              PATCH=0
+              ;;
+            major)
+              MAJOR=$((MAJOR+1))
+              MINOR=0
+              PATCH=0
+              ;;
+          esac
+
+          NEXT="v$MAJOR.$MINOR.$PATCH"
+          echo "next=$NEXT" >> $GITHUB_OUTPUT
+          echo "Next version: $NEXT"
+
+      # 5️⃣ Create and push tag using a PAT to trigger workflows reliably
+      - name: Create and push tag
+        env:
+          PAT: ${{ secrets.PERSONAL_GITHUB_TOKEN }}  # must be a PAT with repo scope
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "${{ steps.next.outputs.next }}"
+          git push https://x-access-token:${PAT}@github.com/${{ github.repository }}.git "${{ steps.next.outputs.next }}"
+
+      # 6️⃣ Setup pnpm
       - uses: pnpm/action-setup@v4
         with:
           version: 10
           run_install: false
 
-      # 3️⃣ Setup Node.js with pnpm caching
+      # 7️⃣ Setup Node.js with caching
       - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: "pnpm"
 
-      # 4️⃣ Install dependencies
+      # 8️⃣ Install dependencies
       - run: pnpm install --frozen-lockfile
 
-      # 5️⃣ Run your release script to produce the artifact folder
-      - name: Run Release Script
+      # 9️⃣ Run release script
+      - name: Run release script
         run: ./release.sh
 
-      # 6️⃣ Package the release folder
+      # 🔟 Package release folder
       - name: Package Release
         run: |
-          cd release   # your folder from ./release.sh
-          TAG=${GITHUB_REF##*/}  # extracts the tag name
-          tar -czf myapp-${TAG}-linux-x64.tar.gz .
+          cd release
+          TAG=${{ steps.next.outputs.next }}
+          tar -czf ../myapp-${TAG}-linux-x64.tar.gz .
 
-      # 7️⃣ Create GitHub Release & upload artifact
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: release/myapp-${{ github.ref_name }}-linux-x64.tar.gz
+          tag_name: ${{ steps.next.outputs.next }}   # explicitly provide tag
+          files: myapp-${{ steps.next.outputs.next }}-linux-x64.tar.gz
+          overwrite_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
