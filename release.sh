@@ -29,7 +29,7 @@ mkdir -p "$OUT_DIR"
 
 echo "📦 Deploying backend prod node_modules into /out..."
 cd "$ROOT_DIR"
-pnpm --filter backend deploy --prod "$OUT_DIR"
+pnpm --filter backend deploy --legacy --prod "$OUT_DIR"
 
 echo "📂 Copying backend dist + package.json..."
 # cp -r "$BACKEND_DIR/dist" "$OUT_DIR/dist"
