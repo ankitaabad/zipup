@@ -12,7 +12,7 @@ curl -L -o myapp.tar.gz \
   "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${LATEST_TAG}/myapp-${LATEST_TAG}-linux-x64.tar.gz"
 
 # Extract and run docker-compose
-mkdir -p release && tar -xzf myapp.tar.gz -C release
+mkdir -p artifact && tar -xzf myapp.tar.gz -C artifact
 rm myapp.tar.gz
-cd release
+cd artifact
 # docker-compose up -d
