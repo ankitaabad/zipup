@@ -18,24 +18,37 @@ importers:
 
   backend:
     dependencies:
+      '@node-rs/argon2':
+        specifier: ^2.0.2
+        version: 2.0.2
+    devDependencies:
+      '@faker-js/faker':
+        specifier: ^10.1.0
+        version: 10.2.0
       '@hono/node-server':
         specifier: ^1.19.6
         version: 1.19.9(hono@4.11.5)
       '@libsql/client':
         specifier: ^0.15.15
         version: 0.15.15
-      '@node-rs/argon2':
-        specifier: ^2.0.2
-        version: 2.0.2
       '@oslojs/crypto':
         specifier: ^1.0.1
         version: 1.0.1
       '@oslojs/encoding':
         specifier: ^1.1.0
         version: 1.1.0
+      '@types/better-sqlite3':
+        specifier: ^7.6.13
+        version: 7.6.13
       '@types/dockerode':
         specifier: ^3.3.47
         version: 3.3.47
+      '@types/fs-extra':
+        specifier: ^11.0.4
+        version: 11.0.4
+      '@types/node':
+        specifier: ^20.11.17
+        version: 20.19.30
       '@zipup/common':
         specifier: workspace:*
         version: link:../common
@@ -48,15 +61,6 @@ importers:
       bullmq:
         specifier: ^5.66.4
         version: 5.67.1
-      busboy:
-        specifier: ^1.6.0
-        version: 1.6.0
-      cli-progress:
-        specifier: ^3.12.0
-        version: 3.12.0
-      commander:
-        specifier: ^14.0.2
-        version: 14.0.2
       dockerode:
         specifier: ^4.0.9
         version: 4.0.9
@@ -75,6 +79,9 @@ importers:
       drizzle-zod:
         specifier: ^0.8.3
         version: 0.8.3(drizzle-orm@0.44.7(@libsql/client@0.15.15)(@types/better-sqlite3@7.6.13)(better-sqlite3@12.6.2)(sqlite3@5.1.7))(zod@4.3.6)
+      esbuild:
+        specifier: ^0.27.2
+        version: 0.27.2
       form-data:
         specifier: ^4.0.5
         version: 4.0.5
@@ -84,15 +91,9 @@ importers:
       hono:
         specifier: ^4.10.6
         version: 4.11.5
-      ignore:
-        specifier: ^7.0.5
-        version: 7.0.5
       ksuid:
         specifier: ^3.0.0
         version: 3.0.0
-      ora:
-        specifier: ^9.0.0
-        version: 9.1.0
       paseto:
         specifier: ^3.1.4
         version: 3.1.4
@@ -111,25 +112,6 @@ importers:
       tar:
         specifier: ^7.5.2
         version: 7.5.6
-      zod:
-        specifier: ^4.2.1
-        version: 4.3.6
-    devDependencies:
-      '@faker-js/faker':
-        specifier: ^10.1.0
-        version: 10.2.0
-      '@types/better-sqlite3':
-        specifier: ^7.6.13
-        version: 7.6.13
-      '@types/fs-extra':
-        specifier: ^11.0.4
-        version: 11.0.4
-      '@types/node':
-        specifier: ^20.11.17
-        version: 20.19.30
-      esbuild:
-        specifier: ^0.27.2
-        version: 0.27.2
       tsx:
         specifier: ^4.7.1
         version: 4.21.0
@@ -142,6 +124,9 @@ importers:
       vitest:
         specifier: ^4.0.13
         version: 4.0.18(@types/node@20.19.30)(sugarss@5.0.1)(tsx@4.21.0)
+      zod:
+        specifier: ^4.2.1
+        version: 4.3.6
 
   cli:
     dependencies:
@@ -1668,10 +1653,6 @@ packages:
 
   bullmq@5.67.1:
     resolution: {integrity: sha512-ELJEAzwzesgFxk29emvnAakqrwdBEhEyfZREPQ8pbG4ALVz/mk/AhfuChzxkFpJ7SfL2qclPHbiUGBZzaqcLvg==}
-
-  busboy@1.6.0:
-    resolution: {integrity: sha512-8SFQbg/0hQ9xy3UNTB0YEnsNBbWfhf7RtnzpL7TkBiTBRfrQ9Fxcnz7VJsleJpyp6rVLvXiuORqjlHi5q+PYuA==}
-    engines: {node: '>=10.16.0'}
 
   cacache@15.3.0:
     resolution: {integrity: sha512-VVdYzXEn+cnbXpFgWs5hTT7OScegHVmLhJIR8Ufqk3iFD6A6j5iSX1KuBTfNEv4tdJWE2PzA6IVFtcLC7fN9wQ==}
@@ -3227,10 +3208,6 @@ packages:
 
   stream-shift@1.0.3:
     resolution: {integrity: sha512-76ORR0DO1o1hlKwTbi/DM3EXWGf3ZJYO8cXX5RJwnul2DEg2oyoZyjLNoQM8WsvZiFKCRfC1O0J7iCvie3RZmQ==}
-
-  streamsearch@1.1.0:
-    resolution: {integrity: sha512-Mcc5wHehp9aXz1ax6bZUyY5afg9u2rv5cqQI3mRrYkGC8rW2hM02jWuwjtL++LS5qinSyhj2QfLyNsuc+VsExg==}
-    engines: {node: '>=10.0.0'}
 
   string-width@4.2.3:
     resolution: {integrity: sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==}
@@ -4962,10 +4939,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  busboy@1.6.0:
-    dependencies:
-      streamsearch: 1.1.0
-
   cacache@15.3.0:
     dependencies:
       '@npmcli/fs': 1.1.1
@@ -6592,8 +6565,6 @@ snapshots:
       stubs: 3.0.0
 
   stream-shift@1.0.3: {}
-
-  streamsearch@1.1.0: {}
 
   string-width@4.2.3:
     dependencies:
