@@ -7,7 +7,8 @@
     "frontend": "pnpm -F frontend dev",
     "server": "pnpm -F backend dev",
     "dbinit": "pnpm -F backend dbinit",
-    "build": "pnpm -F frontend build && pnpm -F backend build"
+    "build": "pnpm -F frontend build && pnpm -F backend build",
+    "dockerBuild": "docker build -f Dockerfile.zipup ."
   },
   "dependencies": {
     "zod": "^4.2.1"

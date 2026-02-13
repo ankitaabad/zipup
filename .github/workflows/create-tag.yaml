@@ -1,0 +1,73 @@
+name: Create Version Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump type"
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0   # important: we need full tag history
+
+      - name: Fetch all tags
+        run: git fetch --tags
+
+      - name: Get latest tag
+        id: latest
+        run: |
+          TAG=$(git tag --list 'v*.*.*' --sort=-v:refname | head -n 1)
+          echo "latest=$TAG" >> $GITHUB_OUTPUT
+          echo "Latest tag: $TAG"
+
+      - name: Compute next version
+        id: next
+        run: |
+          LATEST="${{ steps.latest.outputs.latest }}"
+
+          if [ -z "$LATEST" ]; then
+            MAJOR=0
+            MINOR=0
+            PATCH=0
+          else
+            VERSION=${LATEST#v}
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          fi
+
+          case "${{ github.event.inputs.bump }}" in
+            patch)
+              PATCH=$((PATCH+1))
+              ;;
+            minor)
+              MINOR=$((MINOR+1))
+              PATCH=0
+              ;;
+            major)
+              MAJOR=$((MAJOR+1))
+              MINOR=0
+              PATCH=0
+              ;;
+          esac
+
+          NEXT="v$MAJOR.$MINOR.$PATCH"
+          echo "next=$NEXT" >> $GITHUB_OUTPUT
+          echo "Next version: $NEXT"
+
+      - name: Create and push tag
+        run: |
+          git tag "${{ steps.next.outputs.next }}"
+          git push origin "${{ steps.next.outputs.next }}"

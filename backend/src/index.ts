@@ -20,11 +20,10 @@ import fs from "fs";
 
 const frontendDir =
   process.env.FRONTEND_DIST_DIR ??
-  path.join(process.cwd(), "frontend", "dist");/**
- * 1️⃣ Serve static assets FIRST
- */
+  path.join(process.cwd(),"..", "frontend", "dist");
 
 const app = new Hono();
+app.use(secureHeaders());
 app.use(
   "/assets/*",
   serveStatic({
@@ -35,7 +34,7 @@ app.use(
   })
 );
 
-app.use(secureHeaders());
+
 
 //todo: only same origin.
 // app.use(
