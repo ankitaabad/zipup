@@ -1,4 +1,4 @@
-name: Create Version Tag
+name: Create Tag and Release
 
 on:
   workflow_dispatch:
@@ -12,23 +12,26 @@ on:
           - patch
           - minor
           - major
+
 permissions:
-  contents: write
-  
+  contents: write  # required to create releases
+
 jobs:
-  tag:
+  release:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout master
+      # 1️⃣ Checkout repo with full history
+      - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          ref: master
-          fetch-depth: 0   # important: we need full tag history
+          fetch-depth: 0  # needed for tags
 
+      # 2️⃣ Fetch all tags
       - name: Fetch all tags
         run: git fetch --tags
 
+      # 3️⃣ Get latest tag
       - name: Get latest tag
         id: latest
         run: |
@@ -36,6 +39,7 @@ jobs:
           echo "latest=$TAG" >> $GITHUB_OUTPUT
           echo "Latest tag: $TAG"
 
+      # 4️⃣ Compute next version
       - name: Compute next version
         id: next
         run: |
@@ -69,7 +73,46 @@ jobs:
           echo "next=$NEXT" >> $GITHUB_OUTPUT
           echo "Next version: $NEXT"
 
+      # 5️⃣ Create and push tag using a PAT to trigger workflows reliably
       - name: Create and push tag
+        env:
+          PAT: ${{ secrets.PERSONAL_GITHUB_TOKEN }}  # must be a PAT with repo scope
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag "${{ steps.next.outputs.next }}"
-          git push origin "${{ steps.next.outputs.next }}"
+          git push https://x-access-token:${PAT}@github.com/${{ github.repository }}.git "${{ steps.next.outputs.next }}"
+
+      # 6️⃣ Setup pnpm
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      # 7️⃣ Setup Node.js with caching
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      # 8️⃣ Install dependencies
+      - run: pnpm install --frozen-lockfile
+
+      # 9️⃣ Run release script
+      - name: Run release script
+        run: ./release.sh
+
+      # 🔟 Package release folder
+      - name: Package Release
+        run: |
+          cd release
+          TAG=${{ steps.next.outputs.next }}
+          tar -czf ../myapp-${TAG}-linux-x64.tar.gz .
+
+      # 1️⃣1️⃣ Create GitHub Release and upload artifact
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: myapp-${{ steps.next.outputs.next }}-linux-x64.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
