@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
-OUT_DIR="$ROOT_DIR/out"
+OUT_DIR="$ROOT_DIR/release"
 BACKEND_DIR="$ROOT_DIR/backend"
 FRONTEND_DIR="$ROOT_DIR/frontend"
 
@@ -34,7 +34,11 @@ pnpm --filter backend deploy --prod "$OUT_DIR"
 echo "📂 Copying backend dist + package.json..."
 # cp -r "$BACKEND_DIR/dist" "$OUT_DIR/dist"
 # cp "$BACKEND_DIR/package.json" "$OUT_DIR/package.json"
-
+#  copy open resty folder and docker compose file
+echo "📂 Copying OpenResty and docker-compose.yml into /out..."
+mkdir -p "$OUT_DIR/openResty"
+cp -r "$ROOT_DIR/openResty/"* "$OUT_DIR/openResty"
+cp "$ROOT_DIR/docker-compose.yaml" "$OUT_DIR/docker-compose.yaml"
 echo "📂 Copying frontend build into /out/public..."
 mkdir -p "$OUT_DIR/frontend/dist"
 cp -r "$FRONTEND_DIR/dist/"* "$OUT_DIR/frontend/dist"

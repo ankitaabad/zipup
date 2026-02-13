@@ -32,4 +32,4 @@ backend/.pnpm-store
 backend/dist
 backend/dist-frontend
 backend/meta.json
-out
+release/

@@ -1,0 +1,55 @@
+name: Build & Release Artifact
+
+# Trigger only on tags
+on:
+  push:
+    tags:
+      - 'v*'   # any tag starting with "v", e.g., v1.0.0
+
+permissions:
+  contents: write  # required to create releases
+  actions: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout repo with full history so tags are available
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2️⃣ Setup pnpm (skip auto install)
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      # 3️⃣ Setup Node.js with pnpm caching
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      # 4️⃣ Install dependencies
+      - run: pnpm install --frozen-lockfile
+
+      # 5️⃣ Run your release script to produce the artifact folder
+      - name: Run Release Script
+        run: ./release.sh
+
+      # 6️⃣ Package the release folder
+      - name: Package Release
+        run: |
+          cd release   # your folder from ./release.sh
+          TAG=${GITHUB_REF##*/}  # extracts the tag name
+          tar -czf myapp-${TAG}-linux-x64.tar.gz .
+
+      # 7️⃣ Create GitHub Release & upload artifact
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/myapp-${{ github.ref_name }}-linux-x64.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
