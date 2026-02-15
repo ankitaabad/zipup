@@ -34,3 +34,4 @@ backend/dist-frontend
 backend/meta.json
 release/
 backend/src/db/zipup.db
+artifact

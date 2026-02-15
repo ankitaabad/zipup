@@ -1,7 +1,7 @@
 // what we need to create docker container
 
 /**
- * docker image : node:24-alpine
+ * docker image : node:20-bookworm-slim
  * volume: /app and /data
  *
  * secrets
@@ -109,7 +109,7 @@ export async function deployDynamicApp(event: {
     // await new Promise((resolve) => setTimeout(resolve, 8000));
     logger.debug("wait complete, proceeding to create container");
     const container = await docker.createContainer({
-      Image: "node:24-alpine",
+      Image: "node:20-bookworm-slim",
       name: containerName,
 
       Cmd: ["sh", "-c", start_command],

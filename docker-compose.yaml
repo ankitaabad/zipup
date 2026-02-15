@@ -47,7 +47,7 @@
           driver: none
 
     zipup:
-      image: node:24-alpine
+      image: node:20-bookworm-slim
       working_dir: /app
       container_name: zipup
       networks:
