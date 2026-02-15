@@ -36,7 +36,7 @@ echo "📦 Deploying backend prod node_modules into /out..."
 cd "$ROOT_DIR"
 echo "📂 Copying backend dist + package.json..."
 pnpm --filter backend deploy --prod --legacy "$BACKEND_OUT_DIR"
-pnpm --filter backend dbinit
+pnpm --filter backend dbInit
 
 echo "📂 Copying database file into /out..."
 # create db folder in out and copy the db file there

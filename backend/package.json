@@ -12,7 +12,7 @@
     "build": "node esbuild.cjs",
     "output": "pnpm deploy --prod --legacy ./out",
     "migrate": "drizzle-kit push",
-    "dbinit": "rm -f ./src/db/zipup.db && npm run migrate && tsx ./src/scripts/dbinit.ts"
+    "dbInit": "rm -f ./src/db/zipup.db && npm run migrate && tsx ./src/scripts/dbInit.ts"
   },
   "keywords": [],
   "author": "",

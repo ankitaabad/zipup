@@ -6,7 +6,7 @@
     "ui": "pnpm -F frontend dev",
     "frontend": "pnpm -F frontend dev",
     "server": "pnpm -F backend dev",
-    "dbinit": "pnpm -F backend dbinit",
+    "dbInit": "pnpm -F backend dbInit",
     "build": "pnpm -F frontend build && pnpm -F backend build",
     "dockerBuild": "docker build -f Dockerfile.zipup ."
   },
