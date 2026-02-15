@@ -22,7 +22,7 @@ fi
 if ! groups $USER | grep -q "\bdocker\b"; then
     echo "Adding $USER to docker group..."
     sudo usermod -aG docker $USER
-    # Refresh group membership for current shell
+    # Apply new group membership for current shell
     newgrp docker <<EONG
 echo "Docker group applied for current shell"
 EONG
@@ -48,8 +48,8 @@ tar -xzf myapp.tar.gz -C artifact
 rm myapp.tar.gz
 cd artifact
 
-# --- 7. Run docker-compose ---
+# --- 7. Run docker-compose (legacy standalone) ---
 echo "Starting containers..."
-docker compose -f docker-compose.release.yaml up -d
+docker-compose -f docker-compose.release.yaml up -d
 
 echo "✅ Installation complete. Containers are running."
