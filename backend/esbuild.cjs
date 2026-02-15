@@ -17,8 +17,8 @@ esbuild
     minify: true,
     target: ["node24"],
     outfile: "dist/index.js",
-    packages: "external",
-    // loader: { ".node": "file" },
+
+    external: ["@node-rs/argon2", "dockerode"],
     logLevel: "info",
     metafile: true
   })

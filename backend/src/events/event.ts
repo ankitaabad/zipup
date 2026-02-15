@@ -56,7 +56,7 @@ eventBus.on(
       if (type === "STATIC") {
         // static deployment
         logger.debug("reloading the config");
-        await updateRouteConfig();
+        // await updateRouteConfig();
         await fetch(`${reverseProxyURL}/__reload__`, {
           method: "POST",
           headers: {

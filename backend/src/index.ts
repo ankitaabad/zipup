@@ -15,12 +15,11 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import fs from "fs";
-// const __filename = fileURLToPath(import.meta.url)
-// const __dirname = path.dirname(__filename)
+import { internalRouter } from "./routes/internal";
+
 
 const frontendDir =
-  process.env.FRONTEND_DIST_DIR ??
-  path.join(process.cwd(),"..", "frontend", "dist");
+  process.env.FRONTEND_DIST_DIR ?? path.resolve(__dirname,"../frontend/dist");
 
 const app = new Hono();
 app.use(secureHeaders());
@@ -34,8 +33,6 @@ app.use(
   })
 );
 
-
-
 //todo: only same origin.
 // app.use(
 //   "*",
@@ -48,13 +45,13 @@ app.use(
 // );
 
 app.use("/api/*", loggerMiddleware());
+app.route("/api/__zipup_internal__", internalRouter);
 app.use("/api/*", (c, next) => authMiddleware(c, next));
 app.route("/api/admin", adminAuthRouter);
 app.route("/api/apps", appsRouter);
 app.route("/api/global_config", settingsRouter);
 app.route("/api/artifacts", artifactsRouter);
 app.route("/api/stats", statsRouter);
-
 app.get("*", async (c) => {
   const indexHtml = await fs.promises.readFile(
     path.join(frontendDir, "index.html"),

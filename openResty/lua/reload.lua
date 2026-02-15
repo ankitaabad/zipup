@@ -1,37 +1,50 @@
 local cjson = require "cjson.safe"
+local http = require "resty.http"
+
 local dict = ngx.shared.routes
-local config_file = "/config/routes.json"  -- path inside container
+local ROUTES_API = "http://zipup:8080/api/__zipup_internal__/routes"
 
 ngx.log(ngx.INFO, "Reload endpoint hit")
 
--- Read config.json
-local file, err = io.open(config_file, "r")
-if not file then
-    ngx.log(ngx.ERR, "Failed to open config file: ", err)
+local httpc = http.new()
+httpc:set_timeout(3000)
+
+local res, err = httpc:request_uri(ROUTES_API, {
+    method = "GET",
+    headers = {
+        ["X-Zipup-Internal"] = "1"
+    }
+})
+
+if not res then
+    ngx.log(ngx.ERR, "failed to call routes API: ", err)
     ngx.status = 500
-    ngx.say("Failed to read config")
+    ngx.say("failed to fetch routes")
     return
 end
 
-local content = file:read("*a")
-file:close()
-
-local config, decode_err = cjson.decode(content)
-if not config or not config.routes then
-    ngx.log(ngx.ERR, "Failed to parse config: ", decode_err)
+if res.status ~= 200 then
+    ngx.log(ngx.ERR, "routes API returned non-200: ", res.status)
     ngx.status = 500
-    ngx.say("Invalid config")
+    ngx.say("invalid routes response")
     return
 end
 
--- Store routes in shared dict
-local ok, set_err = dict:set("routes", cjson.encode(config.routes))
+local decoded, decode_err = cjson.decode(res.body)
+if not decoded or not decoded.routes then
+    ngx.log(ngx.ERR, "invalid routes response: ", decode_err)
+    ngx.status = 500
+    ngx.say("invalid routes payload")
+    return
+end
+
+local ok, set_err = dict:set("routes", cjson.encode(decoded.routes))
 if not ok then
-    ngx.log(ngx.ERR, "Failed to update shared dict: ", set_err)
+    ngx.log(ngx.ERR, "failed to update shared dict: ", set_err)
     ngx.status = 500
-    ngx.say("Failed to update routes")
+    ngx.say("failed to update routes")
     return
 end
 
-ngx.log(ngx.INFO, "Routes successfully reloaded. Total routes: ", #config.routes)
+ngx.log(ngx.INFO, "Routes successfully reloaded. Total routes: ", #decoded.routes)
 ngx.say("Routes reloaded successfully")

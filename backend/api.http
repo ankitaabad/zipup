@@ -59,3 +59,7 @@ Content-Type: application/json
 ### get docker stats
 
 get {{server}}/stats
+
+
+### Get routes config for openresty
+get {{server}}/api/__zipup_internal__/routes

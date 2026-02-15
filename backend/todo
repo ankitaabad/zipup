@@ -77,6 +77,15 @@ Today:
   ☐ @low Rotate API/ secret key
   ☐ @low Remove setting redis prefix , let user do it themselves.
 
+Next:
+  ☐ Frontend - fix static app settings, they will be different from dynamic app settings. like no env variables, no secrets
+  ☐ Fix Dynamic app settings, remove redis prefix, deployments apis, env and secrets check.
+  ☐ Delete X-Zipup-Internal header from each request, only internal calls can be made with this header.
+  ☐ Deployment signature check.
+  ☐ Remove logs tab and version from UI.
+  
+
+
 Done:
   ✘ create redis prefix
   ✘ creating a task and task invocation

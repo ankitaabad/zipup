@@ -1,9 +1,10 @@
-# Start from the official alpine image
 FROM openresty/openresty:alpine
 
-# Install curl and perl (required by opm in alpine images)
+# opm requires curl + perl on Alpine
 RUN apk add --no-cache curl perl
 
-# Now you can use opm commands in subsequent RUN layers
+# Install required OpenResty libraries
+RUN opm get ledgetech/lua-resty-http
 RUN opm get openresty/lua-resty-lock
-
+# (optional but harmless) clean opm cache
+RUN rm -rf /root/.opm

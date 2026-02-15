@@ -12,32 +12,27 @@
     "build": "node esbuild.cjs",
     "output": "pnpm deploy --prod ./out",
     "migrate": "drizzle-kit push",
-    "dbinit": "rm -f ./src/db/my_database.db && npm run migrate && tsx ./src/scripts/dbinit.ts"
+    "dbinit": "rm -f ./src/db/zipup.db && npm run migrate && tsx ./src/scripts/dbinit.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@node-rs/argon2": "^2.0.2"
+    "@node-rs/argon2": "^2.0.2",
+    "@libsql/client": "^0.15.15",
+    "better-sqlite3": "^12.6.2"
   },
   "devDependencies": {
     "@faker-js/faker": "^10.1.0",
-    "@types/better-sqlite3": "^7.6.13",
-    "@types/fs-extra": "^11.0.4",
-    "@types/node": "^20.11.17",
-    "esbuild": "^0.27.2",
-    "tsx": "^4.7.1",
-    "typescript": "^5.9.3",
-    "vite": "6",
-    "vitest": "^4.0.13",
     "@hono/node-server": "^1.19.6",
-    "@libsql/client": "^0.15.15",
     "@oslojs/crypto": "^1.0.1",
     "@oslojs/encoding": "^1.1.0",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/dockerode": "^3.3.47",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^20.19.30",
     "@zipup/common": "workspace:*",
     "axios": "^1.13.2",
-    "better-sqlite3": "^12.6.2",
     "bullmq": "^5.66.4",
     "dockerode": "^4.0.9",
     "dotenv": "^17.2.3",
@@ -45,6 +40,7 @@
     "drizzle-kit": "^0.31.7",
     "drizzle-orm": "^0.44.7",
     "drizzle-zod": "^0.8.3",
+    "esbuild": "^0.27.2",
     "form-data": "^4.0.5",
     "fs-extra": "^11.3.3",
     "hono": "^4.10.6",
@@ -55,6 +51,10 @@
     "senselogs": "^1.0.7",
     "sqlite3": "^5.1.7",
     "tar": "^7.5.2",
+    "tsx": "^4.7.1",
+    "typescript": "^5.9.3",
+    "vite": "6",
+    "vitest": "^4.0.13",
     "zod": "^4.2.1"
   }
 }

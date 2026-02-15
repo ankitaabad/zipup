@@ -206,7 +206,7 @@ export async function deployDynamicApp(event: {
     // -----------------------------
     // Your app-specific logic to update config, reverse proxy, or route traffic
     // e.g., update openresty or nginx upstream to point to this container
-    await updateRouteConfig();
+    // await updateRouteConfig();
     await fetch(`${reverseProxyURL}/__reload__`, {
       method: "POST",
       headers: {
