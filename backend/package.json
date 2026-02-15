@@ -10,7 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx watch src/index.ts",
     "build": "node esbuild.cjs",
-    "output": "pnpm deploy --prod ./out",
+    "output": "pnpm deploy --prod --legacy ./out",
     "migrate": "drizzle-kit push",
     "dbinit": "rm -f ./src/db/zipup.db && npm run migrate && tsx ./src/scripts/dbinit.ts"
   },

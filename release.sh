@@ -35,7 +35,7 @@ mkdir -p "$BACKEND_OUT_DIR" "$FRONTEND_OUT_DIR"
 echo "📦 Deploying backend prod node_modules into /out..."
 cd "$ROOT_DIR"
 echo "📂 Copying backend dist + package.json..."
-pnpm --filter backend deploy --prod "$BACKEND_OUT_DIR"
+pnpm --filter backend deploy --prod --legacy "$BACKEND_OUT_DIR"
 pnpm --filter backend dbinit
 
 echo "📂 Copying database file into /out..."
