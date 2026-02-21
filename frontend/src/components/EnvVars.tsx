@@ -128,6 +128,7 @@ export function EnvVarsTab({ appId }: { appId: string }) {
                   <Table.Td>
                     {isEditing ? (
                       <TextInput
+                        autoFocus
                         value={editingValue}
                         onChange={(e) => setEditingValue(e.currentTarget.value)}
                         size="xs"
@@ -146,7 +147,10 @@ export function EnvVarsTab({ appId }: { appId: string }) {
                             color="green"
                             leftIcon={<IconCheck size={14} />}
                             onClick={() => {
-                              update.mutate({ id: env.id, value: editingValue });
+                              update.mutate({
+                                id: env.id,
+                                value: editingValue
+                              });
                               setEditingId(null);
                             }}
                           >
@@ -193,14 +197,14 @@ export function EnvVarsTab({ appId }: { appId: string }) {
       )}
 
       {/* Add Environment Variable Modal */}
-      <CustomModal  
+      <CustomModal
         opened={addOpen}
         title="Add Environment Variable"
         onClose={() => setAddOpen(false)}
       >
         <Stack>
           <TextInput
-          data-autofocus
+            data-autofocus
             label="Key"
             placeholder="MY_VARIABLE"
             value={newKey}
@@ -219,7 +223,7 @@ export function EnvVarsTab({ appId }: { appId: string }) {
       </CustomModal>
 
       {/* Delete Confirmation Modal */}
-      <CustomModal 
+      <CustomModal
         opened={deleteOpen}
         title="Delete Environment Variable"
         onClose={() => setDeleteOpen(false)}

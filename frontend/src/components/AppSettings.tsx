@@ -4,70 +4,56 @@ import {
   Stack,
   Group,
   Text,
-  ActionIcon,
-  TextInput,
   Button,
   Divider,
   Title,
-  Menu,
   Badge,
   Box,
-  useMantineTheme
+  UnstyledButton,
+  Tooltip,
+  TextInput
 } from "@mantine/core";
 import {
-  IconPencil,
-  IconDotsVertical,
   IconPlayerPlay,
   IconPlayerStop,
   IconRefresh,
-  IconTrash,
-  IconX
+  IconTrash
 } from "@tabler/icons-react";
 import { useState, useEffect, ReactNode } from "react";
 import { useApp, useUpdateApp } from "../apis/apps";
 import { CustomLoader } from "./CustomLoader";
 import { CustomModal } from "./CustomModal";
 import { useForm } from "@mantine/form";
-import { zod4Resolver } from "mantine-form-zod-resolver";
 import { AppCredentialsDialogBox } from "./AppCredentialsDialogBox";
+import { theme } from "@frontend/theme";
+import { useParams } from "react-router-dom";
 
-/* ------------------- Custom Modal Component ------------------- */
-interface CustomModalProps {
-  opened: boolean;
-  title: string;
-  onClose: () => void;
-  children: ReactNode;
-  padding?: string | number;
-}
+/* ------------------- Types ------------------- */
 
-/* ------------------- AppSettings Component ------------------- */
+type EditTarget = "appName" | "domain" | "startCommand" | "appKey" | null;
 
-type EditTarget =
-  | "appName"
-  | "domainPath"
-  | "redisPrefix"
-  | "startCommand"
-  | "appKey"
-  | null;
+/* ------------------- Component ------------------- */
 
 export function AppSettings({ app_id }: { app_id: string }) {
   const appQuery = useApp(app_id);
   const updateApp = useUpdateApp(app_id);
-
-  // ------------------- State -------------------
+  const { type } = useParams<{
+    type: string;
+    appId: string;
+    tab?: string;
+  }>();
   const [editTarget, setEditTarget] = useState<EditTarget>(null);
-  const [appName, setAppName] = useState<string | null>(null);
+
   const appForm = useForm({
     initialValues: {
+      app_name: "",
       domain: "",
-      redis_prefix: "",
       start_command: "",
-      api_key_suffix: "",
-      app_name: ""
+      api_key_suffix: ""
     }
-    // validate: zod4Resolver(appFormSchema)
   });
-  // ------------------- Sync data when loaded -------------------
+
+  /* ------------------- Sync persisted data ------------------- */
   useEffect(() => {
     if (appQuery.isSuccess && appQuery.data?.data) {
       const app = appQuery.data.data;
@@ -75,151 +61,181 @@ export function AppSettings({ app_id }: { app_id: string }) {
         app_name: app.name || "",
         domain: app.domain || "",
         start_command: app.start_command || "",
-        redis_prefix: app.redis_prefix || "",
         api_key_suffix: app.api_key_suffix || ""
       });
       appForm.reset();
     }
   }, [appQuery.isSuccess, appQuery.data]);
 
-  // ------------------- Loading / Error -------------------
-  if (appQuery.isLoading)
+  /* ------------------- Loading / Error ------------------- */
+  if (appQuery.isLoading) {
     return <CustomLoader fullPage label="Loading app settings..." />;
-  if (appQuery.isError)
-    return <Text color="red">Failed to load app settings</Text>;
+  }
 
-  // ------------------- Render -------------------
+  if (appQuery.isError) {
+    return <Text c="red">Failed to load app settings</Text>;
+  }
+
+  /* ------------------- Render ------------------- */
   return (
     <Paper withBorder p="lg" radius="md" bg="gray.0">
-      <Stack gap="lg">
+      <Stack gap="sm">
         {/* Header */}
         <Group justify="space-between">
           <Title order={4}>App Settings</Title>
 
-          <Menu position="bottom-end">
-            <Menu.Target>
-              <Button variant="outline">Actions</Button>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Item leftSection={<IconPlayerPlay size={16} />}>
-                Start
-              </Menu.Item>
-              <Menu.Item leftSection={<IconPlayerStop size={16} />}>
-                Stop
-              </Menu.Item>
-              <Menu.Item leftSection={<IconRefresh size={16} />}>
-                Restart
-              </Menu.Item>
-              <Menu.Divider />
-              <Menu.Item color="red" leftSection={<IconTrash size={16} />}>
-                Delete App
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
+          <Group>
+            <Button variant="light" leftSection={<IconPlayerPlay size={16} />}>
+              Start
+            </Button>
+            <Button variant="light" leftSection={<IconPlayerStop size={16} />}>
+              Stop
+            </Button>
+            <Button variant="outline" leftSection={<IconRefresh size={16} />}>
+              Restart
+            </Button>
+            <Button
+              color="red"
+              variant="outline"
+              leftSection={<IconTrash size={16} />}
+            >
+              Delete
+            </Button>
+          </Group>
         </Group>
 
         <Divider />
 
-        {/* Settings rows */}
-        <SettingRow
+        {/* ------------------- App Name ------------------- */}
+        <ConfigurableSettingRow
           label="App Name"
           value={appForm.getInitialValues().app_name}
-          onEdit={() => setEditTarget("appName")}
+          description="Used for identification in dashboards and logs. Changing this does not restart the app."
+          onClick={() => setEditTarget("appName")}
         />
+
         <Divider />
-        <SettingRow
+
+        {/* ------------------- Domain ------------------- */}
+        <ConfigurableSettingRow
           label="Domain"
           value={appForm.getInitialValues().domain}
-          onEdit={() => setEditTarget("domainPath")}
+          description="Changing the domain updates the public URL. Existing links will stop working. Restart is manual."
+          onClick={() => setEditTarget("domain")}
         />
-        <Divider />
-        <SettingRow
-          label="Redis Prefix"
-          value={appForm.getInitialValues().redis_prefix}
-          onEdit={() => setEditTarget("redisPrefix")}
-        />
-        <Divider />
-        <SettingRow
-          label="Start Command"
-          value={appForm.getInitialValues().start_command}
-          onEdit={() => setEditTarget("startCommand")}
-        />
+
         <Divider />
 
-        {/* API Key */}
-        <Group align="flex-start" gap="sm">
-          <Menu position="bottom-start">
-            <Menu.Target>
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                mt={2}
-                aria-label="API key actions"
-              >
-                <IconDotsVertical size={16} />
-              </ActionIcon>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Item
-                onClick={() => {
-                  setEditTarget("appKey");
-                }}
-              >
-                Get API Key
-              </Menu.Item>
-              <Menu.Item color="orange">Rotate API Key</Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
+        {/* ------------------- Start Command ------------------- */}
+        {type === "web" && (
+          <>
+            <ConfigurableSettingRow
+              label="Start Command"
+              value={appForm.getInitialValues().start_command}
+              description="Command executed when the app starts. Updating this does not restart the app automatically."
+              onClick={() => setEditTarget("startCommand")}
+            />
 
-          <div style={{ flex: 1 }}>
-            <Text size="sm" fw={500}>
-              API Key
-            </Text>
-            {appForm.getInitialValues().api_key_suffix ? (
-              <Text size="sm" c="dimmed">
-                .... .... .... {appForm.getInitialValues().api_key_suffix}
+            <Divider />
+          </>
+        )}
+        {/* ------------------- API Key ------------------- */}
+        <Box
+          p="sm"
+          style={{
+            borderRadius: 8,
+            transition: "background-color 120ms ease"
+          }}
+          className="config-row"
+        >
+          {/* Header */}
+          <Group justify="space-between" align="center">
+            <Tooltip
+              label="Rotating the API key immediately invalidates the previous key."
+              multiline
+              w={240}
+              withArrow
+            >
+              <Text size="sm" fw={500}>
+                API Key
               </Text>
-            ) : (
-              <Badge color="red" variant="light">
-                Not set
-              </Badge>
-            )}
-          </div>
-        </Group>
+            </Tooltip>
 
+            {/* <Text size="xs" c="dimmed">
+              Credentials
+            </Text> */}
+          </Group>
+
+          {/* Value */}
+          {appForm.getInitialValues().api_key_suffix ? (
+            <Text
+              size="sm"
+              fw={500}
+              mt={4}
+              style={{ fontFamily: "var(--mantine-font-family-monospace)" }}
+              c={theme.colors.primaryColor[7]}
+            >
+              •••• •••• •••• {appForm.getInitialValues().api_key_suffix}
+            </Text>
+          ) : (
+            <Text size="sm" fw={500} c="red" mt={4}>
+              Not set
+            </Text>
+          )}
+
+          {/* Description */}
+          <Text size="xs" c="dimmed" mt={6} maw={520}>
+            Used for authenticating API requests. Treat this key like a
+            password.
+          </Text>
+
+          {/* Actions */}
+          <Group mt="sm">
+            <Button
+              size="xs"
+              variant="light"
+              onClick={() => setEditTarget("appKey")}
+            >
+              Get API Key
+            </Button>
+            <Button size="xs" color="orange" variant="outline">
+              Rotate Key
+            </Button>
+          </Group>
+        </Box>
         {/* ------------------- Modals ------------------- */}
         {editTarget === "appKey" && (
           <CustomModal
             opened
-            onClose={() => {
-              setEditTarget(null);
-            }}
             title="App Credentials"
+            onClose={() => setEditTarget(null)}
           >
             <AppCredentialsDialogBox
-              onClose={() => {
-                setEditTarget(null);
-              }}
               appId={app_id}
+              onClose={() => setEditTarget(null)}
             />
           </CustomModal>
         )}
+
         {editTarget === "appName" && (
           <CustomModal
-            title="Update App Name"
             opened
+            title="Update App Name"
             onClose={() => {
               appForm.reset();
               setEditTarget(null);
             }}
           >
+            <Text size="sm" c="dimmed" mb="sm">
+              Changing the app name does not restart the app.
+            </Text>
+
             <TextInput
-              data-autofocus
-              label="App Name"
-              description="Shown in dashboards and logs"
-              key={appForm.key("app_name")}
+              autoFocus
+              style={{ width: "100%" }}
               {...appForm.getInputProps("app_name")}
             />
+
             <Group justify="flex-end" mt="md">
               <Button
                 onClick={() => {
@@ -236,25 +252,25 @@ export function AppSettings({ app_id }: { app_id: string }) {
           </CustomModal>
         )}
 
-        {editTarget === "domainPath" && (
+        {editTarget === "domain" && (
           <CustomModal
-            title="Update Domain"
             opened
+            title="Update Domain"
             onClose={() => {
               appForm.reset();
               setEditTarget(null);
             }}
           >
+            <Text size="sm" c="dimmed" mb="sm">
+              This change updates the public URL. Restart is manual.
+            </Text>
+
             <TextInput
-              data-autofocus
-              label="Domain"
-              key={appForm.key("domain")}
+              autoFocus
+              style={{ width: "100%" }}
               {...appForm.getInputProps("domain")}
             />
 
-            <Text size="xs" c="dimmed" mt={5}>
-              This will change the public URL of your application.
-            </Text>
             <Group justify="flex-end" mt="md">
               <Button
                 onClick={() => {
@@ -271,54 +287,25 @@ export function AppSettings({ app_id }: { app_id: string }) {
           </CustomModal>
         )}
 
-        {editTarget === "redisPrefix" && (
-          <CustomModal
-            title="Update Redis Prefix"
-            opened
-            onClose={() => {
-              appForm.reset();
-              setEditTarget(null);
-            }}
-          >
-            <TextInput
-              data-autofocus
-              label="Redis Prefix"
-              description="Changing this may invalidate existing cache keys"
-              key={appForm.key("redis_prefix")}
-              {...appForm.getInputProps("redis_prefix")}
-            />
-            <Group justify="flex-end" mt="md">
-              <Button
-                onClick={() => {
-                  updateApp.mutate({
-                    action: "UpdateRedisPrefix",
-                    redis_prefix: appForm.values.redis_prefix
-                  });
-                  setEditTarget(null);
-                }}
-              >
-                Save
-              </Button>
-            </Group>
-          </CustomModal>
-        )}
-
         {editTarget === "startCommand" && (
           <CustomModal
-            title="Update Start Command"
             opened
+            title="Update Start Command"
             onClose={() => {
               appForm.reset();
               setEditTarget(null);
             }}
           >
+            <Text size="sm" c="dimmed" mb="sm">
+              This does not restart the app automatically.
+            </Text>
+
             <TextInput
-              data-autofocus
-              label="Start Command"
-              description="Executed when the app container starts"
-              key={appForm.key("start_command")}
+              autoFocus
+              style={{ width: "100%" }}
               {...appForm.getInputProps("start_command")}
             />
+
             <Group justify="flex-end" mt="md">
               <Button
                 onClick={() => {
@@ -339,41 +326,65 @@ export function AppSettings({ app_id }: { app_id: string }) {
   );
 }
 
-/* ------------------- Setting Row Component ------------------- */
-function SettingRow({
+/* ------------------- Configurable Row ------------------- */
+
+function ConfigurableSettingRow({
   label,
   value,
-  onEdit
+  description,
+  onClick
 }: {
   label: string;
   value: string | null;
-  onEdit: () => void;
+  description: string;
+  onClick: () => void;
 }) {
   return (
-    <Group align="flex-start" gap="sm">
-      <ActionIcon
-        variant="subtle"
-        color="gray"
-        mt={2}
-        onClick={onEdit}
-        aria-label={`Edit ${label}`}
+    <UnstyledButton
+      onClick={onClick}
+      style={{ width: "100%", textAlign: "left" }}
+    >
+      <Box
+        p="sm"
+        style={{
+          borderRadius: 8,
+          transition: "background-color 120ms ease"
+        }}
+        className="config-row"
       >
-        <IconPencil size={16} />
-      </ActionIcon>
-      <div style={{ flex: 1 }}>
-        <Text size="sm" fw={500}>
-          {label}
-        </Text>
+        {/* Header */}
+        <Group align="center">
+          <Text size="sm" fw={500}>
+            {label}
+          </Text>
+
+          <Text size="xs" c="dimmed">
+            [ Click Row to Edit ]
+          </Text>
+        </Group>
+
+        {/* Value */}
         {value ? (
-          <Text size="sm" c="dimmed">
+          <Text
+            size="sm"
+            mt={4}
+            fw={500}
+            style={{ fontFamily: "monospace" }}
+            c={theme.colors.primaryColor[7]}
+          >
             {value}
           </Text>
         ) : (
-          <Badge color="red" variant="light">
+          <Badge color="red" variant="light" mt={6}>
             Not set
           </Badge>
         )}
-      </div>
-    </Group>
+
+        {/* Description */}
+        <Text size="xs" c="dimmed" mt={6} maw={520}>
+          [ {description} ]
+        </Text>
+      </Box>
+    </UnstyledButton>
   );
 }

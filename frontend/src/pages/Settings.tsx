@@ -30,9 +30,9 @@ export function Settings() {
         <Tabs.Tab value="general" leftSection={<IconSettings size={16} />}>
           General
         </Tabs.Tab>
-        <Tabs.Tab value="2fa" leftSection={<IconShieldLock size={16} />}>
+        {/* <Tabs.Tab value="2fa" leftSection={<IconShieldLock size={16} />}>
           2FA
-        </Tabs.Tab>
+        </Tabs.Tab> */}
       </Tabs.List>
 
       {/* ---------------- General Tab ---------------- */}
@@ -85,7 +85,7 @@ export function Settings() {
           </Card>
 
           {/* Debug Logs */}
-          <Card withBorder>
+          {/* <Card withBorder>
             <Group justify="space-between">
               <div>
                 <Text fw={600}>Debug logs</Text>
@@ -101,7 +101,7 @@ export function Settings() {
                 }
               />
             </Group>
-          </Card>
+          </Card> */}
         </Stack>
       </Tabs.Panel>
 

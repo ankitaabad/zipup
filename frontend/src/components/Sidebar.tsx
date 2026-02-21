@@ -127,7 +127,7 @@ export function AppSidebar() {
             <Text fw={700} size="lg" style={{ letterSpacing: -0.3 }}>
               zipup
             </Text>
-            <Code size="xs">v3.1.2</Code>
+            {/* <Code size="xs">v3.1.2</Code> */}
           </Group>
         </Box>
 
@@ -150,6 +150,7 @@ export function AppSidebar() {
                 key={site.id}
                 active={activeAppId === site.id}
                 onClick={() => onSelectApp("static", site.id)}
+                
               >
                 {site.name}
               </MenuItem>
@@ -183,14 +184,6 @@ export function AppSidebar() {
             </MenuItem>
           </SubMenu>
 
-          {/* Logs */}
-          <MenuItem
-            icon={<IconFileText size={18} />}
-            active={activeSection === "Logs"}
-            onClick={() => navigate("/logs")}
-          >
-            Logs
-          </MenuItem>
 
           {/* Settings */}
           <MenuItem

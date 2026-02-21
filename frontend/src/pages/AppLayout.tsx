@@ -78,10 +78,12 @@ export default function AppLayout() {
         <Title
           order={3}
           fw={600}
-          c="gray.7"
-          fs={"italic"}
-          mx={"auto"}
-          style={{ letterSpacing: "-0.2px" }}
+          mx="auto"
+          style={{
+            letterSpacing: "-0.3px",
+            fontFamily: "var(--mantine-font-family-monospace)",
+            color: "var(--mantine-color-dark-9)"
+          }}
         >
           {app.name}
         </Title>
@@ -95,22 +97,13 @@ export default function AppLayout() {
           <Tabs.List>
             <Tabs.Tab value="settings">Settings</Tabs.Tab>
             <Tabs.Tab value="deployments">Deployments</Tabs.Tab>
-            <Tabs.Tab value="env">Env Variables</Tabs.Tab>
-            <Tabs.Tab value="secrets">Secrets</Tabs.Tab>
+            {type === "web" && (
+              <>
+                <Tabs.Tab value="env">Env Variables</Tabs.Tab>
+                <Tabs.Tab value="secrets">Secrets</Tabs.Tab>
+              </>
+            )}
           </Tabs.List>
-
-          {/* Overview */}
-          <Tabs.Panel
-            value="overview"
-            pt="md"
-            style={{ flex: 1, overflowY: "auto" }}
-          >
-            <div>
-              <p>App type: {type}</p>
-              <p>Internal port: {app.internal_port}</p>
-              {/* Add more overview info here */}
-            </div>
-          </Tabs.Panel>
 
           {/* App Settings */}
           <Tabs.Panel
@@ -131,6 +124,7 @@ export default function AppLayout() {
           </Tabs.Panel>
 
           {/* Env Variables */}
+
           <Tabs.Panel
             value="env"
             pt="md"
@@ -202,7 +196,6 @@ export default function AppLayout() {
               </Table>
             </Stack>
           </Tabs.Panel>
-
         </Tabs>
       </Stack>
     </Paper>

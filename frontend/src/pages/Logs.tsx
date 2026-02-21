@@ -1,6 +1,6 @@
 // src/pages/Logs.tsx
 import { Paper, Title, Stack } from "@mantine/core";
-
+//todo: Remove this.
 export default function Logs() {
   return (
     <Paper
