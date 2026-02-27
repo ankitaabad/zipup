@@ -20,6 +20,8 @@ import {
   UpdateEnvVarSchema
 } from "@common/index";
 import { withErrorHandler } from "@backend/utils/middlewares";
+import { isAppRunningByAppId } from "@backend/utils/docker_utils";
+import { eventBus, zipupEvents } from "@backend/events/event";
 
 export const appsRouter = new Hono();
 
@@ -106,6 +108,48 @@ appsRouter.patch("/:app_id", async (c) => {
   }
 });
 
+appsRouter.delete(
+  "/:app_id",
+  withErrorHandler(async (c) => {
+    const app_id = c.req.param("app_id");
+    // ensure that no running version before deleting the app
+    const isAppRunning = await isAppRunningByAppId(app_id);
+    if (isAppRunning) {
+      return c.json({ error: "Please stop the app before deleting." }, 400);
+    }
+
+    eventBus.emit(zipupEvents.app_delete_initiated, { app_id });
+    return c.json({
+      message: "App deletion in progress."
+    });
+  })
+);
+appsRouter.post(
+  "/:app_id/stop",
+  withErrorHandler(async (c) => {
+    const app_id = c.req.param("app_id");
+    // ensure that no running version before deleting the app
+    const isAppRunning = await isAppRunningByAppId(app_id);
+    if (!isAppRunning) {
+      return c.json({ error: "App is not running." }, 400);
+    }
+
+    eventBus.emit(zipupEvents.app_stop_initiated, { app_id });
+    return c.json({
+      message: "App stopping in progress."
+    });
+  })
+);
+appsRouter.post(
+  "/:app_id/start",
+  withErrorHandler(async (c) => {
+    const app_id = c.req.param("app_id");
+    eventBus.emit(zipupEvents.deploy_latest_app, { app_id });
+    return c.json({
+      message: "App starting in progress."
+    });
+  })
+);
 // get api key
 appsRouter.get(
   "/:id/app-key",
@@ -124,6 +168,34 @@ appsRouter.get(
     return c.json({
       app_key,
       secret_key
+    });
+  })
+);
+
+// rotate app key and secret key
+appsRouter.post(
+  "/:id/rotate-keys",
+  withErrorHandler(async (c) => {
+    const id = c.req.param("id");
+    const app = await db
+      .select()
+      .from(appsTable)
+      .where(eq(appsTable.id, id))
+      .limit(1)
+      .get();
+    if (!app) {
+      return c.json({ error: "App not found" }, 404);
+    }
+    const new_app_key = generateApiKey();
+    const new_secret_key = createSecretKey();
+    await db
+      .update(appsTable)
+      .set({ app_key: new_app_key, secret_key: new_secret_key })
+      .where(eq(appsTable.id, id));
+    return c.json({
+      message: "App key and Secret key rotated successfully",
+      app_key: new_app_key,
+      secret_key: new_secret_key
     });
   })
 );
@@ -233,6 +305,30 @@ appsRouter.delete(
 );
 
 // secrets api
+
+// get all secrets for an app keys only, not values
+
+appsRouter.get(
+  "/:app_id/secrets/keys",
+  withErrorHandler(async (c) => {
+    const app_id = c.req.param("app_id");
+
+    const secrets = await db
+      .select()
+      .from(secretsTable)
+      .where(eq(secretsTable.app_id, app_id))
+      .orderBy(secretsTable.key);
+
+    return c.json({
+      data: secrets.map((secret) => ({
+        id: secret.id,
+        key: secret.key,
+        created_at: secret.created_at,
+        updated_at: secret.updated_at
+      }))
+    });
+  })
+);
 
 appsRouter.get(
   "/:app_id/secrets/:secret_id",

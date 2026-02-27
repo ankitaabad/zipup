@@ -46,7 +46,7 @@ app.use(
 
 app.use("/api/*", loggerMiddleware());
 app.route("/api/__zipup_internal__", internalRouter);
-app.use("/api/*", (c, next) => authMiddleware(c, next));
+// app.use("/api/*", (c, next) => authMiddleware(c, next));
 app.route("/api/admin", adminAuthRouter);
 app.route("/api/apps", appsRouter);
 app.route("/api/global_config", settingsRouter);

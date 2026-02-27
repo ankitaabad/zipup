@@ -20,7 +20,7 @@ import {
   IconTrash
 } from "@tabler/icons-react";
 import { useState, useEffect, ReactNode } from "react";
-import { useApp, useUpdateApp } from "../apis/apps";
+import { useApp, useRotateKeys, useUpdateApp } from "../apis/apps";
 import { CustomLoader } from "./CustomLoader";
 import { CustomModal } from "./CustomModal";
 import { useForm } from "@mantine/form";
@@ -37,6 +37,7 @@ type EditTarget = "appName" | "domain" | "startCommand" | "appKey" | null;
 export function AppSettings({ app_id }: { app_id: string }) {
   const appQuery = useApp(app_id);
   const updateApp = useUpdateApp(app_id);
+  const rotateKeys = useRotateKeys(app_id);
   const { type } = useParams<{
     type: string;
     appId: string;
@@ -157,7 +158,7 @@ export function AppSettings({ app_id }: { app_id: string }) {
               withArrow
             >
               <Text size="sm" fw={500}>
-                API Key
+                APP Key
               </Text>
             </Tooltip>
 
@@ -196,10 +197,17 @@ export function AppSettings({ app_id }: { app_id: string }) {
               variant="light"
               onClick={() => setEditTarget("appKey")}
             >
-              Get API Key
+              Get APP Keys
             </Button>
-            <Button size="xs" color="orange" variant="outline">
-              Rotate Key
+            <Button
+              size="xs"
+              color="orange"
+              variant="outline"
+              onClick={() => {
+                rotateKeys.mutate();
+              }}
+            >
+              Rotate Keys
             </Button>
           </Group>
         </Box>

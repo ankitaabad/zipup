@@ -10,7 +10,7 @@ export interface EnvVar {
 
 /* ---------------- Queries ---------------- */
 
-export function useEnvVars(appId: string) {
+export function useGetAllEnvVars(appId: string) {
   return useQuery({
     queryKey: ["env-vars", appId],
     queryFn: async () => {

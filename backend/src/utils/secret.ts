@@ -6,7 +6,7 @@ const key = crypto.randomBytes(32);
 const encKey =
   "1d3352caef90975cef0bcb77f35f8c7bc9e8c8e45e44cf44cc76fe4dfd188285";
 export function createSecretKey() {
-  return crypto.randomBytes(32).toString("hex");
+  return `zipup_sk_${crypto.randomBytes(32).toString("hex")}`;
 }
 export function encrypt(plaintext, key) {
   const iv = crypto.randomBytes(12); // 96-bit nonce (recommended for GCM)
@@ -41,7 +41,6 @@ export function decrypt(ciphertextBase64, key) {
   return decrypted.toString("utf8");
 }
 
-
 export function sha256(data: string | Buffer) {
   return crypto.createHash("sha256").update(data).digest("hex");
 }
@@ -53,12 +52,9 @@ export function signPayload(
   bodyHash: string,
   secretKey: string
 ) {
-  const canonical = [
-    method.toUpperCase(),
-    path,
-    timestamp,
-    bodyHash
-  ].join("\n");
+  const canonical = [method.toUpperCase(), path, timestamp, bodyHash].join(
+    "\n"
+  );
 
   return crypto
     .createHmac("sha256", Buffer.from(secretKey, "hex"))

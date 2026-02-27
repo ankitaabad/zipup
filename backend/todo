@@ -78,11 +78,23 @@ Today:
   ☐ @low Remove setting redis prefix , let user do it themselves.
 
 Next:
-  ☐ Frontend - fix static app settings, they will be different from dynamic app settings. like no env variables, no secrets
-  ☐ Fix Dynamic app settings, remove redis prefix, deployments apis, env and secrets check.
+  ✔ Frontend - fix static app settings, they will be different from dynamic app settings. like no env variables, no secrets
+  ✔ Fix Dynamic app settings, remove redis prefix, deployments apis, env and secrets check.
+  ✔ @bug deployment is failing
+  ☐ @bug deployed app is not running on the domain.
+  ☐ add checks that start command is present before deploying an app.
+  ☐ Env and secret variable present in the app deployed.
+  ☐ start/stop and delete app.
+  ☐ postgres accesss.
+  ☐ redis access
+  ☐ working with rotated keys.
+  ☐ new version correctly working
+  ☐ wireguard vpn connection working.
+  ☐ logs appearing in victorologs.
+  ☐ longest prefix matchin working for routing.
   ☐ Delete X-Zipup-Internal header from each request, only internal calls can be made with this header.
   ☐ Deployment signature check.
-  ☐ Remove logs tab and version from UI.
+  ✔ Remove logs tab and version from UI.
   
 
 

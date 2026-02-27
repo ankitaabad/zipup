@@ -1,4 +1,4 @@
-// src/components/EnvVarsTab.tsx
+// src/components/SecretVarsTab.tsx
 import { useState } from "react";
 import {
   Button,
@@ -6,9 +6,10 @@ import {
   Paper,
   Table,
   Text,
-  TextInput,
   Stack,
-  Center
+  Center,
+  PasswordInput,
+  TextInput
 } from "@mantine/core";
 import {
   IconPlus,
@@ -16,23 +17,28 @@ import {
   IconEdit,
   IconCheck,
   IconX,
-  IconDatabaseOff
+  IconDatabaseOff,
+  IconLock
 } from "@tabler/icons-react";
 import {
-  useCreateEnvVar,
-  useDeleteEnvVar,
-  useGetAllEnvVars,
-  useUpdateEnvVar
-} from "../apis/envVar";
+  useGetAllSecretVarsKeys,
+  useCreateSecretVar,
+  useDeleteSecretVar,
+  useUpdateSecretVar,
+  useFetchSecretVar
+} from "../apis/secretVars";
 import { CustomModal } from "./CustomModal";
 
-export function EnvVarsTab({ appId }: { appId: string }) {
-  const { data, isLoading } = useGetAllEnvVars(appId);
-  const create = useCreateEnvVar(appId);
-  const update = useUpdateEnvVar(appId);
-  const remove = useDeleteEnvVar(appId);
+export function SecretVarsTab({ appId }: { appId: string }) {
+  const { data, isLoading } = useGetAllSecretVarsKeys(appId);
+
+  const create = useCreateSecretVar(appId);
+  const update = useUpdateSecretVar(appId);
+  const remove = useDeleteSecretVar(appId);
+  const fetchSecret = useFetchSecretVar(appId);
 
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingKey, setEditingKey] = useState("");
   const [editingValue, setEditingValue] = useState("");
 
   const [addOpen, setAddOpen] = useState(false);
@@ -43,9 +49,41 @@ export function EnvVarsTab({ appId }: { appId: string }) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteKey, setDeleteKey] = useState("");
 
-  const saveNewVar = () => {
+  /* ---------- handlers ---------- */
+
+  const openEdit = async (id: string, key: string) => {
+    setEditingId(id);
+    setEditingKey(key);
+
+    const res = await fetchSecret.mutateAsync(id);
+    setEditingValue(res.value);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditingKey("");
+    setEditingValue("");
+  };
+
+  const saveEdit = () => {
+    if (!editingId) return;
+
+    update.mutate({
+      secret_id: editingId,
+      value: editingValue
+    });
+
+    cancelEdit();
+  };
+
+  const saveNewSecret = () => {
     if (!newKey.trim()) return;
-    create.mutate({ key: newKey.trim(), value: newValue });
+
+    create.mutate({
+      key: newKey.trim(),
+      value: newValue
+    });
+
     setNewKey("");
     setNewValue("");
     setAddOpen(false);
@@ -64,42 +102,35 @@ export function EnvVarsTab({ appId }: { appId: string }) {
     setDeleteOpen(false);
   };
 
+  /* ---------- UI ---------- */
+
   return (
     <Paper p="md" withBorder bg="gray.0">
       <Group justify="space-between" mb="sm">
-        <Text fw={600}>Environment Variables</Text>
+        <Group gap="xs">
+          <IconLock size={16} />
+          <Text fw={600}>Secrets</Text>
+        </Group>
+
         <Button
           size="xs"
           leftIcon={<IconPlus size={14} />}
           onClick={() => setAddOpen(true)}
         >
-          Add variable
+          Add secret
         </Button>
       </Group>
 
       <Text size="sm" c="dimmed" mb="md">
-        Changes require redeploy to take effect
+        Secret values are hidden and fetched only when edited.
       </Text>
 
       {!isLoading && (!data || data.length === 0) ? (
-        <Paper
-          p="xl"
-          radius="md"
-          withBorder
-          style={{ textAlign: "center", backgroundColor: "#f8f9fa" }}
-        >
+        <Paper p="xl" radius="md" withBorder>
           <Center mb="sm">
-            <IconDatabaseOff size={48} color="#9CA3AF" />
+            <IconDatabaseOff size={48} />
           </Center>
-          <Text size="lg" fw={500} mb="xs">
-            No environment variables
-          </Text>
-          <Text color="dimmed" size="sm" mb="md">
-            You haven’t added any environment variables yet.
-          </Text>
-          <Button size="sm" onClick={() => setAddOpen(true)}>
-            Add Environment Variable
-          </Button>
+          <Text fw={500}>No secrets</Text>
         </Paper>
       ) : (
         <Table striped highlightOnHover>
@@ -110,6 +141,7 @@ export function EnvVarsTab({ appId }: { appId: string }) {
               <Table.Th w={180}>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
+
           <Table.Tbody>
             {isLoading && (
               <Table.Tr>
@@ -117,23 +149,27 @@ export function EnvVarsTab({ appId }: { appId: string }) {
               </Table.Tr>
             )}
 
-            {data?.map((env) => {
-              const isEditing = editingId === env.id;
+            {data?.map((secret) => {
+              const isEditing = editingId === secret.id;
+
               return (
-                <Table.Tr key={env.id}>
+                <Table.Tr key={secret.id}>
                   <Table.Td>
-                    <Text fw={500}>{env.key}</Text>
+                    <Text fw={500}>{secret.key}</Text>
                   </Table.Td>
 
                   <Table.Td>
                     {isEditing ? (
-                      <TextInput
+                      <PasswordInput
                         autoFocus
                         value={editingValue}
-                        onChange={(e) => setEditingValue(e.currentTarget.value)}
+                        onChange={(e) =>
+                          setEditingValue(e.currentTarget.value)
+                        }
+                        size="md"
                       />
                     ) : (
-                      <Text>{env.value}</Text>
+                      <Text c="dimmed">••••••••</Text>
                     )}
                   </Table.Td>
 
@@ -145,13 +181,7 @@ export function EnvVarsTab({ appId }: { appId: string }) {
                             size="xs"
                             color="green"
                             leftIcon={<IconCheck size={14} />}
-                            onClick={() => {
-                              update.mutate({
-                                id: env.id,
-                                value: editingValue
-                              });
-                              setEditingId(null);
-                            }}
+                            onClick={saveEdit}
                           >
                             Save
                           </Button>
@@ -159,7 +189,7 @@ export function EnvVarsTab({ appId }: { appId: string }) {
                             size="xs"
                             color="gray"
                             leftIcon={<IconX size={14} />}
-                            onClick={() => setEditingId(null)}
+                            onClick={cancelEdit}
                           >
                             Cancel
                           </Button>
@@ -169,10 +199,9 @@ export function EnvVarsTab({ appId }: { appId: string }) {
                           <Button
                             size="xs"
                             leftIcon={<IconEdit size={14} />}
-                            onClick={() => {
-                              setEditingId(env.id);
-                              setEditingValue(env.value);
-                            }}
+                            onClick={() =>
+                              openEdit(secret.id, secret.key)
+                            }
                           >
                             Edit
                           </Button>
@@ -180,7 +209,9 @@ export function EnvVarsTab({ appId }: { appId: string }) {
                             size="xs"
                             color="red"
                             leftIcon={<IconTrash size={14} />}
-                            onClick={() => confirmDelete(env.id, env.key)}
+                            onClick={() =>
+                              confirmDelete(secret.id, secret.key)
+                            }
                           >
                             Delete
                           </Button>
@@ -195,36 +226,33 @@ export function EnvVarsTab({ appId }: { appId: string }) {
         </Table>
       )}
 
-      {/* Add Environment Variable Modal */}
+      {/* Add Secret Modal */}
       <CustomModal
         opened={addOpen}
-        title="Add Environment Variable"
+        title="Add Secret"
         onClose={() => setAddOpen(false)}
       >
         <Stack>
           <TextInput
-            data-autofocus
             label="Key"
-            placeholder="MY_VARIABLE"
             value={newKey}
             onChange={(e) => setNewKey(e.currentTarget.value)}
           />
-          <TextInput
+          <PasswordInput
             label="Value"
             value={newValue}
-            mt="sm"
             onChange={(e) => setNewValue(e.currentTarget.value)}
           />
           <Group justify="flex-end" mt="md">
-            <Button onClick={saveNewVar}>Add</Button>
+            <Button onClick={saveNewSecret}>Add</Button>
           </Group>
         </Stack>
       </CustomModal>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Modal */}
       <CustomModal
         opened={deleteOpen}
-        title="Delete Environment Variable"
+        title="Delete Secret"
         onClose={() => setDeleteOpen(false)}
       >
         <Stack>

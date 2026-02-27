@@ -4,8 +4,17 @@ import { hash, verify } from "@node-rs/argon2";
 import { sha1 } from "@oslojs/crypto/sha1";
 import { encodeHexLowerCase } from "@oslojs/encoding";
 import { V4 } from "paseto";
-import { AUD, ISSUER, TokenPurpose } from "./constants";
+import {
+  AUD,
+  DYNAMIC_ARTIFACT_ROOT,
+  DYNAMIC_TEMP_DIR,
+  ISSUER,
+  STATIC_ARTIFACT_ROOT,
+  STATIC_TEMP_DIR,
+  TokenPurpose
+} from "./constants";
 import { BadRequest } from "./errorHandler";
+import path from "path";
 export const generateId = () => {
   return KSUID.randomSync().string;
 };
@@ -262,3 +271,21 @@ export function mustBeTrue(
 
   throw new BadRequest(message);
 }
+
+export const getArtifactStorageLocation = (
+  type: "STATIC" | "DYNAMIC",
+  artifact_id: string
+) => {
+  let artifactRoot: string, artifactTemp: string;
+  if (type === "STATIC") {
+    artifactRoot = STATIC_ARTIFACT_ROOT;
+    artifactTemp = STATIC_TEMP_DIR;
+  } else if (type === "DYNAMIC") {
+    artifactRoot = DYNAMIC_ARTIFACT_ROOT;
+    artifactTemp = DYNAMIC_TEMP_DIR;
+  } else {
+    throw new Error("Invalid artifact type");
+  }
+  const artifactPath = path.join(artifactRoot, artifact_id);
+  return artifactPath;
+};

@@ -30,6 +30,7 @@ fi
 
 # --- 4. Set variables for GitHub release ---
 REPO_OWNER="ankitaabad"
+# todo: change this to zipup
 REPO_NAME="passup"
 
 # Fetch latest release tag

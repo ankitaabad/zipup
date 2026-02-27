@@ -59,6 +59,20 @@ export function useCreateApp() {
   });
 }
 
+export function useRotateKeys(appId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const res = await api.post(`/apps/${appId}/rotate-keys`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["apps", appId] });
+    }
+  });
+}
+
 export function useUpdateApp(appId: string) {
   const queryClient = useQueryClient();
 

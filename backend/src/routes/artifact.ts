@@ -10,13 +10,16 @@ import { eventBus, zipupEvents } from "../events/event";
 import { getLogger } from "../utils/logger";
 import { getArtifactWithApp } from "../utils/dbQueries";
 import { errorHandler } from "../utils/errorHandler";
+import {
+  DYNAMIC_ARTIFACT_ROOT,
+  DYNAMIC_TEMP_DIR,
+  STATIC_ARTIFACT_ROOT,
+  STATIC_TEMP_DIR
+} from "@backend/utils/constants";
+import { File } from "buffer";
 
 export const artifactsRouter = new Hono();
 
-const STATIC_ARTIFACT_ROOT = "/static_artifacts";
-const STATIC_TEMP_DIR = path.join(STATIC_ARTIFACT_ROOT, "temp");
-const DYNAMIC_ARTIFACT_ROOT = "/dynamic_artifacts";
-const DYNAMIC_TEMP_DIR = path.join(DYNAMIC_ARTIFACT_ROOT, "temp");
 // fs.ensureDirSync(STATIC_ARTIFACT_ROOT);
 // fs.ensureDirSync(STATIC_TEMP_DIR);
 
@@ -36,7 +39,7 @@ artifactsRouter.post("/", async (c) => {
       .limit(1)
       .get();
 
-    if (!app) return c.json({ error: "Invalid API key" }, 401);
+    if (!app) return c.json({ error: "Invalid App key" }, 401);
 
     const app_id = app.id;
     const artifactId = generateId();
@@ -103,7 +106,7 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
     fs.ensureDirSync(artifactTemp);
     // parse multipart/form-data
     const body = await c.req.parseBody();
-    console.log("Received body: ");
+    console.log("Received body: ", body);
     const file = body["artifact"];
     console.log("file" + file);
     console.log("filetype " + typeof file);
@@ -116,7 +119,7 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
     const finalDir = path.join(artifactRoot, artifact_id);
     fs.ensureDirSync(finalDir);
 
-    const arrayBuffer = await file.arrayBuffer();
+    const arrayBuffer = await (file as File).arrayBuffer();
     await fs.writeFile(tempPath, Buffer.from(arrayBuffer));
 
     // extract and cleanup

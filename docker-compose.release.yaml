@@ -45,7 +45,7 @@ services:
       driver: none
 
   zipup:
-    image: node:20-bookworm-slim
+    image: node:24-bookworm-slim
     container_name: zipup
     working_dir: /app
     restart: unless-stopped

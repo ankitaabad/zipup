@@ -19,6 +19,7 @@ import Deployment from "../components/Deployment";
 import { EnvVarsTab } from "../components/EnvVars";
 import { CustomLoader } from "../components/CustomLoader";
 import { theme } from "@frontend/theme";
+import { SecretVarsTab } from "@frontend/components/SecretVarsTab";
 
 export default function AppLayout() {
   const { type, appId, tab } = useParams<{
@@ -96,7 +97,7 @@ export default function AppLayout() {
         >
           <Tabs.List>
             <Tabs.Tab value="settings">Settings</Tabs.Tab>
-            <Tabs.Tab value="deployments">Deployments</Tabs.Tab>
+            {/* <Tabs.Tab value="deployments">Deployments</Tabs.Tab> */}
             {type === "web" && (
               <>
                 <Tabs.Tab value="env">Env Variables</Tabs.Tab>
@@ -115,13 +116,13 @@ export default function AppLayout() {
           </Tabs.Panel>
 
           {/* Deployments */}
-          <Tabs.Panel
+          {/* <Tabs.Panel
             value="deployments"
             pt="md"
             style={{ flex: 1, overflowY: "auto" }}
           >
             <Deployment />
-          </Tabs.Panel>
+          </Tabs.Panel> */}
 
           {/* Env Variables */}
 
@@ -139,62 +140,7 @@ export default function AppLayout() {
             pt="md"
             style={{ flex: 1, overflowY: "auto" }}
           >
-            <Stack gap="lg">
-              <Divider label="Secrets" labelPosition="left" />
-              <Table striped highlightOnHover withColumnBorders>
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th>Key</Table.Th>
-                    <Table.Th>Value</Table.Th>
-                    <Table.Th style={{ width: 60 }}></Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  <Table.Tr>
-                    <Table.Td>
-                      <TextInput
-                        placeholder="SECRET_KEY"
-                        value={tempKey}
-                        onChange={(e) => setTempKey(e.currentTarget.value)}
-                      />
-                    </Table.Td>
-                    <Table.Td>
-                      <TextInput
-                        placeholder="SECRET_VALUE"
-                        value={tempValue}
-                        onChange={(e) => setTempValue(e.currentTarget.value)}
-                      />
-                    </Table.Td>
-                    <Table.Td>
-                      <ActionIcon
-                        color="blue"
-                        variant="light"
-                        onClick={addSecret}
-                        disabled={!tempKey.trim()}
-                      >
-                        <IconPlus size={16} />
-                      </ActionIcon>
-                    </Table.Td>
-                  </Table.Tr>
-
-                  {secrets.map((s, index) => (
-                    <Table.Tr key={index}>
-                      <Table.Td>{s.key}</Table.Td>
-                      <Table.Td>{s.value}</Table.Td>
-                      <Table.Td>
-                        <ActionIcon
-                          color="red"
-                          variant="subtle"
-                          onClick={() => deleteSecret(index)}
-                        >
-                          <IconTrash size={16} />
-                        </ActionIcon>
-                      </Table.Td>
-                    </Table.Tr>
-                  ))}
-                </Table.Tbody>
-              </Table>
-            </Stack>
+            <SecretVarsTab appId={appId!} />
           </Tabs.Panel>
         </Tabs>
       </Stack>

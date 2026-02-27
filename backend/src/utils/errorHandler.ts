@@ -27,6 +27,9 @@ export class Unauthorized extends HttpError {
 export function errorHandler(c: Context, error: unknown) {
   const logger = getLogger();
   console.error(error);
+
+  // print stack trace
+  logger.debug(`error stack ${(error as Error)?.stack}`);
   logger.debug(`error occured ${(error as Error)?.message}`);
   // 1. Your HTTP errors
   if (error instanceof HttpError) {
@@ -50,8 +53,7 @@ export function errorHandler(c: Context, error: unknown) {
       {
         error: {
           code: "BAD_REQUEST",
-          message: errors[0]?.message || "Invalid request payload",
-      
+          message: errors[0]?.message || "Invalid request payload"
         }
       },
       400
@@ -78,8 +80,8 @@ export function errorHandler(c: Context, error: unknown) {
           process.env.NODE_ENV === "production"
             ? "Something went wrong"
             : error instanceof Error
-            ? error.message
-            : "Unknown error"
+              ? error.message
+              : "Unknown error"
       }
     },
     500

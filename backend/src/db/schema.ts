@@ -110,7 +110,7 @@ export const groupAppsTable = table(
     app_id: t
       .text()
       .notNull()
-      .references(() => appsTable.id),
+      .references(() => appsTable.id, { onDelete: "cascade" }),
     created_at: t.text().notNull()
   },
   (table) => [primaryKey({ columns: [table.group_id, table.app_id] })]
@@ -124,7 +124,7 @@ export const artifactsTable = table(
     app_id: t
       .text()
       .notNull()
-      .references(() => appsTable.id),
+      .references(() => appsTable.id, { onDelete: "cascade" }),
     version: t.text().notNull(),
     status: t.text().$type<ARTIFACT_STATUS>().notNull(),
     path: t.text(),
@@ -144,7 +144,7 @@ export const deploymentsTable = table(
     app_id: t
       .text()
       .notNull()
-      .references(() => appsTable.id),
+      .references(() => appsTable.id, { onDelete: "cascade" }),
     version: t.text(),
     artifact_id: t
       .text()
@@ -167,7 +167,7 @@ export const secretsTable = table(
     app_id: t
       .text()
       .notNull()
-      .references(() => appsTable.id),
+      .references(() => appsTable.id, { onDelete: "cascade" }),
     key: t.text().notNull(),
     value: t.text().notNull(),
     created_at: t.text().notNull(),
@@ -182,7 +182,7 @@ export const envVarsTable = table(
     app_id: t
       .text()
       .notNull()
-      .references(() => appsTable.id),
+      .references(() => appsTable.id, { onDelete: "cascade" }),
     key: t.text().notNull(),
     value: t.text().notNull(),
     created_at: t.text().notNull(),

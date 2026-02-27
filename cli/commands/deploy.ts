@@ -1,11 +1,10 @@
-import { hash } from "@node-rs/argon2";
 import * as tar from "tar";
 import { Command } from "commander";
 import fs from "fs";
 import path from "path";
 import ora from "ora";
 import { loadConfig, zipupConfig } from "../config";
-import { sha256, signPayload } from "../../secret";
+import { sha256, signPayload } from "../../backend/src/utils/secret";
 
 function formatBytes(bytes: number, decimals = 2) {
   if (bytes === 0) return "0 Bytes";
@@ -54,7 +53,15 @@ export const deployCommand = new Command("deploy")
     cliConfig.BUILD_FOLDER = dir;
 
     let config: zipupConfig;
-
+    // remove undefined values to avoid overriding file/env configs with undefined
+    Object.keys(cliConfig).forEach((key) => {
+      if (
+        cliConfig[key as keyof zipupConfig] === undefined ||
+        cliConfig[key as keyof zipupConfig] === null
+      ) {
+        delete cliConfig[key as keyof zipupConfig];
+      }
+    });
     try {
       config = loadConfig(cliConfig);
     } catch {
@@ -87,7 +94,7 @@ export const deployCommand = new Command("deploy")
       config.SECRET_KEY
     );
 
-    const res = await fetch(`${config.HOST}${path}`, {
+    const res = await fetch(`${config.HOST}/api/artifacts`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -128,7 +135,7 @@ export const deployCommand = new Command("deploy")
     // 3️⃣ Upload artifact
     const uploadSpinner = ora("Uploading artifact...").start();
     const bodyHashForUpload = sha256(buffer); // hash the file contents
-    const uploadPath = `/artifacts/${id}/upload`;
+    const uploadPath = `/api/artifacts/${id}/upload`;
     const signatureForUpload = signPayload(
       "POST",
       uploadPath,
@@ -136,16 +143,17 @@ export const deployCommand = new Command("deploy")
       bodyHashForUpload,
       config.SECRET_KEY
     );
-
+    console.log({ signatureForUpload, bodyHashForUpload });
     const blob = new Blob([buffer], { type: "application/gzip" });
     const form = new FormData();
+    console.log({ tarPath });
     form.append("artifact", blob, path.basename(tarPath));
 
     const uploadRes = await fetch(`${config.HOST}${uploadPath}`, {
       method: "POST",
       body: form,
       headers: {
-        "Content-Type": "application/json",
+        // "Content-Type": "application/json",
         "X-App-Key": config.APP_KEY,
         "X-Timestamp": timestamp,
         "X-Signature": signatureForUpload
@@ -160,6 +168,7 @@ export const deployCommand = new Command("deploy")
     uploadSpinner.succeed("Artifact successfully uploaded");
 
     // 4️⃣ Cleanup
+    //todo: cleanup should be in finally
     const cleanupSpinner = ora("Cleaning up local files...").start();
     fs.unlinkSync(tarPath);
     cleanupSpinner.succeed("Local artifact deleted");

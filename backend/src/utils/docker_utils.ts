@@ -109,7 +109,7 @@ export async function deployDynamicApp(event: {
     // await new Promise((resolve) => setTimeout(resolve, 8000));
     logger.debug("wait complete, proceeding to create container");
     const container = await docker.createContainer({
-      Image: "node:20-bookworm-slim",
+      Image: "node:24-bookworm-slim",
       name: containerName,
 
       Cmd: ["sh", "-c", start_command],
@@ -124,8 +124,8 @@ export async function deployDynamicApp(event: {
       },
       NetworkingConfig: {
         EndpointsConfig: {
-          zipup_redis_network: {},
-          zipup_openresty_network: {}
+          // zipup_redis_network: {},
+          // zipup_openresty_network: {}
         }
       },
       WorkingDir: `/app/${artifact_id}`,
@@ -324,3 +324,33 @@ export async function getDockerStats() {
     // throw err;
   }
 }
+
+export const isAppRunningByAppId = async (appId: string) => {
+  const containers = await docker.listContainers({ all: false });
+  return containers.some((c) => {
+    const labels = c.Labels || {};
+    return labels["zipup.app_id"] === appId && c.State === "running";
+  });
+};
+export const removeAllContainersOfAnApp = async (appId: string) => {
+  const containers = await docker.listContainers({ all: true });
+  const targetContainers = containers.filter((c) => {
+    const labels = c.Labels || {};
+    return labels["zipup.app_id"] === appId;
+  });
+
+  for (const c of targetContainers) {
+    const container = docker.getContainer(c.Id);
+    try {
+      if (c.State === "running") {
+        await container.stop({ t: 5 });
+      }
+      await container.remove({ force: true });
+      console.log(`Removed container ${c.Names[0]} for app ${appId}`);
+    } catch (err) {
+      console.warn(
+        `Error stopping/removing container ${c.Names[0]} for app ${appId}: ${err.message}`
+      );
+    }
+  }
+};

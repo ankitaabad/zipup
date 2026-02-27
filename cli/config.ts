@@ -80,20 +80,17 @@ function parseTags(value: string): string[] {
  * Main config loader
  * cliConfig should already be normalized to internal keys
  */
-export function loadConfig(
-  cliConfig: Partial<zipupConfig> = {}
-): zipupConfig {
+export function loadConfig(cliConfig: Partial<zipupConfig> = {}): zipupConfig {
   const fileConfig = loadFileConfig();
   const envConfig = loadEnvConfig();
-
   const merged = {
     ...fileConfig,
     ...envConfig,
     ...cliConfig
   };
-
+  console.log({ cliConfig, merged });
   const parsed = ConfigSchema.safeParse(merged);
-
+  console.log({ parsed });
   if (!parsed.success) {
     console.error("❌ Invalid zipup configuration:");
     console.error(parsed.error.format());

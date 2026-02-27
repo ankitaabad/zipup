@@ -1,6 +1,5 @@
 {
   "HOST": "http://localhost:8080",
-  "APP_KEY": "zipup_ak_uvf3NfjdXUM7WHYG8weDgxGKiEuSkoZ2EbhKH46gYdw",
-  "SECRET_KEY": "zipup_sk_test",
-  "tags": ["v1.2.3"]
+  "APP_KEY": "zipup_ak_viRljOheLGZsLpCeTtdrvqWdAUxbaMTMdfuwGLCeQJU",
+  "SECRET_KEY": "zipup_sk_80b0fd346bf24e7779a9c1eb6af90ea71fc66cd27165125d1c6d3e1209c1712b"
 }

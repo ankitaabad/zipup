@@ -47,7 +47,7 @@
           driver: none
 
     zipup:
-      image: node:20-bookworm-slim
+      image: node:24-bookworm-slim
       working_dir: /app
       container_name: zipup
       networks:
@@ -128,4 +128,6 @@
     openresty_network:
       driver: bridge
     redis_network:
+      driver: bridge
+    postgres_network:
       driver: bridge
