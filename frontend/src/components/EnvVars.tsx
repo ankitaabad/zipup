@@ -205,7 +205,6 @@ export function EnvVarsTab({ appId }: { appId: string }) {
           <TextInput
             data-autofocus
             label="Key"
-            placeholder="MY_VARIABLE"
             value={newKey}
             onChange={(e) => setNewKey(e.currentTarget.value)}
           />
