@@ -18,7 +18,8 @@ import {
   Divider,
   Stack,
   TextInput,
-  Button
+  Button,
+  useMantineTheme
 } from "@mantine/core";
 import { useApps, useCreateApp } from "../apis/apps";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -32,8 +33,24 @@ type Site = {
   name: string;
 };
 
+const useSidebarRoute = () => {
+  const { pathname } = useLocation();
+  const parts = pathname.split("/").filter(Boolean);
+
+  return {
+    isDashboard: pathname === "/",
+    isGlobalSettings: pathname === "/settings",
+
+    isAppRoute: parts[0] === "apps",
+    appType: parts[1], // static | web
+    appId: parts[2] // the sidebar item
+  };
+};
 export function AppSidebar() {
   console.log("AppSidebar called");
+  const theme = useMantineTheme();
+  const sidebarRoute = useSidebarRoute();
+  console.log({ sidebarRoute });
   const appsQuery = useApps();
   const navigate = useNavigate();
   const location = useLocation();
@@ -45,19 +62,25 @@ export function AppSidebar() {
   const [modalFor, setModalFor] = useState<"static" | "web" | null>(null);
   const [newName, setNewName] = useState("");
 
+  const [staticMenuOpen, setStaticMenuOpen] = useState(
+    sidebarRoute.appType === "static"
+  );
+  const [webMenuOpen, setWebMenuOpen] = useState(
+    sidebarRoute.appType === "web"
+  );
   /* ---------------- derive active from route ---------------- */
   let activeSection: string = "Dashboard"; // Dashboard / Logs / Settings / Apps
   let activeAppId: string | null = null; // if inside static/web app
 
-  const pathParts = location.pathname.split("/").filter(Boolean);
-  if (pathParts[0] === "logs") activeSection = "Logs";
-  else if (pathParts[0] === "settings") activeSection = "Settings";
-  else if (pathParts[0] === "apps") {
-    activeSection = "Apps";
-    activeAppId = pathParts[2] || null; // apps/static/:appId or apps/web/:appId
-  } else {
-    activeSection = "Dashboard";
-  }
+  // const pathParts = location.pathname.split("/").filter(Boolean);
+  // if (pathParts[0] === "logs") activeSection = "Logs";
+  // else if (pathParts[0] === "settings") activeSection = "Settings";
+  // else if (pathParts[0] === "apps") {
+  //   activeSection = "Apps";
+  //   activeAppId = pathParts[2] || null; // apps/static/:appId or apps/web/:appId
+  // } else {
+  //   activeSection = "Dashboard";
+  // }
 
   /* ---------------- update apps state when query succeeds ---------------- */
   useEffect(() => {
@@ -133,24 +156,45 @@ export function AppSidebar() {
 
         <Divider />
 
-        <Menu>
+        <Menu
+          menuItemStyles={{
+            button: ({ active }) => ({
+              backgroundColor: active ? theme.colors.gray[1] : "transparent",
+              fontWeight: active ? 600 : 400,
+              boxShadow: active
+                ? "inset 6px 0 0 var(--mantine-color-gray-5)"
+                : "none"
+            })
+          }}
+        >
           {/* Dashboard */}
           <MenuItem
             icon={<IconLayoutDashboard size={18} />}
-            active={activeSection === "Dashboard"}
-            onClick={() => navigate("/")}
+            active={sidebarRoute.isDashboard}
+            onClick={() => {
+              setStaticMenuOpen(false);
+              setWebMenuOpen(false);
+              navigate("/");
+            }}
           >
             Dashboard
           </MenuItem>
 
           {/* Static Sites */}
-          <SubMenu label="Static Sites" icon={<IconWorld size={18} />}>
+          <SubMenu
+            label="Static Sites"
+            icon={<IconWorld size={18} />}
+            open={staticMenuOpen}
+            onClick={() => {
+              setStaticMenuOpen(!staticMenuOpen);
+              setWebMenuOpen(false);
+            }}
+          >
             {staticSites.map((site) => (
               <MenuItem
                 key={site.id}
-                active={activeAppId === site.id}
+                active={sidebarRoute.appId === site.id}
                 onClick={() => onSelectApp("static", site.id)}
-                
               >
                 {site.name}
               </MenuItem>
@@ -165,11 +209,19 @@ export function AppSidebar() {
           </SubMenu>
 
           {/* Web Apps */}
-          <SubMenu label="Web Apps" icon={<IconAppWindow size={18} />}>
+          <SubMenu
+            label="Web Apps"
+            icon={<IconAppWindow size={18} />}
+            open={webMenuOpen}
+            onClick={() => {
+              setStaticMenuOpen(false);
+              setWebMenuOpen(!webMenuOpen);
+            }}
+          >
             {webApps.map((app) => (
               <MenuItem
                 key={app.id}
-                active={activeAppId === app.id}
+                active={sidebarRoute.appId === app.id}
                 onClick={() => onSelectApp("web", app.id)}
               >
                 {app.name}
@@ -184,12 +236,15 @@ export function AppSidebar() {
             </MenuItem>
           </SubMenu>
 
-
           {/* Settings */}
           <MenuItem
             icon={<IconSettings size={18} />}
-            active={activeSection === "Settings"}
-            onClick={() => navigate("/settings")}
+            active={sidebarRoute.isGlobalSettings}
+            onClick={() => {
+              setStaticMenuOpen(false);
+              setWebMenuOpen(false);
+              navigate("/settings");
+            }}
           >
             Settings
           </MenuItem>
@@ -207,7 +262,6 @@ export function AppSidebar() {
                   onSuccess: () => {
                     navigate("/login");
                   }
-                  
                 });
               }}
             >

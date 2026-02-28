@@ -84,7 +84,7 @@ Next:
   ✔ @bug deployed app is not running on the domain.
 
   ✔ Env and secret variable present in the app deployed.
-  ☐ start/stop and delete app.
+  ☐ @high start/stop and delete app.
   ☐ Reserved env ZIPUP_PORT
   ☐ postgres accesss.
   ☐ redis access
@@ -94,10 +94,10 @@ Next:
   ☐ logs appearing in victorologs.
   ☐ longest prefix matchin working for routing.
   ☐ Delete X-Zipup-Internal header from each request, only internal calls can be made with this header.
-  ☐ Deployment signature check.
-  ☐ password loading in secret variable input.
-  ☐ show current submenu in the sidebar.
-  ☐ close other menus when one menu is opened in the sidebar.
+  ☐ @high Deployment signature check.
+  ☐ @bug password loading in secret variable input.
+  ✔ show current submenu in the sidebar.
+  ✔ close other menus when one menu is opened in the sidebar.
   ☐ Dashboard stats anything better can be shown?
   
   ✔ Remove logs tab and version from UI.
