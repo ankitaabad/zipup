@@ -1,0 +1,3 @@
+- tsx index.ts deploy ../exampleapp/urlshortner
+- set domain to `test.localhost`
+- go to http://test.localhost:8080/

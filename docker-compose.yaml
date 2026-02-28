@@ -1,133 +1,133 @@
-  # version: "3.8"
+# version: "3.8"
+name: zipup
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    networks:
+      - redis_network
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    labels:
+      - app_type=system
+      - app_name=redis
+    logging:
+        driver: none
 
-  services:
-    redis:
-      image: redis:7-alpine
-      container_name: redis
-      restart: unless-stopped
-      networks:
-        - redis_network
-      volumes:
-        - redis_data:/data
-      command: ["redis-server", "--appendonly", "yes"]
-      ports:
-        - "6379:6379"
-      labels:
-        - app_type=system
-        - app_name=redis
-      logging:
-          driver: none
+  openresty:
+    build:
+      context: ./openresty
+      dockerfile: Dockerfile
+    container_name: openresty
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./openresty/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
+      - ./openresty/lua:/lua:ro
+      - ./config:/config:ro
+      - static_artifacts:/static_artifacts
 
-    openresty:
-      build:
-        context: ./openresty
-        dockerfile: Dockerfile
-      container_name: openresty
-      ports:
-        - "8080:8080"
-      volumes:
-        - ./openresty/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
-        - ./openresty/lua:/lua:ro
-        - ./config:/config:ro
-        - static_artifacts:/static_artifacts
+      # - ./sites:/data/sites:ro
+    networks:
+      - zipup_network
+      - openresty_network
+      - redis_network
+      # todo: does openresty needs redis network
+    restart: unless-stopped
+    depends_on:
+      - zipup
+    labels:
+      - app_type=system
+      - app_name=openresty
+    logging:
+        driver: none
 
-        # - ./sites:/data/sites:ro
-      networks:
-        - zipup_network
-        - openresty_network
-        - redis_network
-        # todo: does openresty needs redis network
-      restart: unless-stopped
-      depends_on:
-        - zipup
-      labels:
-        - app_type=system
-        - app_name=openresty
-      logging:
-          driver: none
+  zipup:
+    image: node:24-bookworm-slim
+    working_dir: /app
+    container_name: zipup
+    networks:
+      - zipup_network
+      - redis_network
+    restart: unless-stopped
+    user: root
+    volumes:
+      - ./:/app # <-- mount CURRENT directory
+      - /app/node_modules
+      - ./config:/config
+      - zipup_data:/data
+      - static_artifacts:/static_artifacts
+      - dynamic_artifacts:/dynamic_artifacts
+      - secrets:/secrets
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: sh -c "npm install -g pnpm && pnpm install  && pnpm --filter backend run dev"
+    environment:
+      - NODE_ENV=development
+    ports:
+      - "3000:8080"
+    labels:
+      - app_type=system
+      - app_name=zipup
+    logging:
+      driver: "json-file"
+      options:
+        labels: "app_name"  
+    # logging:
+    #   driver: "none"   # disable default Docker logging → Vector will handle logs
+    depends_on:
+      - vector
 
-    zipup:
-      image: node:24-bookworm-slim
-      working_dir: /app
-      container_name: zipup
-      networks:
-        - zipup_network
-        - redis_network
-      restart: unless-stopped
-      user: root
-      volumes:
-        - ./:/app # <-- mount CURRENT directory
-        - /app/node_modules
-        - ./config:/config
-        - zipup_data:/data
-        - static_artifacts:/static_artifacts
-        - dynamic_artifacts:/dynamic_artifacts
-        - secrets:/secrets
-        - /var/run/docker.sock:/var/run/docker.sock
-      command: sh -c "npm install -g pnpm && pnpm install  && pnpm --filter backend run dev"
-      environment:
-        - NODE_ENV=development
-      ports:
-        - "3000:8080"
-      labels:
-        - app_type=system
-        - app_name=zipup
-      logging:
-        driver: "json-file"
-        options:
-          labels: "app_name"  
-      # logging:
-      #   driver: "none"   # disable default Docker logging → Vector will handle logs
-      depends_on:
-        - vector
-
-    vector:
-      image: timberio/vector:0.38.X-alpine
-      volumes:
-        - ./vector.yaml:/etc/vector/vector.yaml:ro
-        - /var/run/docker.sock:/var/run/docker.sock
-        - type: bind
-          source: /var/lib/docker
-          target: /var/lib/docker
-      ports:
-        - "8686:8686" # Vector internal API (optional)
-      depends_on:
-        - victorialogs
-      user: root
-      labels:
-        - app_type=system
-        - app_name=vector
+  vector:
+    image: timberio/vector:0.38.X-alpine
+    volumes:
+      - ./vector.yaml:/etc/vector/vector.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - type: bind
+        source: /var/lib/docker
+        target: /var/lib/docker
+    ports:
+      - "8686:8686" # Vector internal API (optional)
+    depends_on:
+      - victorialogs
+    user: root
+    labels:
+      - app_type=system
+      - app_name=vector
+    
+  victorialogs:
+    image: victoriametrics/victoria-logs:latest
+    container_name: victorialogs
+    ports:
+      - "9428:9428" # VictoriaLogs HTTP ingestion + query
+    command:
+      - "--storageDataPath=/vlogs"
+    volumes:
+      - vldata:/vlogs
+    labels:
+      - app_type=system
+      - app_name=victorialogs
+    logging:
+        driver: none        
+    networks:
+      - zipup_network
       
-    victorialogs:
-      image: victoriametrics/victoria-logs:latest
-      container_name: victorialogs
-      ports:
-        - "9428:9428" # VictoriaLogs HTTP ingestion + query
-      command:
-        - "--storageDataPath=/vlogs"
-      volumes:
-        - vldata:/vlogs
-      labels:
-        - app_type=system
-        - app_name=victorialogs
-      logging:
-          driver: none        
-      networks:
-        - zipup_network
-        
-  volumes:
-    vldata:
-    zipup_data:
-    redis_data:
-    static_artifacts:
-    dynamic_artifacts:
-    secrets:
-  networks:
-    zipup_network:
-      driver: bridge
-    openresty_network:
-      driver: bridge
-    redis_network:
-      driver: bridge
-    postgres_network:
-      driver: bridge
+volumes:
+  vldata:
+  zipup_data:
+  redis_data:
+  static_artifacts:
+  dynamic_artifacts:
+  secrets:
+networks:
+  zipup_network:
+    driver: bridge
+  openresty_network:
+    driver: bridge
+  redis_network:
+    driver: bridge
+  postgres_network:
+    driver: bridge

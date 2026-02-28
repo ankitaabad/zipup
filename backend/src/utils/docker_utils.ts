@@ -115,8 +115,8 @@ export async function deployDynamicApp(event: {
       Cmd: ["sh", "-c", start_command],
 
       Env: [
-        `PORT=${PORT_FOR_USER_APPS}`,
-        ...Object.entries(envs).map(([k, v]) => `${k}=${v}`)
+        ...Object.entries(envs).map(([k, v]) => `${k}=${v}`),
+        `ZIPUP_PORT=${PORT_FOR_USER_APPS}`
       ],
 
       ExposedPorts: {
@@ -124,8 +124,8 @@ export async function deployDynamicApp(event: {
       },
       NetworkingConfig: {
         EndpointsConfig: {
-          // zipup_redis_network: {},
-          // zipup_openresty_network: {}
+          zipup_redis_network: {},
+          zipup_openresty_network: {}
         }
       },
       WorkingDir: `/app/${artifact_id}`,

@@ -8,8 +8,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3000;
-const DATA_FILE = path.join(__dirname, "data.json");
+// const PORT = 3000;
+const DATA_FILE = path.join("/data", "data.json");
+// create data file empty if not exist
+if (!fs.existsSync(DATA_FILE)) {
+  fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
+  fs.writeFileSync(DATA_FILE, JSON.stringify({}));
+}
 
 // ---- helpers ----
 function loadData() {
@@ -27,6 +32,9 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // ---- create short url ----
 app.post("/api/shorten", (req, res) => {
+  const { secret_one, env_one } = process.env;
+  console.log("secret_one:", secret_one);
+  console.log("env_one:", env_one);
   const { url } = req.body;
 
   if (!url || !url.startsWith("http")) {
@@ -55,8 +63,8 @@ app.get("/:id", (req, res) => {
 
   res.redirect(target);
 });
-
+const port = process.env.ZIPUP_PORT;
 // ---- start server ----
-app.listen(PORT, () => {
-  console.log(`URL shortener running on http://localhost:${PORT}`);
+app.listen(port, () => {
+  console.log(`URL shortener running on http://localhost:${port}`);
 });

@@ -71,7 +71,7 @@ export const AppPatchSchema = z.discriminatedUnion("action", [
   }),
 ]);
 
-const EnvkeySchema = z.string().regex(/^[A-Z_][A-Z0-9_]*$/);
+const EnvkeySchema = z.string()
 const EnvValueSchema = z.string();
 
 export const CreateEnvVarSchema = z.object({

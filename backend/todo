@@ -81,10 +81,11 @@ Next:
   ✔ Frontend - fix static app settings, they will be different from dynamic app settings. like no env variables, no secrets
   ✔ Fix Dynamic app settings, remove redis prefix, deployments apis, env and secrets check.
   ✔ @bug deployment is failing
-  ☐ @bug deployed app is not running on the domain.
-  ☐ add checks that start command is present before deploying an app.
-  ☐ Env and secret variable present in the app deployed.
+  ✔ @bug deployed app is not running on the domain.
+
+  ✔ Env and secret variable present in the app deployed.
   ☐ start/stop and delete app.
+  ☐ Reserved env ZIPUP_PORT
   ☐ postgres accesss.
   ☐ redis access
   ☐ working with rotated keys.
@@ -96,7 +97,8 @@ Next:
   ☐ Deployment signature check.
   ✔ Remove logs tab and version from UI.
   
-
+Error Handling:
+    ☐ add checks that start command is present before deploying an app.
 
 Done:
   ✘ create redis prefix
