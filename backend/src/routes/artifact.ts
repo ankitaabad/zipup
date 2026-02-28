@@ -17,6 +17,7 @@ import {
   STATIC_TEMP_DIR
 } from "@backend/utils/constants";
 import { File } from "buffer";
+import { createBodyHash, signPayload } from "@common/index";
 
 export const artifactsRouter = new Hono();
 
@@ -84,6 +85,9 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
   try {
     const logger = getLogger();
     const artifact_id = c.req.param("artifact_id");
+    const bodyHashHeader = c.req.header("Zipup-Body-Hash");
+    const signatureHeader = c.req.header("Zipup-Signature");
+    const appKey = c.req.header("Zipup-App-Key");
 
     // validate artifact exists
     const artifactResult = await getArtifactWithApp(artifact_id);
@@ -91,7 +95,30 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
       return c.json({ error: "Artifact not found" }, 404);
     }
     const { artifact, app } = artifactResult;
+    if (!appKey || appKey !== app.app_key) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+    const body = await c.req.parseBody();
+    console.log("Received body: ", body);
+    const file = body["artifact"];
+    console.log("file" + file);
+    console.log("filetype " + typeof file);
 
+    const arrayBuffer = await (file as File).arrayBuffer();
+    const bodyHash = createBodyHash(Buffer.from(arrayBuffer));
+    if (!bodyHashHeader || bodyHashHeader !== bodyHash) {
+      return c.json({ error: "Invalid body hash" }, 400);
+    }
+    const signature = signPayload(
+      "POST",
+      `/api/artifacts/${artifact_id}/upload`,
+      bodyHash,
+      app.secret_key
+    );
+    console.log({ signature });
+    if (!signatureHeader || signatureHeader !== signature) {
+      return c.json({ error: "Invalid signature" }, 401);
+    }
     let artifactRoot: string, artifactTemp: string;
     if (app.type === "STATIC") {
       artifactRoot = STATIC_ARTIFACT_ROOT;
@@ -105,21 +132,13 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
     fs.ensureDirSync(artifactRoot);
     fs.ensureDirSync(artifactTemp);
     // parse multipart/form-data
-    const body = await c.req.parseBody();
-    console.log("Received body: ", body);
-    const file = body["artifact"];
-    console.log("file" + file);
-    console.log("filetype " + typeof file);
-    // if (!file || !(file instanceof File)) {
-    //   return c.json({ error: "No file uploaded" }, 400);
-    // }
 
     // save to temp as .tar.gz
     const tempPath = path.join(artifactTemp, `${artifact_id}.tar.gz`);
     const finalDir = path.join(artifactRoot, artifact_id);
     fs.ensureDirSync(finalDir);
 
-    const arrayBuffer = await (file as File).arrayBuffer();
+    console.log({ bodyHash });
     await fs.writeFile(tempPath, Buffer.from(arrayBuffer));
 
     // extract and cleanup

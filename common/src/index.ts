@@ -1,4 +1,5 @@
 import { z } from "zod/v4";
+import crypto from "node:crypto";
 export const UsernameSchema = z
   .string()
   .min(3, "Username must be at least 3 characters long");
@@ -39,46 +40,65 @@ export const CreateAppSchema = z.object({
   type: AppTypeSchema
 });
 
-
-
 export const AppPatchActionSchema = z.enum([
   "UpdateDomain",
   "UpdateStartCommand",
   "UpdateAppName",
-  "UpdateRedisPrefix",
+  "UpdateRedisPrefix"
 ]);
 export type AppPatchActionSchema = z.infer<typeof AppPatchActionSchema>;
 
 export const AppPatchSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal(AppPatchActionSchema.enum.UpdateDomain),
-    domain: z.string(),
+    domain: z.string()
   }),
 
   z.object({
     action: z.literal(AppPatchActionSchema.enum.UpdateStartCommand),
-    start_command: z.string(),
+    start_command: z.string()
   }),
 
   z.object({
     action: z.literal(AppPatchActionSchema.enum.UpdateAppName),
-    name: z.string(),
+    name: z.string()
   }),
 
   z.object({
     action: z.literal(AppPatchActionSchema.enum.UpdateRedisPrefix),
-    redis_prefix: z.string(),
-  }),
+    redis_prefix: z.string()
+  })
 ]);
 
-const EnvkeySchema = z.string()
+const EnvkeySchema = z.string();
 const EnvValueSchema = z.string();
 
 export const CreateEnvVarSchema = z.object({
   key: EnvkeySchema,
-  value: EnvValueSchema,
+  value: EnvValueSchema
 });
 
 export const UpdateEnvVarSchema = z.object({
-  value: EnvValueSchema,
+  value: EnvValueSchema
 });
+
+/** For Payload Signature and verification */
+
+export function signPayload(
+  method: string,
+  path: string,
+  bodyHash: string,
+  secretKey: string
+) {
+  const expires = Math.floor(Date.now() / 1000) + 300; // expires in 5 minutes
+  const canonical = [method.toUpperCase(), path, expires, bodyHash].join("\n");
+
+  return crypto
+    .createHmac("sha256", Buffer.from(secretKey, "hex"))
+    .update(canonical)
+    .digest("hex");
+}
+
+export const createBodyHash = (data: string | Buffer) => {
+  return crypto.createHash("sha256").update(data).digest("hex");
+};

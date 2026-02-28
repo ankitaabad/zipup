@@ -2,11 +2,10 @@
   "name": "@zipup/common",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
-
   "dependencies": {
+    "@types/node": "^20.19.30",
     "zod": "^4.2.1"
   }
 }

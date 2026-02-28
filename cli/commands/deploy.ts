@@ -1,10 +1,10 @@
+import { createBodyHash, signPayload } from "@zipup/common";
 import * as tar from "tar";
 import { Command } from "commander";
 import fs from "fs";
 import path from "path";
 import ora from "ora";
 import { loadConfig, zipupConfig } from "../config";
-import { sha256, signPayload } from "../../backend/src/utils/secret";
 
 function formatBytes(bytes: number, decimals = 2) {
   if (bytes === 0) return "0 Bytes";
@@ -84,7 +84,7 @@ export const deployCommand = new Command("deploy")
     });
 
     const timestamp = Date.now().toString();
-    const bodyHash = sha256(body);
+    const bodyHash = createBodyHash(body);
 
     const signature = signPayload(
       "POST",
@@ -134,12 +134,12 @@ export const deployCommand = new Command("deploy")
 
     // 3️⃣ Upload artifact
     const uploadSpinner = ora("Uploading artifact...").start();
-    const bodyHashForUpload = sha256(buffer); // hash the file contents
+    const bodyHashForUpload = createBodyHash(buffer); // hash the file contents
+    console.log({ bodyHashForUpload });
     const uploadPath = `/api/artifacts/${id}/upload`;
     const signatureForUpload = signPayload(
       "POST",
       uploadPath,
-      new Date().toISOString(),
       bodyHashForUpload,
       config.SECRET_KEY
     );
@@ -154,9 +154,10 @@ export const deployCommand = new Command("deploy")
       body: form,
       headers: {
         // "Content-Type": "application/json",
-        "X-App-Key": config.APP_KEY,
-        "X-Timestamp": timestamp,
-        "X-Signature": signatureForUpload
+        "Zipup-App-Key": config.APP_KEY,
+        "Zipup-Timestamp": timestamp,
+        "Zipup-Signature": signatureForUpload,
+        "Zipup-Body-Hash": bodyHashForUpload
       }
     });
 
