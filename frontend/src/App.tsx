@@ -1,5 +1,4 @@
 import { Routes, Route, BrowserRouter } from "react-router-dom";
-import Dashboard from "./pages/Dashboard";
 import Logs from "./pages/Logs";
 import AppLayout from "./pages/AppLayout"; // New page for app details with tabs
 import RootLayout from "./RootLayout";

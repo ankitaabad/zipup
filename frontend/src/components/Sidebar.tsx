@@ -159,10 +159,11 @@ export function AppSidebar() {
         <Menu
           menuItemStyles={{
             button: ({ active }) => ({
-              backgroundColor: active ? theme.colors.gray[1] : "transparent",
+              backgroundColor: active ? theme.colors.gray[2] : "transparent",
+              "&:hover": { backgroundColor: theme.colors.gray[2] },
               fontWeight: active ? 600 : 400,
               boxShadow: active
-                ? "inset 6px 0 0 var(--mantine-color-gray-5)"
+                ? "inset 6px 0 0 var(--mantine-primary-color-7)"
                 : "none"
             })
           }}

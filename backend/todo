@@ -98,14 +98,21 @@ Next:
   ☐ integrate change password in the UI.
   ☐ publish the cli package to npm.
   ☐ Better messages in UI like fields explanations, dashboard etc.
-  ✔ @high Deployment signature check.
   ☐ @bug password loading in secret variable input.
   ✔ show current submenu in the sidebar.
   ✔ close other menus when one menu is opened in the sidebar.
   ☐ Dashboard stats anything better can be shown?
-  
   ✔ Remove logs tab and version from UI.
-  
+  ✔ @high Deployment signature check.
+
+Roadmap:
+  ☐ Layers @next
+  ☐ 2FA @next
+  ☐ Versioned Deployments @later
+  ☐ Forward Auth Proxy @next
+  ☐ SCRAM auth @later
+  ☐ Notifications @maybe
+
 Error Handling:
     ☐ add checks that start command is present before deploying an app.
 

@@ -11,18 +11,12 @@ import {
   Divider,
   Center,
   Loader,
-  SimpleGrid,
+  SimpleGrid
 } from "@mantine/core";
 import { useAppStats } from "../apis/stats";
 import { CustomLoader } from "./CustomLoader";
 
-function StatRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
+function StatRow({ label, value }: { label: string; value: string }) {
   return (
     <Group justify="space-between">
       <Text size="sm" c="dimmed">
@@ -41,7 +35,7 @@ function ContainerCard({
   cpu,
   mem,
   rx,
-  tx,
+  tx
 }: {
   name: string;
   instance: string;
@@ -52,16 +46,21 @@ function ContainerCard({
 }) {
   return (
     <Card withBorder radius="md" p="sm">
-      <Group justify="space-between" mb={6}>
-        <Text fw={600}>{name}</Text>
-        <Badge variant="light">#{instance}</Badge>
+      <Group justify="space-between" mb={10}>
+        <Badge variant="light" radius="sm">
+          {name?.toUpperCase()}
+        </Badge>
+        {/* <Badge variant="light">#{instance}</Badge> */}
       </Group>
 
       <Stack gap={4}>
         <StatRow label="CPU" value={`${cpu.toFixed(2)} %`} />
-        <StatRow label="Memory" value={`${(mem / 1024 / 1024).toFixed(1)} MB`} />
-        <StatRow label="Network RX" value={`${(rx / 1024).toFixed(1)} KB`} />
-        <StatRow label="Network TX" value={`${(tx / 1024).toFixed(1)} KB`} />
+        <StatRow
+          label="Memory"
+          value={`${(mem / 1024 / 1024).toFixed(1)} MB`}
+        />
+        <StatRow label="Network In" value={`${(rx / 1024).toFixed(1)} KB`} />
+        <StatRow label="Network Out" value={`${(tx / 1024).toFixed(1)} KB`} />
       </Stack>
     </Card>
   );
@@ -75,24 +74,19 @@ export default function AppStatsDashboard() {
   useEffect(() => {
     const handler = () => setPolling(!document.hidden);
     document.addEventListener("visibilitychange", handler);
-    return () =>
-      document.removeEventListener("visibilitychange", handler);
+    return () => document.removeEventListener("visibilitychange", handler);
   }, []);
 
   if (isLoading) {
     return (
       <Center h={300}>
-        <CustomLoader label="Loading app stats..."/>
+        <CustomLoader label="Loading app stats..." />
       </Center>
     );
   }
 
-  const systemApps = (data ?? []).filter(
-    (c) => c.appType === "system"
-  );
-  const userApps = (data ?? []).filter(
-    (c) => c.appType === "user"
-  );
+  const systemApps = (data ?? []).filter((c) => c.appType === "system");
+  const userApps = (data ?? []).filter((c) => c.appType === "user");
 
   return (
     <Stack p="md" gap="xl">
