@@ -18,8 +18,9 @@ import {
 } from "@backend/utils/constants";
 import { File } from "buffer";
 import { createBodyHash, signPayload } from "@common/index";
+import { createAppKeyAuthenticatedRouter } from "@backend/utils/middlewares";
 
-export const artifactsRouter = new Hono();
+export const artifactsRouter = createAppKeyAuthenticatedRouter();
 
 // fs.ensureDirSync(STATIC_ARTIFACT_ROOT);
 // fs.ensureDirSync(STATIC_TEMP_DIR);
@@ -33,14 +34,7 @@ artifactsRouter.post("/", async (c) => {
     logger.debug("creating artifact");
     const { app_key } = await c.req.json();
 
-    const app = await db
-      .select()
-      .from(appsTable)
-      .where(eq(appsTable.app_key, app_key))
-      .limit(1)
-      .get();
-
-    if (!app) return c.json({ error: "Invalid App key" }, 401);
+    const app = c.get("app");
 
     const app_id = app.id;
     const artifactId = generateId();
@@ -85,6 +79,7 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
   try {
     const logger = getLogger();
     const artifact_id = c.req.param("artifact_id");
+    // todo: can get app from context set by appKeyAuthMiddleware
     const bodyHashHeader = c.req.header("Zipup-Body-Hash");
     const signatureHeader = c.req.header("Zipup-Signature");
     const appKey = c.req.header("Zipup-App-Key");
@@ -95,9 +90,9 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
       return c.json({ error: "Artifact not found" }, 404);
     }
     const { artifact, app } = artifactResult;
-    if (!appKey || appKey !== app.app_key) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
+    // if (!appKey || appKey !== app.app_key) {
+    //   return c.json({ error: "Unauthorized" }, 401);
+    // }
     const body = await c.req.parseBody();
     console.log("Received body: ", body);
     const file = body["artifact"];

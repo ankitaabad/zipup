@@ -98,9 +98,9 @@ export const deployCommand = new Command("deploy")
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-App-Key": config.APP_KEY,
-        "X-Timestamp": timestamp,
-        "X-Signature": signature
+        "Zipup-App-Key": config.APP_KEY,
+        "Zipup-Timestamp": timestamp,
+        "Zipup-Signature": signature
       },
       body
     });

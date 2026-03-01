@@ -6,6 +6,11 @@ import { paseto_public, TokenPayload } from "./helper";
 import { errorHandler } from "./errorHandler";
 import { Context, Hono } from "hono";
 import { getLogger } from "./logger";
+import { eq } from "drizzle-orm";
+import { appsTable } from "@backend/db/schema";
+import { db } from "@backend/db/dbClient";
+import { appSchema } from "@backend/db/schema";
+import z from "zod";
 const loginPath = "/api/admin/login";
 const refreshTokenPath = "/api/admin/refresh";
 
@@ -35,7 +40,25 @@ async function verifyPasetoToken(
 
   return payload;
 }
-
+export const appKeyAuthMiddleware = createMiddleware(async (c, next) => {
+  const logger = getLogger();
+  const appKey = c.req.header("Zipup-App-Key");
+  if (!appKey) {
+    logger.error("Unauthorized: No app key provided");
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+  const app = await db
+    .select()
+    .from(appsTable)
+    .where(eq(appsTable.app_key, appKey))
+    .get();
+  if (!app) {
+    logger.error("Unauthorized: Invalid app key", { appKey });
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+  c.set("app", app);
+  await next();
+});
 export const authMiddleware = createMiddleware(async (c, next) => {
   const { method, path } = c.req;
   const logger = getLogger();
@@ -109,5 +132,12 @@ export const createAuthenticatedRouter = () =>
   new Hono<{
     Variables: {
       tokenPayload: TokenPayload;
+    };
+  }>();
+
+export const createAppKeyAuthenticatedRouter = () =>
+  new Hono<{
+    Variables: {
+      app: z.infer<typeof appSchema> ;
     };
   }>();

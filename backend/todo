@@ -94,7 +94,10 @@ Next:
   ☐ logs appearing in victorologs.
   ☐ longest prefix matchin working for routing.
   ☐ Delete X-Zipup-Internal header from each request, only internal calls can be made with this header.
-  ☐ @high Deployment signature check.
+  ☐ paseto secret storage.
+  ☐ integrate change password in the UI.
+  ☐ publish the cli package to npm.
+  ✔ @high Deployment signature check.
   ☐ @bug password loading in secret variable input.
   ✔ show current submenu in the sidebar.
   ✔ close other menus when one menu is opened in the sidebar.
