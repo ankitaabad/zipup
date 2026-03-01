@@ -25,7 +25,7 @@ export function useApp(appId: string) {
   });
 }
 
-export function useAppAppKey(appId: string) {
+export function useAppKey(appId: string) {
   return useQuery({
     queryKey: ["apps", appId, "app-key"],
     queryFn: async () => {
@@ -33,6 +33,17 @@ export function useAppAppKey(appId: string) {
         `/apps/${appId}/app-key`
       );
       return res.data;
+    },
+    enabled: !!appId
+  });
+}
+
+export function useAppStatus(appId: string) {
+  return useQuery({
+    queryKey: ["apps", appId, "status"],
+    queryFn: async () => {
+      const res = await api.get<{ status: string }>(`/apps/${appId}/status`);
+      return res.data.status;
     },
     enabled: !!appId
   });
@@ -89,6 +100,48 @@ export function useUpdateApp(appId: string) {
     },
     onSuccess: () => {
       // queryClient.invalidateQueries({ queryKey: ["apps"] });
+      queryClient.invalidateQueries({ queryKey: ["apps", appId] });
+    }
+  });
+}
+
+// delete app
+export function useDeleteApp(appId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      await api.delete(`/apps/${appId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["apps"] });
+    }
+  });
+}
+
+// start app
+export function useStartApp(appId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      await api.post(`/apps/${appId}/start`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["apps", appId] });
+    }
+  });
+}
+
+//stop app
+export function useStopApp(appId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      await api.post(`/apps/${appId}/stop`);
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["apps", appId] });
     }
   });

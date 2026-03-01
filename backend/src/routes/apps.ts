@@ -1,3 +1,8 @@
+import {
+  getAppWithLatestArtifact,
+  getAppWithLatestArtifact,
+  getArtifactWithApp
+} from "@backend/utils/dbQueries";
 import { generateApiKey } from "@backend/utils/secret";
 import { Context, Hono } from "hono";
 import { db } from "@backend/db/dbClient";
@@ -15,6 +20,7 @@ import { createSecretKey } from "@backend/utils/secret";
 import { errorHandler } from "@backend/utils/errorHandler";
 import {
   AppPatchSchema,
+  AppStatus,
   CreateAppSchema,
   CreateEnvVarSchema,
   UpdateEnvVarSchema
@@ -140,6 +146,39 @@ appsRouter.post(
     });
   })
 );
+
+appsRouter.get("/:app_id/status", async (c) => {
+  const app_id = c.req.param("app_id");
+
+  const isAppRunning = await isAppRunningByAppId(app_id);
+  if (isAppRunning) {
+    return c.json({
+      status: AppStatus.RUNNING
+    });
+  }
+  const { app, artifact } = await getAppWithLatestArtifact(app_id);
+  console.log({ app, artifact });
+  if (!app) {
+    return c.json({ error: "App not found" }, 404);
+  }
+  let status = AppStatus.DRAFT;
+  if (app.type === "STATIC") {
+    if (artifact?.id) {
+      status = AppStatus.DEPLOYABLE;
+    } else {
+      status = AppStatus.READY;
+    }
+  } else {
+    if (app.start_command && artifact?.id) {
+      status = AppStatus.DEPLOYABLE;
+    } else if (app.start_command) {
+      status = AppStatus.READY;
+    }
+  }
+  return c.json({
+    status
+  });
+});
 appsRouter.post(
   "/:app_id/start",
   withErrorHandler(async (c) => {

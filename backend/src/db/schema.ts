@@ -90,7 +90,7 @@ export const userGroupsTable = table(
     user_id: t
       .text()
       .notNull()
-      .references(() => usersTable.id),
+      .references(() => usersTable.id, { onDelete: "cascade" }),
     group_id: t
       .text()
       .notNull()
@@ -106,7 +106,7 @@ export const groupAppsTable = table(
     group_id: t
       .text()
       .notNull()
-      .references(() => groupsTable.id),
+      .references(() => groupsTable.id, { onDelete: "cascade" }),
     app_id: t
       .text()
       .notNull()
@@ -149,7 +149,7 @@ export const deploymentsTable = table(
     artifact_id: t
       .text()
       .notNull()
-      .references(() => artifactsTable.id),
+      .references(() => artifactsTable.id, { onDelete: "cascade" }),
     container_name: t.text(),
     // host_port: t.integer(),
     status: t.text().$type<DEPLOYMENT_STATUS>().notNull(),

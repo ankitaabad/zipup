@@ -31,3 +31,25 @@ export async function getArtifactWithApp(artifactId: string) {
   }
   return { artifact: result[0].artifacts, app: result[0].apps };
 }
+
+export async function getAppWithLatestArtifact(appId: string) {
+  const result = await db
+    .select()
+    .from(appsTable)
+    .leftJoin(
+      artifactsTable,
+      and(
+        eq(appsTable.id, artifactsTable.app_id),
+        sql`${artifactsTable.version} = (
+          SELECT MAX(version) FROM artifacts WHERE app_id = ${appId}
+        )`
+      )
+    )
+    .where(eq(appsTable.id, appId))
+    .limit(1);
+
+  if (!result[0]) {
+    return { app: null, artifact: null };
+  }
+  return { app: result[0].apps, artifact: result[0].artifacts };
+}

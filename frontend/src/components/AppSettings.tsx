@@ -20,13 +20,22 @@ import {
   IconTrash
 } from "@tabler/icons-react";
 import { useState, useEffect, ReactNode } from "react";
-import { useApp, useRotateKeys, useUpdateApp } from "../apis/apps";
+import {
+  useApp,
+  useAppStatus,
+  useDeleteApp,
+  useRotateKeys,
+  useStartApp,
+  useStopApp,
+  useUpdateApp
+} from "../apis/apps";
 import { CustomLoader } from "./CustomLoader";
 import { CustomModal } from "./CustomModal";
 import { useForm } from "@mantine/form";
 import { AppCredentialsDialogBox } from "./AppCredentialsDialogBox";
 import { theme } from "@frontend/theme";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { AppStatus } from "@common/index";
 
 /* ------------------- Types ------------------- */
 
@@ -34,10 +43,35 @@ type EditTarget = "appName" | "domain" | "startCommand" | "appKey" | null;
 
 /* ------------------- Component ------------------- */
 
+function getStartTooltip(status: AppStatus) {
+  switch (status) {
+    case AppStatus.DEPLOYABLE:
+      return "Start the app";
+    case AppStatus.READY:
+      return "No Artifact found. App is not deployable.";
+    case AppStatus.RUNNING:
+      return "App is already running";
+    case AppStatus.DRAFT:
+      return "Ensure start command is set and artifact is uploaded to start the app.";
+  }
+}
+function getStopTooltip(status: AppStatus) {
+  switch (status) {
+    case AppStatus.RUNNING:
+      return "Stop the app";
+    default:
+      return "App is not running";
+  }
+}
 export function AppSettings({ app_id }: { app_id: string }) {
   const appQuery = useApp(app_id);
   const updateApp = useUpdateApp(app_id);
   const rotateKeys = useRotateKeys(app_id);
+  const deleteApp = useDeleteApp(app_id);
+  const startApp = useStartApp(app_id);
+  const stopApp = useStopApp(app_id);
+  const appStatus = useAppStatus(app_id);
+  const navigate = useNavigate();
   const { type } = useParams<{
     type: string;
     appId: string;
@@ -86,19 +120,41 @@ export function AppSettings({ app_id }: { app_id: string }) {
           <Title order={4}>App Settings</Title>
 
           <Group>
-            <Button variant="light" leftSection={<IconPlayerPlay size={16} />}>
-              Start
-            </Button>
-            <Button variant="light" leftSection={<IconPlayerStop size={16} />}>
-              Stop
-            </Button>
-            <Button variant="outline" leftSection={<IconRefresh size={16} />}>
+            {!appStatus.isLoading && (
+              <>
+                <Tooltip label={getStartTooltip(appStatus.data!)} withArrow>
+                  <Button
+                    variant="light"
+                    leftSection={<IconPlayerPlay size={16} />}
+                    onClick={() => startApp.mutate()}
+                    disabled={appStatus.data !== AppStatus.DEPLOYABLE}
+                  >
+                    Start
+                  </Button>
+                </Tooltip>
+                <Tooltip label={getStopTooltip(appStatus.data!)} withArrow>
+                  <Button
+                    variant="light"
+                    leftSection={<IconPlayerStop size={16} />}
+                    onClick={() => stopApp.mutate()}
+                    disabled={appStatus.data !== AppStatus.RUNNING}
+                  >
+                    Stop
+                  </Button>
+                </Tooltip>
+              </>
+            )}
+            {/* <Button variant="outline" leftSection={<IconRefresh size={16} />}>
               Restart
-            </Button>
+            </Button> */}
             <Button
               color="red"
               variant="outline"
               leftSection={<IconTrash size={16} />}
+              onClick={() => {
+                deleteApp.mutate();
+                navigate("/");
+              }}
             >
               Delete
             </Button>

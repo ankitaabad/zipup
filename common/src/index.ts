@@ -102,3 +102,11 @@ export function signPayload(
 export const createBodyHash = (data: string | Buffer) => {
   return crypto.createHash("sha256").update(data).digest("hex");
 };
+
+export const enum AppStatus {
+  DRAFT = "DRAFT",
+  READY = "READY",
+  DEPLOYABLE = "DEPLOYABLE",
+  RUNNING = "RUNNING",
+  STOPPED = "STOPPED",
+}

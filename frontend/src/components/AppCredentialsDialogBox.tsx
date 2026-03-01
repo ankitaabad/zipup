@@ -10,7 +10,7 @@ import {
 } from "@mantine/core";
 import { IconCopy, IconCheck } from "@tabler/icons-react";
 import { useClipboard } from "@mantine/hooks";
-import { useAppAppKey } from "@frontend/apis/apps";
+import { useAppKey } from "@frontend/apis/apps";
 
 interface AppCredentialsDialogBoxProps {
   appId: string;
@@ -27,7 +27,7 @@ export function AppCredentialsDialogBox({
   const appKeyClipboard = useClipboard({ timeout: 1500 });
   const secretKeyClipboard = useClipboard({ timeout: 1500 });
 
-  const { data, isLoading, isError } = useAppAppKey(appId);
+  const { data, isLoading, isError } = useAppKey(appId);
 
   if (isLoading) {
     return (
