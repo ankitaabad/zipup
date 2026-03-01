@@ -36,6 +36,7 @@ import { AppCredentialsDialogBox } from "./AppCredentialsDialogBox";
 import { theme } from "@frontend/theme";
 import { useNavigate, useParams } from "react-router-dom";
 import { AppStatus } from "@common/index";
+import { AppStatusBadge } from "./AppStatusBadge";
 
 /* ------------------- Types ------------------- */
 
@@ -117,8 +118,10 @@ export function AppSettings({ app_id }: { app_id: string }) {
       <Stack gap="sm">
         {/* Header */}
         <Group justify="space-between">
-          <Title order={4}>App Settings</Title>
-
+          <Group>
+            <Title order={4}>App Settings</Title>
+            <AppStatusBadge status={appStatus?.data! as AppStatus} />
+          </Group>
           <Group>
             {!appStatus.isLoading && (
               <>

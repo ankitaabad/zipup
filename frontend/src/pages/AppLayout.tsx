@@ -9,17 +9,20 @@ import {
   TextInput,
   ActionIcon,
   Divider,
-  Text
+  Text,
+  Group
 } from "@mantine/core";
 import { useState } from "react";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
-import { useApp } from "../apis/apps";
+import { useApp, useAppStatus } from "../apis/apps";
 import { AppSettings } from "../components/AppSettings";
 import Deployment from "../components/Deployment";
 import { EnvVarsTab } from "../components/EnvVars";
 import { CustomLoader } from "../components/CustomLoader";
 import { theme } from "@frontend/theme";
 import { SecretVarsTab } from "@frontend/components/SecretVarsTab";
+import { AppStatusBadge } from "@frontend/components/AppStatusBadge";
+import { AppStatus } from "@common/index";
 
 export default function AppLayout() {
   const { type, appId, tab } = useParams<{
@@ -35,7 +38,7 @@ export default function AppLayout() {
   const [secrets, setSecrets] = useState<{ key: string; value: string }[]>([]);
   const [tempKey, setTempKey] = useState("");
   const [tempValue, setTempValue] = useState("");
-
+  const appStatus = useAppStatus(appId!);
   if (appQuery.isLoading) {
     return <CustomLoader label="Loading app..." />;
   }
@@ -76,18 +79,20 @@ export default function AppLayout() {
       }}
     >
       <Stack style={{ flex: 1 }}>
-        <Title
-          order={3}
-          fw={600}
-          mx="auto"
-          style={{
-            letterSpacing: "-0.3px",
-            fontFamily: "var(--mantine-font-family-monospace)",
-            color: "var(--mantine-color-dark-9)"
-          }}
-        >
-          {app.name}
-        </Title>
+        {/* <Group align="center" gap="sm">
+          <Title
+            order={3}
+            fw={600}
+            style={{
+              letterSpacing: "-0.3px"
+            }}
+          >
+            {app.name}
+          </Title>
+
+          <AppStatusBadge status={appStatus?.data! as AppStatus} />
+        </Group> */}
+
         <Tabs
           // value={activeTab}
           // defaultValue={"settings"}

@@ -84,7 +84,7 @@ Next:
   ✔ @bug deployed app is not running on the domain.
 
   ✔ Env and secret variable present in the app deployed.
-  ☐ @high start/stop and delete app.
+  ✔ @high start/stop and delete app.
   ☐ Reserved env ZIPUP_PORT
   ☐ postgres accesss.
   ☐ redis access
@@ -97,6 +97,7 @@ Next:
   ☐ paseto secret storage.
   ☐ integrate change password in the UI.
   ☐ publish the cli package to npm.
+  ☐ Better messages in UI like fields explanations, dashboard etc.
   ✔ @high Deployment signature check.
   ☐ @bug password loading in secret variable input.
   ✔ show current submenu in the sidebar.
