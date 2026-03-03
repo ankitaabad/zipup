@@ -21,10 +21,10 @@ export function AppStatusBadge({ status }: Props) {
         </Badge>
       );
 
-    case AppStatus.DEPLOYABLE:
+    case AppStatus.STOPPED:
       return (
         <Badge color="indigo" variant="filled" radius="sm">
-          Deployable
+          Stopped
         </Badge>
       );
 

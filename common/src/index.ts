@@ -106,7 +106,6 @@ export const createBodyHash = (data: string | Buffer) => {
 export const enum AppStatus {
   DRAFT = "DRAFT",
   READY = "READY",
-  DEPLOYABLE = "DEPLOYABLE",
-  RUNNING = "RUNNING",
   STOPPED = "STOPPED",
+  RUNNING = "RUNNING",
 }

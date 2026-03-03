@@ -46,7 +46,7 @@ type EditTarget = "appName" | "domain" | "startCommand" | "appKey" | null;
 
 function getStartTooltip(status: AppStatus) {
   switch (status) {
-    case AppStatus.DEPLOYABLE:
+    case AppStatus.STOPPED:
       return "Start the app";
     case AppStatus.READY:
       return "No Artifact found. App is not deployable.";
@@ -123,14 +123,14 @@ export function AppSettings({ app_id }: { app_id: string }) {
             <AppStatusBadge status={appStatus?.data! as AppStatus} />
           </Group>
           <Group>
-            {!appStatus.isLoading && (
+            {!appStatus.isLoading && type === "web" && (
               <>
                 <Tooltip label={getStartTooltip(appStatus.data!)} withArrow>
                   <Button
                     variant="light"
                     leftSection={<IconPlayerPlay size={16} />}
                     onClick={() => startApp.mutate()}
-                    disabled={appStatus.data !== AppStatus.DEPLOYABLE}
+                    disabled={appStatus.data !== AppStatus.STOPPED}
                   >
                     Start
                   </Button>

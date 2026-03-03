@@ -164,13 +164,13 @@ appsRouter.get("/:app_id/status", async (c) => {
   let status = AppStatus.DRAFT;
   if (app.type === "STATIC") {
     if (artifact?.id) {
-      status = AppStatus.DEPLOYABLE;
+      status = AppStatus.STOPPED;
     } else {
       status = AppStatus.READY;
     }
   } else {
     if (app.start_command && artifact?.id) {
-      status = AppStatus.DEPLOYABLE;
+      status = AppStatus.STOPPED;
     } else if (app.start_command) {
       status = AppStatus.READY;
     }
