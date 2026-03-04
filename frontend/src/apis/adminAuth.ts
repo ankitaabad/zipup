@@ -98,3 +98,17 @@ export function useAdminChangePassword() {
     }
   });
 }
+
+// change password
+export function useChangeAdminPassword() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: { new_password: string }) => {
+      await api.post(`/admin/change-password`, payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["apps", appId] });
+    }
+  });
+}

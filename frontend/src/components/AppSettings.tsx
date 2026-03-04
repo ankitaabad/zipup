@@ -35,7 +35,7 @@ import { useForm } from "@mantine/form";
 import { AppCredentialsDialogBox } from "./AppCredentialsDialogBox";
 import { theme } from "@frontend/theme";
 import { useNavigate, useParams } from "react-router-dom";
-import { AppStatus } from "@common/index";
+import { AppStatus } from "@zipup/common";
 import { AppStatusBadge } from "./AppStatusBadge";
 
 /* ------------------- Types ------------------- */

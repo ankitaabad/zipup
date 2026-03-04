@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useForm } from "@mantine/form";
 import {
   Button,
@@ -8,22 +8,22 @@ import {
   PasswordInput,
   Stack,
   TextInput,
-  Title,
   Text,
   Box,
   Group,
-  useMantineTheme
+  useMantineTheme,
+  Divider
 } from "@mantine/core";
 import { IconUser, IconLock } from "@tabler/icons-react";
 import { useAdminLogin } from "../apis/adminAuth";
 import { useNavigate } from "react-router-dom";
 import { zod4Resolver } from "mantine-form-zod-resolver";
-import { AdminLoginSchema } from "@common/index";
-
+import { AdminLoginSchema } from "@zipup/common";
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const theme = useMantineTheme();
   const loginMutation = useAdminLogin();
+
   const loginForm = useForm({
     initialValues: {
       username: "",
@@ -32,98 +32,92 @@ export const Login: React.FC = () => {
     validate: zod4Resolver(AdminLoginSchema)
   });
 
-
-  const handleSubmit = (
-    { username, password }: typeof loginForm.values,
-    e: React.FormEvent<HTMLFormElement> | undefined
-  ) => {
-    e?.preventDefault();
-
+  const handleSubmit = ({ username, password }: typeof loginForm.values) => {
     loginMutation.mutate(
       { username, password },
       {
-        onSuccess: () => {
-          navigate("/"); // or /admin/dashboard
-        }
+        onSuccess: () => navigate("/")
       }
     );
   };
 
   return (
-    <Container
-      size={420}
+    <Box
       style={{
         minHeight: "100vh",
+        // background: `linear-gradient(
+        //   135deg,
+        //   ${theme.colors.gray[0]} 0%,
+        //   ${theme.colors.gray[2]} 100%
+        // )`,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: 20
+        padding: 24
       }}
     >
-      <Center style={{ width: "100%" }}>
+      <Container size={420}>
         <Card
-          shadow="xl"
+          shadow="lg"
           padding="xl"
-          radius="md"
+          radius="lg"
           withBorder
-          style={{ width: "100%" }}
+          bg="white"
+          bg="gray.0"
         >
-          {/* Header */}
-          <Box sx={{ textAlign: "center", marginBottom: 30 }}>
-            <Group justify="center" gap={6}>
-              {/* <IconCloudBolt
-                size={32}
-                stroke={2}
-                color={theme.colors.primaryColor[7]}
-              /> */}
-              <Text
-                component="h2"
-                size={"35px"}
-                fw={700}
-                variant="gradient"
-                gradient={{
-                  from: theme.colors.primaryColor[7],
-                  to: "black",
-                  deg: 30
-                }}
-                mb={20}
-              >
-                zipup
-              </Text>
-            </Group>
+          {/* Brand */}
+          <Box ta="center" mb={40}>
+            <Text
+              size="44px"
+              fw={900}
+              lh={1}
+              style={{
+                letterSpacing: "-1px"
+              }}
+            >
+              <span style={{ color: theme.colors.gray[8] }}>zip</span>
+              <span style={{ color: "var(--mantine-primary-color-7)" }}>
+                up
+              </span>
+            </Text>
           </Box>
 
           {/* Error */}
           {loginMutation.isError && (
-            <Text c="red" size="sm" align="center" mb="sm">
-              {(loginMutation.error as any)?.response?.data?.error ??
-                "Login failed"}
-            </Text>
+            <Box
+              mb="md"
+              p="sm"
+              style={{
+                background: theme.colors.red[0],
+                borderRadius: 8
+              }}
+            >
+              <Text c="red" size="sm" ta="center">
+                {(loginMutation.error as any)?.response?.data?.error ??
+                  "Invalid username or password"}
+              </Text>
+            </Box>
           )}
 
           {/* Form */}
           <form onSubmit={loginForm.onSubmit(handleSubmit)}>
-            <Stack gap="md">
+            <Stack gap="lg">
               <TextInput
                 label="Username"
                 autoFocus
-                placeholder="Enter your username"
-                required
-                radius="sm"
+                placeholder="Enter username"
+                radius="md"
                 size="md"
-                leftSection={<IconUser size={20} />}
-                key={loginForm.key("username")}
+                leftSection={<IconUser size={18} />}
                 {...loginForm.getInputProps("username")}
               />
 
               <PasswordInput
                 label="Password"
-                placeholder="Enter your password"
-                leftSection={<IconLock size={20} />}
-                required
-                radius="sm"
+                placeholder="Enter password"
+                radius="md"
                 size="md"
-                key={loginForm.key("password")}
+                leftSection={<IconLock size={18} />}
                 {...loginForm.getInputProps("password")}
               />
 
@@ -131,14 +125,15 @@ export const Login: React.FC = () => {
                 type="submit"
                 fullWidth
                 size="md"
+                radius="md"
                 loading={loginMutation.isPending}
               >
-                Login
+                Sign in
               </Button>
             </Stack>
           </form>
         </Card>
-      </Center>
-    </Container>
+      </Container>
+    </Box>
   );
 };

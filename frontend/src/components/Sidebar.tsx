@@ -147,8 +147,11 @@ export function AppSidebar() {
         {/* Brand */}
         <Box px="md" py="sm">
           <Group justify="space-between">
-            <Text fw={700} size="lg" style={{ letterSpacing: -0.3 }}>
-              zipup
+            <Text fw={700} size="xl" style={{ letterSpacing: -0.3 }}>
+              <span style={{ color: theme.colors.gray[8] }}>zip</span>
+              <span style={{ color: "var(--mantine-primary-color-7)" }}>
+                up
+              </span>
             </Text>
             {/* <Code size="xs">v3.1.2</Code> */}
           </Group>
@@ -163,7 +166,7 @@ export function AppSidebar() {
               "&:hover": { backgroundColor: theme.colors.gray[2] },
               fontWeight: active ? 600 : 400,
               boxShadow: active
-                ? "inset 6px 0 0 var(--mantine-primary-color-7)"
+                ? "inset  6px 0 0 var(--mantine-primary-color-7)"
                 : "none"
             })
           }}

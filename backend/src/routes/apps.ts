@@ -24,7 +24,7 @@ import {
   CreateAppSchema,
   CreateEnvVarSchema,
   UpdateEnvVarSchema
-} from "@common/index";
+} from "@zipup/common";
 import { withErrorHandler } from "@backend/utils/middlewares";
 import { isAppRunningByAppId } from "@backend/utils/docker_utils";
 import { eventBus, zipupEvents } from "@backend/events/event";

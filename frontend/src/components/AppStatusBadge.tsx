@@ -1,4 +1,4 @@
-import { AppStatus } from "@common/index";
+import { AppStatus } from "@zipup/common";
 import { Badge } from "@mantine/core";
 
 type Props = {

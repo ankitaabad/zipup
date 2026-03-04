@@ -19,9 +19,8 @@ import {
 import { eq } from "drizzle-orm";
 import { setCookie, getCookie } from "hono/cookie";
 import { getLogger } from "../utils/logger";
-import { errorHandler } from "../utils/errorHandler";
 import { db } from "@backend/db/dbClient";
-import { AdminChangePasswordSchema, AdminLoginSchema } from "@common/index";
+import { AdminChangePasswordSchema, AdminLoginSchema } from "@zipup/common";
 import { CookieType } from "@backend/utils/constants";
 import {
   createAuthenticatedRouter,
@@ -214,6 +213,10 @@ adminAuthRouter.post(
     setCookie(c, CookieType.ACCESS_TOKEN, "", { maxAge: 0 });
     setCookie(c, CookieType.REFRESH_TOKEN, "", { maxAge: 0 });
 
+
+    // redirect to login page on frontend
+    c.set("Location", "/login");
+    c.status(302);
     return c.json({ message: "Password changed successfully" });
   })
 );

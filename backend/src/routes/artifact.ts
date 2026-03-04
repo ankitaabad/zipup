@@ -17,7 +17,7 @@ import {
   STATIC_TEMP_DIR
 } from "@backend/utils/constants";
 import { File } from "buffer";
-import { createBodyHash, signPayload } from "@common/index";
+import { createBodyHash, signPayload } from "@zipup/common";
 import { createAppKeyAuthenticatedRouter } from "@backend/utils/middlewares";
 
 export const artifactsRouter = createAppKeyAuthenticatedRouter();

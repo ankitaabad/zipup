@@ -1,174 +1,251 @@
+// src/components/Settings.tsx
 import {
   Tabs,
-  Card,
+  Paper,
   Stack,
-  PasswordInput,
-  TextInput,
-  Switch,
-  Button,
   Group,
   Text,
-  Divider
+  Divider,
+  Title,
+  Box,
+  UnstyledButton,
+  Badge,
+  Button,
+  TextInput,
+  PasswordInput
 } from "@mantine/core";
-import { IconSettings, IconShieldLock } from "@tabler/icons-react";
 import { useState } from "react";
+import { IconSettings } from "@tabler/icons-react";
+import { useChangeAdminPassword } from "@frontend/apis/adminAuth";
+import { CustomModal } from "../components/CustomModal";
+import { theme } from "@frontend/theme";
+
+/* ------------------- Types ------------------- */
+
+type EditTarget = "password" | "email" | "domain" | null;
+
+/* ------------------- Component ------------------- */
 
 export function Settings() {
-  /* ---------------- General ---------------- */
+  const [editTarget, setEditTarget] = useState<EditTarget>(null);
+  const changePassword = useChangeAdminPassword();
+
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [leEmail, setLeEmail] = useState("");
-  const [debugLogs, setDebugLogs] = useState(false);
 
-  /* ---------------- 2FA ---------------- */
-  const [twoFaEnabled, setTwoFaEnabled] = useState(false);
-  const [otp, setOtp] = useState("");
+  const [email, setEmail] = useState<string | null>(null);
+  const [domain, setDomain] = useState<string | null>(null);
 
   return (
-    <Tabs defaultValue="general">
-      <Tabs.List>
-        <Tabs.Tab value="general" leftSection={<IconSettings size={16} />}>
-          General
-        </Tabs.Tab>
-        {/* <Tabs.Tab value="2fa" leftSection={<IconShieldLock size={16} />}>
-          2FA
-        </Tabs.Tab> */}
-      </Tabs.List>
+    <Paper
+      p="md"
+      radius="md"
+      style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "80vh"
+      }}
+    >
+      <Tabs defaultValue="general">
+        <Tabs.List>
+          <Tabs.Tab value="general" leftSection={<IconSettings size={16} />}>
+            General
+          </Tabs.Tab>
+        </Tabs.List>
 
-      {/* ---------------- General Tab ---------------- */}
-      <Tabs.Panel value="general" pt="md">
-        <Stack gap="md">
-          {/* Change Password */}
-          <Card withBorder>
-            <Text fw={600} mb="xs">
-              Change password
-            </Text>
+        <Tabs.Panel value="general" pt="md">
+          <Paper withBorder p="lg" radius="md" bg="gray.0">
+            <Stack gap="sm">
+              {/* Header */}
+              <Group justify="space-between">
+                <Title order={4}>Global Settings</Title>
+              </Group>
 
+              <Divider />
+
+              {/* ---------------- Admin Password ---------------- */}
+              <ConfigurableSettingRow
+                label="Admin Password"
+                value={null} // intentionally no value shown
+                description="Change your administrator account password."
+                onClick={() => setEditTarget("password")}
+                hideValue
+              />
+
+              <Divider />
+
+              {/* ---------------- Email ---------------- */}
+              <ConfigurableSettingRow
+                label="Let’s Encrypt Email"
+                value={email}
+                description="Used for certificate expiration notices and security alerts."
+                onClick={() => setEditTarget("email")}
+              />
+
+              <Divider />
+
+              {/* ---------------- Domain ---------------- */}
+              <ConfigurableSettingRow
+                label="Platform Domain"
+                value={domain}
+                description="Primary domain used for your platform. Changing this may require DNS updates."
+                onClick={() => setEditTarget("domain")}
+              />
+            </Stack>
+          </Paper>
+        </Tabs.Panel>
+
+        {/* ---------------- Password Modal ---------------- */}
+        {editTarget === "password" && (
+          <CustomModal
+            opened
+            title="Change Admin Password"
+            onClose={() => {
+              setPassword("");
+              setConfirmPassword("");
+              setEditTarget(null);
+            }}
+          >
             <Stack>
               <PasswordInput
-                label="New password"
+                label="New Password"
                 value={password}
                 onChange={(e) => setPassword(e.currentTarget.value)}
-              />
-              <PasswordInput
-                label="Confirm password"
-                value={confirmPassword}
-                onChange={(e) =>
-                  setConfirmPassword(e.currentTarget.value)
-                }
+                autoFocus
               />
 
-              <Group justify="flex-end">
-                <Button>Update password</Button>
+              <PasswordInput
+                label="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.currentTarget.value)}
+              />
+
+              <Group justify="flex-end" mt="md">
+                <Button
+                  onClick={() => {
+                    if (password !== confirmPassword) return;
+                    changePassword.mutate({ new_password: password });
+                    setEditTarget(null);
+                  }}
+                >
+                  Update Password
+                </Button>
               </Group>
             </Stack>
-          </Card>
+          </CustomModal>
+        )}
 
-          {/* Let's Encrypt Email */}
-          <Card withBorder>
-            <Text fw={600} mb="xs">
-              Let’s Encrypt
-            </Text>
-
+        {/* ---------------- Email Modal ---------------- */}
+        {editTarget === "email" && (
+          <CustomModal
+            opened
+            title="Update Let’s Encrypt Email"
+            onClose={() => setEditTarget(null)}
+          >
             <Stack>
               <TextInput
-                label="Email address"
-                description="Used for certificate expiration notices"
-                value={leEmail}
-                onChange={(e) => setLeEmail(e.currentTarget.value)}
+                label="Email Address"
+                value={email ?? ""}
+                onChange={(e) => setEmail(e.currentTarget.value)}
+                autoFocus
               />
 
-              <Group justify="flex-end">
-                <Button>Save email</Button>
+              <Group justify="flex-end" mt="md">
+                <Button onClick={() => setEditTarget(null)}>Save</Button>
               </Group>
             </Stack>
-          </Card>
+          </CustomModal>
+        )}
 
-          {/* Debug Logs */}
-          {/* <Card withBorder>
-            <Group justify="space-between">
-              <div>
-                <Text fw={600}>Debug logs</Text>
-                <Text size="sm" c="dimmed">
-                  Enable verbose logging for troubleshooting
-                </Text>
-              </div>
-
-              <Switch
-                checked={debugLogs}
-                onChange={(e) =>
-                  setDebugLogs(e.currentTarget.checked)
-                }
+        {/* ---------------- Domain Modal ---------------- */}
+        {editTarget === "domain" && (
+          <CustomModal
+            opened
+            title="Update Platform Domain"
+            onClose={() => setEditTarget(null)}
+          >
+            <Stack>
+              <TextInput
+                label="Domain"
+                value={domain ?? ""}
+                onChange={(e) => setDomain(e.currentTarget.value)}
+                autoFocus
               />
-            </Group>
-          </Card> */}
-        </Stack>
-      </Tabs.Panel>
 
-      {/* ---------------- 2FA Tab ---------------- */}
-      <Tabs.Panel value="2fa" pt="md">
-        <Stack gap="md">
-          <Card withBorder>
-            <Group justify="space-between" mb="sm">
-              <div>
-                <Text fw={600}>Two-factor authentication</Text>
-                <Text size="sm" c="dimmed">
-                  Protect your account with an authenticator app
-                </Text>
-              </div>
+              <Group justify="flex-end" mt="md">
+                <Button onClick={() => setEditTarget(null)}>Save</Button>
+              </Group>
+            </Stack>
+          </CustomModal>
+        )}
+      </Tabs>
+    </Paper>
+  );
+}
 
-              <Switch
-                checked={twoFaEnabled}
-                onChange={(e) =>
-                  setTwoFaEnabled(e.currentTarget.checked)
-                }
-              />
-            </Group>
+/* ------------------- Reusable Row ------------------- */
 
-            {twoFaEnabled && (
-              <>
-                <Divider my="sm" />
+function ConfigurableSettingRow({
+  label,
+  value,
+  description,
+  onClick,
+  hideValue
+}: {
+  label: string;
+  value: string | null;
+  description: string;
+  onClick: () => void;
+  hideValue?: boolean;
+}) {
+  return (
+    <UnstyledButton
+      onClick={onClick}
+      style={{ width: "100%", textAlign: "left" }}
+    >
+      <Box
+        p="sm"
+        style={{
+          borderRadius: 8,
+          transition: "background-color 120ms ease"
+        }}
+        className="config-row"
+      >
+        <Group align="center">
+          <Text size="sm" fw={500}>
+            {label}
+          </Text>
 
-                {/* QR code placeholder */}
-                <Card withBorder>
-                  <Text size="sm" mb="xs">
-                    Scan QR code with Google Authenticator or Authy
-                  </Text>
+          <Text size="xs" c="dimmed">
+            [ Click Row to Edit ]
+          </Text>
+        </Group>
 
-                  <div
-                    style={{
-                      width: 160,
-                      height: 160,
-                      background: "#eee",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      borderRadius: 6
-                    }}
-                  >
-                    QR
-                  </div>
-                </Card>
-
-                <TextInput
-                  label="Verification code"
-                  placeholder="123456"
-                  value={otp}
-                  onChange={(e) => setOtp(e.currentTarget.value)}
-                />
-
-                <Group justify="space-between">
-                  <Button variant="light" color="red">
-                    Regenerate recovery codes
-                  </Button>
-
-                  <Button>Verify & enable</Button>
-                </Group>
-              </>
+        {!hideValue && (
+          <>
+            {value ? (
+              <Text
+                size="sm"
+                mt={4}
+                fw={500}
+                style={{ fontFamily: "monospace" }}
+                c={theme.colors.primaryColor[7]}
+              >
+                {value}
+              </Text>
+            ) : (
+              <Badge color="red" variant="light" mt={6}>
+                Not set
+              </Badge>
             )}
-          </Card>
-        </Stack>
-      </Tabs.Panel>
-    </Tabs>
+          </>
+        )}
+
+        <Text size="xs" c="dimmed" mt={6} maw={520}>
+          [ {description} ]
+        </Text>
+      </Box>
+    </UnstyledButton>
   );
 }

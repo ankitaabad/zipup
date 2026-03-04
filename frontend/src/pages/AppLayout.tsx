@@ -22,7 +22,7 @@ import { CustomLoader } from "../components/CustomLoader";
 import { theme } from "@frontend/theme";
 import { SecretVarsTab } from "@frontend/components/SecretVarsTab";
 import { AppStatusBadge } from "@frontend/components/AppStatusBadge";
-import { AppStatus } from "@common/index";
+import { AppStatus } from "@zipup/common";
 
 export default function AppLayout() {
   const { type, appId, tab } = useParams<{
