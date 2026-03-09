@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AppStatsDashboard from "./components/AppStatsDashboard";
 import { Login } from "./components/Login";
 import { Settings } from "./pages/Settings";
+import { Wireguard } from "./components/Wireguard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,7 +29,7 @@ export default function App() {
             {/* <Route path="/dashboard" element={<AppStatsDashboard />} /> */}
             <Route path="/settings" element={<Settings />} />
             <Route path="/logs" element={<Logs />} />
-
+            <Route path="/wireguard" element={<Wireguard />} /> 
             {/* Apps with tabs */}
             <Route path="/apps/:type/:appId" element={<AppLayout />} />
             <Route path="/apps/:type/:appId/:tab" element={<AppLayout />} />

@@ -22,6 +22,10 @@ export const theme = createTheme({
   colors: {
     primaryColor
   },
+
+  // fontFamily: "Inter, sans-serif",
+  // headings: { fontFamily: "Inter, sans-serif" },
+
   components: {
     Input: Input.extend({
       classNames: {

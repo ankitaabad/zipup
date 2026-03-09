@@ -12,8 +12,10 @@ import {
   Box,
   Group,
   useMantineTheme,
-  Divider
+  Divider,
+  Image
 } from "@mantine/core";
+import logoImage from "../../public/logo.svg";
 import { IconUser, IconLock } from "@tabler/icons-react";
 import { useAdminLogin } from "../apis/adminAuth";
 import { useNavigate } from "react-router-dom";
@@ -50,6 +52,8 @@ export const Login: React.FC = () => {
         //   ${theme.colors.gray[0]} 0%,
         //   ${theme.colors.gray[2]} 100%
         // )`,
+        background: "#F6F4F5",
+
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -62,7 +66,7 @@ export const Login: React.FC = () => {
           padding="xl"
           radius="lg"
           withBorder
-          bg="white"
+          // bg="white"
           bg="gray.0"
         >
           {/* Brand */}
@@ -75,10 +79,11 @@ export const Login: React.FC = () => {
                 letterSpacing: "-1px"
               }}
             >
-              <span style={{ color: theme.colors.gray[8] }}>zip</span>
+              {/* <span style={{ color: theme.colors.gray[8] }}>zip</span>
               <span style={{ color: "var(--mantine-primary-color-7)" }}>
                 up
-              </span>
+              </span> */}
+                <Image src={logoImage} h={40} w="auto" fit="contain" mx="auto" />
             </Text>
           </Box>
 

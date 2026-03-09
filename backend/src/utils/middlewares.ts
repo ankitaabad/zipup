@@ -1,6 +1,6 @@
 import { getCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
-import { CookieType, ISSUER, TokenPurpose } from "./constants";
+import { AUD, CookieType, ISSUER, TokenPurpose } from "./constants";
 import { V4 } from "paseto";
 import { paseto_public, TokenPayload } from "./helper";
 import { errorHandler } from "./errorHandler";
@@ -31,6 +31,7 @@ async function verifyPasetoToken(
   const exp = new Date(payload.exp).getTime();
 
   if (
+    payload.aud !== AUD.ZIPUP_API ||
     payload.purpose !== expectedPurpose ||
     payload.iss !== ISSUER ||
     exp < now
@@ -78,7 +79,7 @@ export const authMiddleware = createMiddleware(async (c, next) => {
     );
 
     if (!payload) return c.json({ error: "Unauthorized" }, 401);
-
+    c.set("tokenPayload", payload);
     await next();
     return;
   }

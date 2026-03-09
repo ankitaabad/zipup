@@ -3,6 +3,8 @@ import { omit } from "radash";
 import { appsTable, appSchema, platformAdminsTable } from "../db/schema";
 import {
   ACCESS_AUD,
+  addAllTokensToCookie,
+  consumeRefreshJti,
   generateAccessToken,
   generateCSRFToken,
   generateId,
@@ -56,22 +58,7 @@ adminAuthRouter.post(
     if (!isPasswordValid) {
       return c.json({ error: "Invalid username or password" }, 401);
     }
-    const [access_token, refresh_token, csrf_token] = await Promise.all([
-      generateAccessToken(user.id, ACCESS_AUD),
-      generateRefreshToken(user.id),
-      generateCSRFToken(user.id)
-    ]);
-    //todo: what happen when you are only on http to start with.
-    setCookie(c, "access_token", access_token, {
-      httpOnly: true,
-      secure: true
-    });
-    setCookie(c, "refresh_token", refresh_token.token, {
-      httpOnly: true,
-      secure: true,
-      path: "/auth/refresh"
-    });
-    setCookie(c, "csrf_token", csrf_token, { httpOnly: false, secure: true });
+    await addAllTokensToCookie(c, user.id);
     return c.json({});
   })
 );
@@ -106,29 +93,17 @@ adminAuthRouter.post(
       return c.json({ error: "Missing refresh token" }, 401);
     }
 
-    let payload;
-    try {
-      payload = await verifyRefreshToken(refreshToken);
-    } catch (err) {
-      return c.json({ error: err.message }, 401);
+    let payload = c.get("tokenPayload");
+    if (!payload.jti) {
+      throw new Error("Missing jti");
     }
+    const consumed = consumeRefreshJti(payload.jti);
+    if (!consumed) {
+      throw new Error("Refresh token already used or invalid");
+    }
+    await addAllTokensToCookie(c, payload.sub);
 
-    const [newAccessToken, newRefreshToken] = await Promise.all([
-      generateAccessToken(payload.sub, ACCESS_AUD),
-      generateRefreshToken(payload.sub)
-    ]);
-
-    setCookie(c, "access_token", newAccessToken, {
-      httpOnly: true,
-      secure: true
-    });
-
-    setCookie(c, "refresh_token", newRefreshToken.token, {
-      httpOnly: true,
-      secure: true
-    });
-
-    return c.json({ message: "Token refreshed" });
+    return c.json({});
   })
 );
 
@@ -212,7 +187,6 @@ adminAuthRouter.post(
     // Optional: force logout everywhere, in case multiple users
     setCookie(c, CookieType.ACCESS_TOKEN, "", { maxAge: 0 });
     setCookie(c, CookieType.REFRESH_TOKEN, "", { maxAge: 0 });
-
 
     // redirect to login page on frontend
     c.set("Location", "/login");

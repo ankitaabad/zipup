@@ -117,7 +117,7 @@ services:
     restart: unless-stopped
     networks:
       - postgres_network
-      - wireguard_network          # 🔐 VPN access
+      - wireguard_network          
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
@@ -136,14 +136,11 @@ services:
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
-      - SYS_MODULE
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=UTC
+      - TZ=Asia/Kolkata
       - SERVERPORT=51820
-      - PEERS=1
-      - PEERDNS=auto
     volumes:
       - wireguard_config:/config
       - /lib/modules:/lib/modules
@@ -156,6 +153,8 @@ services:
     labels:
       - app_type=system
       - app_name=wireguard
+
+
 
 volumes:
   vldata:

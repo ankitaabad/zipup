@@ -3,7 +3,7 @@ import path from "path";
 export const PORT_FOR_USER_APPS = 3000;
 export const ISSUER = "zipup_server";
 export enum AUD {
-  zipup_API = "zipup_api",
+  ZIPUP_API = "zipup_api",
 }
 export enum CookieType {
   ACCESS_TOKEN = "access_token",

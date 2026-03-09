@@ -108,7 +108,7 @@ export function SecretVarsTab({ appId }: { appId: string }) {
     <Paper p="md" withBorder bg="gray.0">
       <Group justify="space-between" mb="sm">
         <Group gap="xs">
-          <IconLock size={16} />
+          {/* <IconLock size={16} /> */}
           <Text fw={600}>Secrets</Text>
         </Group>
 
@@ -117,7 +117,7 @@ export function SecretVarsTab({ appId }: { appId: string }) {
           leftIcon={<IconPlus size={14} />}
           onClick={() => setAddOpen(true)}
         >
-          Add secret
+          Add Secret Variable
         </Button>
       </Group>
 
@@ -126,11 +126,24 @@ export function SecretVarsTab({ appId }: { appId: string }) {
       </Text>
 
       {!isLoading && (!data || data.length === 0) ? (
-        <Paper p="xl" radius="md" withBorder>
+        <Paper
+          p="xl"
+          radius="md"
+          withBorder
+          style={{ textAlign: "center", backgroundColor: "#f8f9fa" }}
+        >
           <Center mb="sm">
-            <IconDatabaseOff size={48} />
+            <IconDatabaseOff size={48} color="#9CA3AF" />
           </Center>
-          <Text fw={500}>No secrets</Text>
+          <Text size="lg" fw={500} mb="xs">
+            No secret variables
+          </Text>
+          <Text color="dimmed" size="sm" mb="md">
+            You haven’t added any secret variables yet.
+          </Text>
+          <Button size="sm" onClick={() => setAddOpen(true)}>
+            Add Secret Variable
+          </Button>
         </Paper>
       ) : (
         <Table striped highlightOnHover>
@@ -163,9 +176,7 @@ export function SecretVarsTab({ appId }: { appId: string }) {
                       <PasswordInput
                         autoFocus
                         value={editingValue}
-                        onChange={(e) =>
-                          setEditingValue(e.currentTarget.value)
-                        }
+                        onChange={(e) => setEditingValue(e.currentTarget.value)}
                         size="md"
                       />
                     ) : (
@@ -199,9 +210,7 @@ export function SecretVarsTab({ appId }: { appId: string }) {
                           <Button
                             size="xs"
                             leftIcon={<IconEdit size={14} />}
-                            onClick={() =>
-                              openEdit(secret.id, secret.key)
-                            }
+                            onClick={() => openEdit(secret.id, secret.key)}
                           >
                             Edit
                           </Button>
@@ -209,9 +218,7 @@ export function SecretVarsTab({ appId }: { appId: string }) {
                             size="xs"
                             color="red"
                             leftIcon={<IconTrash size={14} />}
-                            onClick={() =>
-                              confirmDelete(secret.id, secret.key)
-                            }
+                            onClick={() => confirmDelete(secret.id, secret.key)}
                           >
                             Delete
                           </Button>
@@ -233,16 +240,21 @@ export function SecretVarsTab({ appId }: { appId: string }) {
         onClose={() => setAddOpen(false)}
       >
         <Stack>
-          <TextInput
-            label="Key"
-            value={newKey}
-            onChange={(e) => setNewKey(e.currentTarget.value)}
-          />
-          <PasswordInput
-            label="Value"
-            value={newValue}
-            onChange={(e) => setNewValue(e.currentTarget.value)}
-          />
+          <form autoComplete="off">
+            <TextInput
+              label="Key"
+              value={newKey}
+              data-autofocus
+              autoComplete="off"
+              onChange={(e) => setNewKey(e.currentTarget.value)}
+            />
+            <TextInput
+              label="Value"
+              autoComplete="off"
+              value={newValue}
+              onChange={(e) => setNewValue(e.currentTarget.value)}
+            />
+          </form>
           <Group justify="flex-end" mt="md">
             <Button onClick={saveNewSecret}>Add</Button>
           </Group>

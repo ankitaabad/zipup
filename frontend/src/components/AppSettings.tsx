@@ -298,7 +298,7 @@ export function AppSettings({ app_id }: { app_id: string }) {
             </Text>
 
             <TextInput
-              autoFocus
+              data-autofocus
               style={{ width: "100%" }}
               {...appForm.getInputProps("app_name")}
             />
@@ -333,7 +333,7 @@ export function AppSettings({ app_id }: { app_id: string }) {
             </Text>
 
             <TextInput
-              autoFocus
+              data-autofocus
               style={{ width: "100%" }}
               {...appForm.getInputProps("domain")}
             />
@@ -368,7 +368,7 @@ export function AppSettings({ app_id }: { app_id: string }) {
             </Text>
 
             <TextInput
-              autoFocus
+              data-autofocus
               style={{ width: "100%" }}
               {...appForm.getInputProps("start_command")}
             />

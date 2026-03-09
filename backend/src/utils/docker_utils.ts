@@ -30,6 +30,8 @@ import { getLogger } from "./logger";
 import { updateRouteConfig } from "./routeConfig";
 import { PORT_FOR_USER_APPS } from "./constants";
 import { db } from "@backend/db/dbClient";
+import { mkdir, writeFile } from "fs/promises";
+import { buildWireguardConfig } from "./helper";
 var docker = new Docker({ socketPath: "/var/run/docker.sock" });
 export const reverseProxyURL = "http://openresty:8080";
 
@@ -124,8 +126,8 @@ export async function deployDynamicApp(event: {
       },
       NetworkingConfig: {
         EndpointsConfig: {
-          zipup_redis_network: {},
-          zipup_openresty_network: {}
+          core_network: {},
+          edge_network: {}
         }
       },
       WorkingDir: `/app/${artifact_id}`,
@@ -354,3 +356,74 @@ export const removeAllContainersOfAnApp = async (appId: string) => {
     }
   }
 };
+
+export async function execInWireguard(cmd: string[]) {
+  const container = docker.getContainer("wireguard");
+
+  if (!container) {
+    throw new Error("Wireguard container not found");
+  }
+
+  const exec = await container.exec({
+    Cmd: cmd,
+    AttachStdout: true,
+    AttachStderr: true
+  });
+
+  const stream = await exec.start({});
+
+  const stdout: Buffer[] = [];
+  const stderr: Buffer[] = [];
+
+  container.modem.demuxStream(
+    stream,
+    {
+      write: (chunk: Buffer) => stdout.push(chunk)
+    },
+    {
+      write: (chunk: Buffer) => stderr.push(chunk)
+    }
+  );
+
+  await new Promise((resolve, reject) => {
+    stream.on("end", resolve);
+    stream.on("error", reject);
+  });
+
+  const err = Buffer.concat(stderr).toString();
+  if (err) throw new Error(err);
+
+  return Buffer.concat(stdout).toString().trim();
+}
+const WG_DIR = "/config/wg_confs";
+const WG_CONFIG_PATH = "/config/wg_confs/wg0.conf";
+export async function rebuildAndRestartWireguard() {
+  const config = await buildWireguardConfig();
+  console.log({ config });
+  await mkdir(WG_DIR, { recursive: true });
+  await writeFile(WG_CONFIG_PATH, config, "utf8");
+
+  // 3. Restart inside container
+  await execInWireguard(["sh", "-c", "ip link delete wg0 2>/dev/null || true"]);
+
+  await execInWireguard(["wg-quick", "up", "wg0"]);
+  // Apply config to running interface
+  // await execInWireguard(["wg", "syncconf", "wg0", WG_CONFIG_PATH]);
+  // await execInWireguard(["wg-quick", "syncconf", "wg0", WG_CONFIG_PATH]);
+
+  console.log("WireGuard config reloaded");
+}
+export async function generateWireguardKeys() {
+  const privateKey = await execInWireguard(["sh", "-c", "wg genkey"]);
+
+  const publicKey = await execInWireguard([
+    "sh",
+    "-c",
+    `echo ${privateKey} | wg pubkey`
+  ]);
+
+  return {
+    privateKey,
+    publicKey
+  };
+}

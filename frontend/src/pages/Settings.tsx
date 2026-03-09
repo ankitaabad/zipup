@@ -12,13 +12,20 @@ import {
   Badge,
   Button,
   TextInput,
-  PasswordInput
+  PasswordInput,
+  ThemeIcon,
+  List
 } from "@mantine/core";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { IconSettings } from "@tabler/icons-react";
 import { useChangeAdminPassword } from "@frontend/apis/adminAuth";
 import { CustomModal } from "../components/CustomModal";
 import { theme } from "@frontend/theme";
+import {
+  useGetSettings,
+  useUpdateCertEmail,
+  useUpdateDomain
+} from "@frontend/apis/settings";
 
 /* ------------------- Types ------------------- */
 
@@ -28,13 +35,28 @@ type EditTarget = "password" | "email" | "domain" | null;
 
 export function Settings() {
   const [editTarget, setEditTarget] = useState<EditTarget>(null);
+
   const changePassword = useChangeAdminPassword();
+  const updateDomain = useUpdateDomain();
+  const updateCertEmail = useUpdateCertEmail();
+  const { data: settings } = useGetSettings();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [email, setEmail] = useState<string | null>(null);
   const [domain, setDomain] = useState<string | null>(null);
+
+  /* ---------- populate settings from API ---------- */
+
+  useEffect(() => {
+    if (!settings) return;
+
+    const map = Object.fromEntries(settings.map((s) => [s.key, s.value]));
+
+    setEmail(map.cert_email ?? null);
+    setDomain(map.domain ?? null);
+  }, [settings]);
 
   return (
     <Paper
@@ -67,7 +89,7 @@ export function Settings() {
               {/* ---------------- Admin Password ---------------- */}
               <ConfigurableSettingRow
                 label="Admin Password"
-                value={null} // intentionally no value shown
+                value={null}
                 description="Change your administrator account password."
                 onClick={() => setEditTarget("password")}
                 hideValue
@@ -110,6 +132,8 @@ export function Settings() {
             <Stack>
               <PasswordInput
                 label="New Password"
+                autoComplete="new-password"
+                data-autofocus
                 value={password}
                 onChange={(e) => setPassword(e.currentTarget.value)}
                 autoFocus
@@ -117,14 +141,99 @@ export function Settings() {
 
               <PasswordInput
                 label="Confirm Password"
+                autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.currentTarget.value)}
               />
 
+              {/* Validation checklist */}
+              <List spacing="xs" size="sm" mt="xs">
+                <List.Item
+                  icon={
+                    <ThemeIcon
+                      size={18}
+                      radius="xl"
+                      color={/[A-Z]/.test(password) ? "teal" : "gray"}
+                    >
+                      ✓
+                    </ThemeIcon>
+                  }
+                >
+                  At least one capital letter
+                </List.Item>
+
+                <List.Item
+                  icon={
+                    <ThemeIcon
+                      size={18}
+                      radius="xl"
+                      color={/[0-9]/.test(password) ? "teal" : "gray"}
+                    >
+                      ✓
+                    </ThemeIcon>
+                  }
+                >
+                  At least one number
+                </List.Item>
+
+                <List.Item
+                  icon={
+                    <ThemeIcon
+                      size={18}
+                      radius="xl"
+                      color={/[^A-Za-z0-9]/.test(password) ? "teal" : "gray"}
+                    >
+                      ✓
+                    </ThemeIcon>
+                  }
+                >
+                  At least one symbol
+                </List.Item>
+
+                <List.Item
+                  icon={
+                    <ThemeIcon
+                      size={18}
+                      radius="xl"
+                      color={password.length >= 8 ? "teal" : "gray"}
+                    >
+                      ✓
+                    </ThemeIcon>
+                  }
+                >
+                  At least 8 characters
+                </List.Item>
+
+                <List.Item
+                  icon={
+                    <ThemeIcon
+                      size={18}
+                      radius="xl"
+                      color={
+                        confirmPassword.length > 0 &&
+                        password === confirmPassword
+                          ? "teal"
+                          : "gray"
+                      }
+                    >
+                      ✓
+                    </ThemeIcon>
+                  }
+                >
+                  Passwords match
+                </List.Item>
+              </List>
+
               <Group justify="flex-end" mt="md">
                 <Button
+                  disabled={
+                    password !== confirmPassword ||
+                    password.length < 8 ||
+                    !/[A-Z]/.test(password) ||
+                    !/[0-9]/.test(password) ||
+                    !/[^A-Za-z0-9]/.test(password)
+                  }
                   onClick={() => {
-                    if (password !== confirmPassword) return;
                     changePassword.mutate({ new_password: password });
                     setEditTarget(null);
                   }}
@@ -152,7 +261,15 @@ export function Settings() {
               />
 
               <Group justify="flex-end" mt="md">
-                <Button onClick={() => setEditTarget(null)}>Save</Button>
+                <Button
+                  onClick={() => {
+                    if (!email) return;
+                    updateCertEmail.mutate({ email });
+                    setEditTarget(null);
+                  }}
+                >
+                  Save
+                </Button>
               </Group>
             </Stack>
           </CustomModal>
@@ -174,7 +291,15 @@ export function Settings() {
               />
 
               <Group justify="flex-end" mt="md">
-                <Button onClick={() => setEditTarget(null)}>Save</Button>
+                <Button
+                  onClick={() => {
+                    if (!domain) return;
+                    updateDomain.mutate({ domain });
+                    setEditTarget(null);
+                  }}
+                >
+                  Save
+                </Button>
               </Group>
             </Stack>
           </CustomModal>

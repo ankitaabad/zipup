@@ -1,5 +1,5 @@
 import KSUID from "ksuid";
-
+import { publicIpv4 } from "public-ip";
 import { hash, verify } from "@node-rs/argon2";
 import { sha1 } from "@oslojs/crypto/sha1";
 import { encodeHexLowerCase } from "@oslojs/encoding";
@@ -15,6 +15,15 @@ import {
 } from "./constants";
 import { BadRequest } from "./errorHandler";
 import path from "path";
+import { Context } from "hono";
+import { setCookie } from "hono/cookie";
+import {
+  settingsTable,
+  wireguardPeersTable,
+  WireguardPeerType
+} from "@backend/db/schema";
+import { db } from "@backend/db/dbClient";
+import { eq } from "drizzle-orm";
 export const generateId = () => {
   return KSUID.randomSync().string;
 };
@@ -70,8 +79,8 @@ export const paseto_public =
 export const paseto_secret =
   "k4.secret.6kiOV7jlw_rThVXqqUC-AtxznaZPwodA6geN1EogdnoDowaIdmvsdJ6u62LMBXU6sP9h613tHEvczt0HPb-22w";
 
-const ACCESS_TTL = 20 * 60 * 1000; // seconds
-const REFRESH_TTL = 24 * 60 * 60 * 1000;
+const ACCESS_TTL = 20 * 60 * 1000; // 20 min
+const REFRESH_TTL = 24 * 60 * 60 * 1000; // 1 day
 
 export const ACCESS_AUD = "zipup_api";
 export const APP_AUD = "app_access";
@@ -85,12 +94,12 @@ export type TokenPayload = {
   iat: string;
   exp: string;
 };
-export const generateAccessToken = async (user_id: string, aud: string) => {
+export const generateAccessToken = async (user_id: string) => {
   const iat = new Date().toISOString();
   const exp = new Date(Date.now() + ACCESS_TTL).toISOString();
   const payload = {
     sub: user_id,
-    aud: AUD.zipup_API,
+    aud: AUD.ZIPUP_API,
     iss: ISSUER,
     purpose: TokenPurpose.ACCESS,
     iat,
@@ -106,7 +115,7 @@ export const generateRefreshToken = async (user_id: string) => {
   const jti = generateId();
   const payload = {
     sub: user_id,
-    aud: AUD.zipup_API,
+    aud: AUD.ZIPUP_API,
     iss: ISSUER,
     purpose: TokenPurpose.REFRESH,
     jti,
@@ -124,7 +133,7 @@ export const generateCSRFToken = async (user_id: string) => {
   const exp = new Date(Date.now() + ACCESS_TTL + 5000).toISOString();
   const payload = {
     sub: user_id,
-    aud: AUD.zipup_API,
+    aud: AUD.ZIPUP_API,
     iss: ISSUER,
     purpose: TokenPurpose.CSRF,
     iat,
@@ -146,12 +155,14 @@ export const verifyAccessToken = async (
   token: string
 ): Promise<AccessTokenPayload> => {
   const payload = (await V4.verify(token, paseto_public as string, {
-    issuer: ISSUER,
-    audience: ACCESS_AUD
+    issuer: ISSUER
   })) as AccessTokenPayload;
 
+  if (payload.aud !== AUD.ZIPUP_API) {
+    throw new Error("Invalid audience");
+  }
   // Ensure token purpose
-  if (payload.purpose !== "access") {
+  if (payload.purpose !== TokenPurpose.ACCESS) {
     throw new Error("Invalid token purpose");
   }
 
@@ -176,7 +187,7 @@ export const verifyAccessToken = async (
 
 export type RefreshTokenPayload = {
   sub: string;
-  aud: typeof REFRESH_AUD;
+  aud: typeof AUD.ZIPUP_API;
   iss: string;
   purpose: "refresh";
   jti: string;
@@ -187,10 +198,16 @@ export type RefreshTokenPayload = {
 export const verifyRefreshToken = async (
   token: string
 ): Promise<RefreshTokenPayload> => {
-  const payload = (await V4.verify(token, paseto_public as string, {
-    issuer: ISSUER,
-    audience: REFRESH_AUD
-  })) as RefreshTokenPayload;
+  const payload = (await V4.verify(
+    token,
+    paseto_public as string
+  )) as RefreshTokenPayload;
+  if (payload.aud !== AUD.ZIPUP_API) {
+    throw new Error("Invalid audience");
+  }
+  if (payload.purpose !== TokenPurpose.REFRESH) {
+    throw new Error("Invalid token purpose");
+  }
   if (!payload.jti) {
     throw new Error("Missing jti");
   }
@@ -200,10 +217,6 @@ export const verifyRefreshToken = async (
   }
   // exp is date string
   const now = Date.now();
-
-  if (payload.purpose !== "refresh") {
-    throw new Error("Invalid token purpose");
-  }
 
   if (new Date(payload.exp).getTime() <= now) {
     throw new Error("Refresh token expired");
@@ -288,4 +301,74 @@ export const getArtifactStorageLocation = (
   }
   const artifactPath = path.join(artifactRoot, artifact_id);
   return artifactPath;
+};
+
+export const addAllTokensToCookie = async (c: Context, userId: string) => {
+  const [access_token, refresh_token, csrf_token] = await Promise.all([
+    generateAccessToken(userId),
+    generateRefreshToken(userId),
+    generateCSRFToken(userId)
+  ]);
+  setCookie(c, "access_token", access_token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "Lax"
+  });
+  setCookie(c, "refresh_token", refresh_token.token, {
+    httpOnly: true,
+    secure: true,
+    path: "/api/admin/refresh"
+  });
+  setCookie(c, "csrf_token", csrf_token, {
+    httpOnly: false,
+    secure: true,
+    sameSite: "strict"
+  });
+};
+
+export async function buildWireguardConfig() {
+  const peers = await db.select().from(wireguardPeersTable);
+
+  const server = peers.find((p) => p.type === WireguardPeerType.SERVER);
+
+  if (!server) {
+    throw new Error("WireGuard server not found");
+  }
+
+  let config = `[Interface]
+PrivateKey = ${server.private_key}
+Address = 10.0.0.1/24
+ListenPort = 51820
+
+`;
+
+  for (const peer of peers) {
+    if (
+      peer.type === WireguardPeerType.CLIENT &&
+      peer.public_key &&
+      peer.ip_index
+    ) {
+      const ip = `10.0.0.${peer.ip_index}`;
+
+      config += `[Peer]
+PublicKey = ${peer.public_key}
+AllowedIPs = ${ip}/32
+
+`;
+    }
+  }
+
+  return config;
+}
+
+export const getServerAddress = async () => {
+  const domainSetting = await db
+    .select()
+    .from(settingsTable)
+    .where(eq(settingsTable.key, "domain"))
+    .get();
+
+  // get public ip
+  const serverAddress = domainSetting?.value || (await publicIpv4());
+  return serverAddress;
 };

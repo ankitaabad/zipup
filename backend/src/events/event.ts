@@ -7,12 +7,17 @@ import { updateRouteConfig } from "@backend/utils/routeConfig";
 import { db } from "@backend/db/dbClient";
 import {
   deployDynamicApp,
+  generateWireguardKeys,
+  rebuildAndRestartWireguard,
   removeAllContainersOfAnApp
 } from "@backend/utils/docker_utils";
 import {
   appsTable,
   artifactsTable,
-  deploymentsTable
+  deploymentsTable,
+  wireguardPeersTable,
+  WireguardPeerStatus,
+  WireguardPeerType
 } from "@backend/db/schema";
 
 export const eventBus = new EventEmitter();
@@ -22,8 +27,36 @@ export const zipupEvents = {
   "artifact_uploaded": "artifact_uploaded",
   "app_delete_initiated": "app_deleted_initiated",
   "app_stop_initiated": "app_stop_initiated",
-  "deploy_latest_app": "deploy_latest_app"
+  "deploy_latest_app": "deploy_latest_app",
+  "create_wireguard_peer": "create_wireguard_peer"
 };
+
+eventBus.on(
+  zipupEvents.create_wireguard_peer,
+  async (event: { id: string; type: WireguardPeerType; ip_index: number }) => {
+    // todo: generate public and private keys  for the peer
+    try {
+      const { id, type, ip_index } = event;
+      // update the peer status to active after keys are generated
+      const { publicKey, privateKey } = await generateWireguardKeys();
+      console.log({ publicKey, privateKey });
+      await db
+        .update(wireguardPeersTable)
+        .set({
+          status: WireguardPeerStatus.ACTIVE,
+          public_key: publicKey,
+          private_key: privateKey,
+          updated_at: new Date().toISOString()
+        })
+        .where(eq(wireguardPeersTable.id, id));
+      console.log("updated the keys in the table.");
+      await rebuildAndRestartWireguard();
+    } catch (error) {
+      console.error("Error creating wireguard peer:", error);
+    }
+  }
+);
+
 eventBus.on("deploy_latest_app", async (event: { app_id: string }) => {
   try {
     const logger = getLogger();

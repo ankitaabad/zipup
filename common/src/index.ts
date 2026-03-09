@@ -31,7 +31,9 @@ export const RedisPrefixSchema = z
   .max(8, "Redis prefix must be at most 8 characters long");
 
 // todo: find suitable schema
-export const DomainNameSchema = z.string().min(3);
+export const DomainNameSchema = z.object({
+  domain: z.string().min(3)
+});
 
 export const AppNameSchema = z.string().min(3);
 export const AppTypeSchema = z.enum(["STATIC", "DYNAMIC"]);
@@ -82,6 +84,11 @@ export const UpdateEnvVarSchema = z.object({
   value: EnvValueSchema
 });
 
+export const CreatePeerSchema = z.object({
+  name: z.string().min(3),
+  description: z.string().optional()
+});
+
 /** For Payload Signature and verification */
 
 export function signPayload(
@@ -107,5 +114,5 @@ export const enum AppStatus {
   DRAFT = "DRAFT",
   READY = "READY",
   STOPPED = "STOPPED",
-  RUNNING = "RUNNING",
+  RUNNING = "RUNNING"
 }

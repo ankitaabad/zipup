@@ -73,7 +73,7 @@ export function EnvVarsTab({ appId }: { appId: string }) {
           leftIcon={<IconPlus size={14} />}
           onClick={() => setAddOpen(true)}
         >
-          Add variable
+          Add Environment Variable
         </Button>
       </Group>
 

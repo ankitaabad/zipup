@@ -5,7 +5,7 @@ import { index } from "drizzle-orm/sqlite-core";
 import { unique } from "drizzle-orm/sqlite-core";
 import { eq } from "drizzle-orm";
 import { primaryKey } from "drizzle-orm/sqlite-core";
-export const settings = table("settings", {
+export const settingsTable = table("settings", {
   key: t.text().primaryKey(),
   value: t.text().notNull(),
   created_at: t.text().notNull(),
@@ -191,10 +191,32 @@ export const envVarsTable = table(
   (table) => [index("env_vars_app_idx").on(table.app_id)]
 );
 
+export const enum WireguardPeerStatus {
+  IN_PROGRESS = "IN_PROGRESS",
+  ACTIVE = "ACTIVE"
+}
+export const enum WireguardPeerType {
+  CLIENT = "CLIENT",
+  SERVER = "SERVER"
+}
+// wireguard peer table
+export const wireguardPeersTable = table("wireguard_peers", {
+  id: t.text().primaryKey(),
+  name: t.text().notNull(),
+  description: t.text(),
+  type: t.text().$type<WireguardPeerType>().notNull(),
+  public_key: t.text(),
+  private_key: t.text(),
+  status: t.text().$type<WireguardPeerStatus>().notNull(),
+  ip_index: t.integer(),
+  created_at: t.text().notNull(),
+  updated_at: t.text().notNull()
+});
+
 export const appSchema = createSelectSchema(appsTable);
 export const userSchema = createSelectSchema(platformAdminsTable);
 export const deploymentSchema = createSelectSchema(deploymentsTable);
-export const globalConfigSchema = createSelectSchema(settings);
+export const globalConfigSchema = createSelectSchema(settingsTable);
 export const secretSchema = createSelectSchema(secretsTable);
 export const envVarSchema = createSelectSchema(envVarsTable);
 export const artifactSchema = createSelectSchema(artifactsTable);

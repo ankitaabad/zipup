@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import logoImage from "../../public/logo.svg";
 
 import { Sidebar, Menu, MenuItem, SubMenu } from "react-pro-sidebar";
 import {
@@ -8,7 +9,12 @@ import {
   IconFileText,
   IconSettings,
   IconLogout,
-  IconPlus
+  IconPlus,
+  IconLockBolt,
+  IconBrandJavascript,
+  IconScript,
+  IconApiApp,
+  IconApps
 } from "@tabler/icons-react";
 import {
   Box,
@@ -19,10 +25,11 @@ import {
   Stack,
   TextInput,
   Button,
-  useMantineTheme
+  useMantineTheme,
+  Image
 } from "@mantine/core";
 import { useApps, useCreateApp } from "../apis/apps";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { CustomModal } from "./CustomModal";
 import { useAdminLogout } from "../apis/adminAuth";
 
@@ -40,7 +47,7 @@ const useSidebarRoute = () => {
   return {
     isDashboard: pathname === "/",
     isGlobalSettings: pathname === "/settings",
-
+    isWireguardSettings: pathname === "/wireguard",
     isAppRoute: parts[0] === "apps",
     appType: parts[1], // static | web
     appId: parts[2] // the sidebar item
@@ -148,10 +155,19 @@ export function AppSidebar() {
         <Box px="md" py="sm">
           <Group justify="space-between">
             <Text fw={700} size="xl" style={{ letterSpacing: -0.3 }}>
-              <span style={{ color: theme.colors.gray[8] }}>zip</span>
+              {/* <span style={{ color: theme.colors.gray[8] }}>zip</span>
               <span style={{ color: "var(--mantine-primary-color-7)" }}>
                 up
-              </span>
+              </span> */}
+              <Link to="/">
+                <Image
+                  src={logoImage}
+                  h={25}
+                  w="auto"
+                  fit="contain"
+                  mx="auto"
+                />
+              </Link>
             </Text>
             {/* <Code size="xs">v3.1.2</Code> */}
           </Group>
@@ -215,7 +231,7 @@ export function AppSidebar() {
           {/* Web Apps */}
           <SubMenu
             label="Web Apps"
-            icon={<IconAppWindow size={18} />}
+            icon={<IconApps size={18} />}
             open={webMenuOpen}
             onClick={() => {
               setStaticMenuOpen(false);
@@ -252,10 +268,21 @@ export function AppSidebar() {
           >
             Settings
           </MenuItem>
+          <MenuItem
+            icon={<IconLockBolt size={18} />}
+            active={sidebarRoute.isWireguardSettings}
+            onClick={() => {
+              setStaticMenuOpen(false);
+              setWebMenuOpen(false);
+              navigate("/wireguard");
+            }}
+          >
+            Wireguard
+          </MenuItem>
         </Menu>
 
         {/* Footer */}
-        <Box mt="auto" px="md" py="sm">
+        <Box mt="auto" py="sm">
           <Divider mb="sm" />
           <Menu>
             <MenuItem
