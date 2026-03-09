@@ -1,4 +1,4 @@
-# version: "3.8"
+version: "3.8"
 name: zipup
 services:
   valkey:
@@ -6,8 +6,9 @@ services:
     container_name: valkey
     restart: unless-stopped
     networks:
-      - core_network
-      - wireguard_network
+      core_network: {}
+      wireguard_network:
+        ipv4_address: 172.25.0.3
     volumes:
       - valkey_data:/data
     command: ["valkey-server", "--appendonly", "yes"]
@@ -29,8 +30,6 @@ services:
       - ./openresty/lua:/lua:ro
       - ./config:/config:ro
       - static_artifacts:/static_artifacts
-
-      # - ./sites:/data/sites:ro
     networks:
       - edge_network
     restart: unless-stopped
@@ -40,7 +39,7 @@ services:
       - app_type=system
       - app_name=openresty
     logging:
-        driver: none
+      driver: none
 
   zipup:
     image: node:24-bookworm-slim
@@ -53,16 +52,15 @@ services:
     restart: unless-stopped
     user: root
     volumes:
-      - ./:/app # <-- mount CURRENT directory
+      - ./:/app
       - /app/node_modules
-      # - ./config:/config
       - zipup_data:/data
       - wireguard_config:/config
       - static_artifacts:/static_artifacts
       - dynamic_artifacts:/dynamic_artifacts
       - secrets:/secrets
       - /var/run/docker.sock:/var/run/docker.sock
-    command: sh -c "npm install -g pnpm && pnpm install  && pnpm --filter backend run dev"
+    command: sh -c "npm install -g pnpm && pnpm install && pnpm --filter backend run dev"
     environment:
       - NODE_ENV=development
     ports:
@@ -70,22 +68,18 @@ services:
     labels:
       - app_type=system
       - app_name=zipup
-    logging:
-      driver: "json-file"
-      options:
-        labels: "app_name"  
-    # logging:
-    #   driver: "none"   # disable default Docker logging → Vector will handle logs
     depends_on:
       - vector
       - wireguard
+
   postgres:
     image: postgres:16-alpine
     container_name: postgres
     restart: unless-stopped
     networks:
-      - core_network
-      - wireguard_network
+      core_network: {}
+      wireguard_network:
+        ipv4_address: 172.25.0.2
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
@@ -94,10 +88,10 @@ services:
       POSTGRES_PASSWORD: zipup
     ports:
       - "5432:5432"
-      
     labels:
       - app_type=system
       - app_name=postgres
+
   vector:
     image: timberio/vector:0.38.X-alpine
     volumes:
@@ -107,19 +101,19 @@ services:
         source: /var/lib/docker
         target: /var/lib/docker
     ports:
-      - "8686:8686" # Vector internal API (optional)
+      - "8686:8686"
     depends_on:
       - victorialogs
     user: root
     labels:
       - app_type=system
       - app_name=vector
-    
+
   victorialogs:
     image: victoriametrics/victoria-logs:latest
     container_name: victorialogs
     ports:
-      - "9428:9428" # VictoriaLogs HTTP ingestion + query
+      - "9428:9428"
     command:
       - "--storageDataPath=/vlogs"
     volumes:
@@ -128,10 +122,12 @@ services:
       - app_type=system
       - app_name=victorialogs
     logging:
-        driver: none        
+      driver: none
     networks:
-      - core_network
-      - wireguard_network          
+      core_network: {}
+      wireguard_network:
+        ipv4_address: 172.25.0.4
+
   wireguard:
     image: linuxserver/wireguard
     container_name: wireguard
@@ -144,25 +140,24 @@ services:
       - TZ=Asia/Kolkata
       - SERVERPORT=51820
       - LOG_CONFS=false
-      - PEERS=5
+      - PEERS=one,two
       - ALLOWEDIPS=10.13.13.0/24
-      # - POSTUP=iptables -A FORWARD -i %i -j ACCEPT; iptables -A FORWARD -o %i -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-      # - POSTDOWN=iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
-
     volumes:
       - wireguard_config:/config
       - /lib/modules:/lib/modules
-      - ./wireguard-startup.sh:/etc/wireguard-startup.sh
+      # - ./wireguard_template.conf:/config/wg_confs/server.conf
     ports:
       - "51820:51820/udp"
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
     networks:
-      - wireguard_network
+      core_network: {}
+      wireguard_network:
+        ipv4_address: 172.25.0.5
     labels:
       - app_type=system
-      - app_name=wireguard    
-    entrypoint: ["/bin/bash", "/etc/wireguard-startup.sh"]
+      - app_name=wireguard
+
 volumes:
   vldata:
   zipup_data:
@@ -172,6 +167,7 @@ volumes:
   secrets:
   postgres_data:
   wireguard_config:
+
 networks:
   edge_network:
     driver: bridge
@@ -179,3 +175,6 @@ networks:
     driver: bridge
   wireguard_network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/24
