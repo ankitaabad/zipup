@@ -20,10 +20,12 @@ import { setCookie } from "hono/cookie";
 import {
   settingsTable,
   wireguardPeersTable,
+  WireguardPeerStatus,
   WireguardPeerType
 } from "@backend/db/schema";
 import { db } from "@backend/db/dbClient";
 import { eq } from "drizzle-orm";
+import { eventBus, zipupEvents } from "@backend/events/event";
 export const generateId = () => {
   return KSUID.randomSync().string;
 };
@@ -337,7 +339,7 @@ export async function buildWireguardConfig() {
 
   let config = `[Interface]
 PrivateKey = ${server.private_key}
-Address = 10.0.0.1/24
+Address = 10.13.13.1/24
 ListenPort = 51820
 
 `;
@@ -372,3 +374,51 @@ export const getServerAddress = async () => {
   const serverAddress = domainSetting?.value || (await publicIpv4());
   return serverAddress;
 };
+
+export async function ensureServerWireguardPeer() {
+  let serverPeer: {
+    id: string;
+    type: WireguardPeerType.SERVER;
+    ip_index: number;
+    public_key?: string;
+    private_key?: string;
+  } = await db
+    .select()
+    .from(wireguardPeersTable)
+    .where(eq(wireguardPeersTable.type, WireguardPeerType.SERVER))
+    .get();
+
+  const now = new Date().toISOString();
+
+  // 1️⃣ Create server peer if it does not exist
+  if (!serverPeer) {
+    const id = generateId();
+
+    await db.insert(wireguardPeersTable).values({
+      id,
+      name: "server",
+      type: WireguardPeerType.SERVER,
+      status: WireguardPeerStatus.IN_PROGRESS,
+      ip_index: 1,
+      created_at: now,
+      updated_at: now
+    });
+
+    serverPeer = {
+      id,
+      type: WireguardPeerType.SERVER,
+      ip_index: 1
+    };
+  }
+
+  // 2️⃣ Generate keys if missing
+  if (!serverPeer.public_key || !serverPeer.private_key) {
+    eventBus.emit(zipupEvents.create_wireguard_peer, {
+      id: serverPeer.id,
+      type: WireguardPeerType.SERVER,
+      ip_index: serverPeer.ip_index
+    });
+  }
+
+  return serverPeer;
+}

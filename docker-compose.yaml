@@ -55,7 +55,9 @@ services:
       - ./:/app
       - /app/node_modules
       - zipup_data:/data
-      - wireguard_config:/config
+      - ./wireguard/wg0.conf:/etc/wireguard/wg0.conf
+
+      # - wireguard_config:/config
       - static_artifacts:/static_artifacts
       - dynamic_artifacts:/dynamic_artifacts
       - secrets:/secrets
@@ -129,26 +131,22 @@ services:
         ipv4_address: 172.25.0.4
 
   wireguard:
-    image: linuxserver/wireguard
+    image: cmulk/wireguard-docker:alpine
     container_name: wireguard
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
+      - SYS_MODULE
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Asia/Kolkata
-      - SERVERPORT=51820
-      - LOG_CONFS=false
-      - PEERS=one,two
-      - ALLOWEDIPS=10.13.13.0/24
+      - WATCH_CHANGES=1
     volumes:
-      - wireguard_config:/config
-      - /lib/modules:/lib/modules
-      # - ./wireguard_template.conf:/config/wg_confs/server.conf
+      # - wireguard_config:/etc/wireguard
+      - ./wireguard/wg0.conf:/etc/wireguard/wg0.conf
+      - /lib/modules:/lib/modules:ro
     ports:
       - "51820:51820/udp"
     sysctls:
+      - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.src_valid_mark=1
     networks:
       core_network: {}
@@ -157,7 +155,6 @@ services:
     labels:
       - app_type=system
       - app_name=wireguard
-
 volumes:
   vldata:
   zipup_data:

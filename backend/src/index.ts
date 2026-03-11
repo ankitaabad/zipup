@@ -17,7 +17,7 @@ import { fileURLToPath } from "url";
 import fs from "fs";
 import { internalRouter } from "./routes/internal";
 import { wireguardRouter } from "./routes/wireguard";
-import { generateId } from "./utils/helper";
+import { ensureServerWireguardPeer, generateId } from "./utils/helper";
 import {
   wireguardPeersTable,
   WireguardPeerStatus,
@@ -74,35 +74,8 @@ app.get("*", async (c) => {
 });
 
 async function main() {
-  // check if server wireguard peer exists, if not create one.
-  // const serverPeer = await db
-  //   .select()
-  //   .from(wireguardPeersTable)
-  //   .where(eq(wireguardPeersTable.type, WireguardPeerType.SERVER))
-  //   .get();
 
-  // console.log({ serverPeer });
-  // const id = serverPeer?.id || generateId();
-  // if (!serverPeer?.id) {
-  //   await db.insert(wireguardPeersTable).values({
-  //     id,
-  //     name: "server",
-  //     type: WireguardPeerType.SERVER,
-  //     status: WireguardPeerStatus.IN_PROGRESS,
-  //     ip_index: 1,
-  //     created_at: new Date().toISOString(),
-  //     updated_at: new Date().toISOString()
-  //   });
-  // }
-  // if (!serverPeer?.public_key) {
-  //   eventBus.emit(zipupEvents.create_wireguard_peer, {
-  //     id,
-  //     type: WireguardPeerType.SERVER,
-  //     ip_index: 1
-  //   });
-  // }
-
- 
+ await ensureServerWireguardPeer()
   serve(
     {
       fetch: app.fetch,

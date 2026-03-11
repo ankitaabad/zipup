@@ -1,3 +1,4 @@
+import { generateKeyPairSync, randomBytes } from "node:crypto";
 // what we need to create docker container
 
 /**
@@ -413,17 +414,52 @@ export async function rebuildAndRestartWireguard() {
 
   console.log("WireGuard config reloaded");
 }
-export async function generateWireguardKeys() {
-  const privateKey = await execInWireguard(["sh", "-c", "wg genkey"]);
+// export async function generateWireguardKeys() {
+//   const privateKey = await execInWireguard(["sh", "-c", "wg genkey"]);
 
-  const publicKey = await execInWireguard([
-    "sh",
-    "-c",
-    `echo ${privateKey} | wg pubkey`
-  ]);
+//   const publicKey = await execInWireguard([
+//     "sh",
+//     "-c",
+//     `echo ${privateKey} | wg pubkey`
+//   ]);
+
+//   return {
+//     privateKey,
+//     publicKey
+//   };
+// }
+
+type WireguardKeys = {
+  privateKey: string;
+  publicKey: string;
+  presharedKey: string;
+};
+
+export function generateWireguardKeys(): WireguardKeys {
+  const { publicKey, privateKey } = generateKeyPairSync("x25519");
+
+  // Extract 32 byte private key
+  const rawPrivate = privateKey.export({
+    type: "pkcs8",
+    format: "der"
+  });
+
+  const wgPrivate = rawPrivate.slice(-32).toString("base64");
+
+  // Extract 32 byte public key
+  const rawPublic = publicKey.export({
+    type: "spki",
+    format: "der"
+  });
+
+  const wgPublic = rawPublic.slice(-32).toString("base64");
+
+  // WireGuard preshared key = 32 random bytes
+  const presharedKey = randomBytes(32).toString("base64");
 
   return {
-    privateKey,
-    publicKey
+    privateKey: wgPrivate,
+    publicKey: wgPublic,
+    presharedKey
   };
 }

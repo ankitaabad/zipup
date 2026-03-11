@@ -1,6 +1,6 @@
 import { fs } from "fs";
 import EventEmitter from "events";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { getLogger } from "@backend/utils/logger";
 import { generateId, getArtifactStorageLocation } from "@backend/utils/helper";
 import { updateRouteConfig } from "@backend/utils/routeConfig";
@@ -19,6 +19,7 @@ import {
   WireguardPeerStatus,
   WireguardPeerType
 } from "@backend/db/schema";
+import { mkdir, writeFile } from "fs/promises";
 
 export const eventBus = new EventEmitter();
 export const reverseProxyURL = "http://openresty:8080";
@@ -28,8 +29,56 @@ export const zipupEvents = {
   "app_delete_initiated": "app_deleted_initiated",
   "app_stop_initiated": "app_stop_initiated",
   "deploy_latest_app": "deploy_latest_app",
-  "create_wireguard_peer": "create_wireguard_peer"
+  "create_wireguard_peer": "create_wireguard_peer",
+  "update_wireguard_config": "update_wireguard_config"
 };
+
+eventBus.on(zipupEvents.update_wireguard_config, async () => {
+  const WG_DIR = "/etc/wireguard";
+  const WG_CONFIG_PATH = `/etc/wireguard/wg0.conf`;
+
+  const peers = await db.select().from(wireguardPeersTable);
+
+  const server = peers.find((p) => p.type === WireguardPeerType.SERVER);
+
+  if (!server) {
+    throw new Error("WireGuard server not found");
+  }
+
+  let config = `[Interface]
+PrivateKey = ${server.private_key}
+Address = 10.13.13.1/24
+ListenPort = 51820
+
+PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -A FORWARD -o %i -j ACCEPT; iptables -t nat -A POSTROUTING -o eth+ -j MASQUERADE
+PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACCEPT; iptables -t nat -D POSTROUTING -o eth+ -j MASQUERADE
+
+`;
+
+  for (const peer of peers) {
+    if (
+      peer.type === WireguardPeerType.CLIENT &&
+      peer.public_key &&
+      peer.ip_index
+    ) {
+      const ip = `10.13.13.${peer.ip_index}`;
+
+      config += `[Peer]
+# ${peer.name ?? `peer_${peer.id}`}
+PublicKey = ${peer.public_key}
+${peer.preshared_key ? `PresharedKey = ${peer.preshared_key}` : ""}
+AllowedIPs = ${ip}/32
+PersistentKeepalive = 25
+
+`;
+    }
+  }
+
+  console.log({ config });
+
+  await mkdir(WG_DIR, { recursive: true });
+  await writeFile(WG_CONFIG_PATH, config, "utf8");
+});
 
 eventBus.on(
   zipupEvents.create_wireguard_peer,
@@ -38,7 +87,8 @@ eventBus.on(
     try {
       const { id, type, ip_index } = event;
       // update the peer status to active after keys are generated
-      const { publicKey, privateKey } = await generateWireguardKeys();
+      const { publicKey, privateKey, presharedKey } =
+        await generateWireguardKeys();
       console.log({ publicKey, privateKey });
       await db
         .update(wireguardPeersTable)
@@ -46,11 +96,14 @@ eventBus.on(
           status: WireguardPeerStatus.ACTIVE,
           public_key: publicKey,
           private_key: privateKey,
+          preshared_key: presharedKey,
+          ip_index,
           updated_at: new Date().toISOString()
         })
         .where(eq(wireguardPeersTable.id, id));
       console.log("updated the keys in the table.");
-      await rebuildAndRestartWireguard();
+      await eventBus.emit(zipupEvents.update_wireguard_config);
+      // await rebuildAndRestartWireguard();
     } catch (error) {
       console.error("Error creating wireguard peer:", error);
     }
@@ -78,7 +131,7 @@ eventBus.on("deploy_latest_app", async (event: { app_id: string }) => {
       .select()
       .from(deploymentsTable)
       .where(eq(deploymentsTable.app_id, app_id))
-      .orderBy(deploymentsTable.created_at, "desc")
+      .orderBy(desc(deploymentsTable.created_at))
       .limit(1)
       .get();
 

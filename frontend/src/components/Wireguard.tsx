@@ -146,7 +146,7 @@ export function Wireguard() {
             )}
 
             {data?.map((peer: any) => {
-              const ip = `10.0.0.${peer.ip_index}`;
+              const ip = `10.13.13.${peer.ip_index}`;
               const disabled = peer.status === "IN_PROGRESS";
 
               return (
@@ -277,7 +277,7 @@ export function Wireguard() {
             </Text>
 
             <Text>
-              <b>IP:</b> 10.0.0.{selectedPeer.ip_index}
+              <b>IP:</b> 10.13.13.{selectedPeer.ip_index}
             </Text>
 
             <Text>

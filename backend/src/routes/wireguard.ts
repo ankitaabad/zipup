@@ -119,6 +119,7 @@ wireguardRouter.delete("/peers/:id", async (c) => {
     return c.json({ error: "Peer not found" }, 404);
   }
   logger.debug("Deleted Wireguard peer", { peerId });
+  eventBus.emit(zipupEvents.update_wireguard_config);
   return c.json({ message: "Peer deleted" });
 });
 
@@ -180,22 +181,30 @@ wireguardRouter.get("/peers/:id/config", async (c) => {
     logger.error("Server Wireguard peer not found for config generation");
     return c.json({ error: "Server peer not found" }, 404);
   }
+
   const serverAddress = await getServerAddress();
 
-  const endpoint = `${serverAddress || "Your_Server_Domain"}:51820`;
+  const endpoint = `${serverAddress || "YOUR_SERVER_DOMAIN"}:51820`;
   const dns = process.env.WIREGUARD_DNS || "1.1.1.1";
 
-  const config = `
-[Interface]
-PrivateKey = ${peer.private_key}
-Address = 10.0.0.${peer.ip_index}/24
+  const clientIp = `10.13.13.${peer.ip_index}`;
 
-[Peer]
-PublicKey = ${serverPeer.public_key}
-Endpoint = ${endpoint}
-AllowedIPs = 10.0.0.0/24
-PersistentKeepalive = 25
-`.trim();
+  const config = [
+    `[Interface]`,
+    `PrivateKey = ${peer.private_key}`,
+    `Address = ${clientIp}/24`,
+    `ListenPort = 51820`,
+    ``,
+    `[Peer]`,
+    `# Zipup WireGuard Server`,
+    `PublicKey = ${serverPeer.public_key}`,
+    peer.preshared_key ? `PresharedKey = ${peer.preshared_key}` : "",
+    `Endpoint = ${endpoint}`,
+    `AllowedIPs = 172.25.0.0/24`,
+    `PersistentKeepalive = 25`
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   logger.debug("Generated Wireguard config for peer", { peerId });
 

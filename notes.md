@@ -3,4 +3,6 @@
 - go to http://test.localhost:8080/
 - victorialogs ui on wg: http://172.25.0.4:9428/select/vmui
 - postgres :  psql -h 172.25.0.2 -U zipup -d zipup
+- redis: 
 - we need to use this https://github.com/cmulk/wireguard-docker
+- redis demo app: https://github.com/redis-developer/basic-caching-demo-nodejs

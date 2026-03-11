@@ -207,6 +207,7 @@ export const wireguardPeersTable = table("wireguard_peers", {
   type: t.text().$type<WireguardPeerType>().notNull(),
   public_key: t.text(),
   private_key: t.text(),
+  preshared_key: t.text(),
   status: t.text().$type<WireguardPeerStatus>().notNull(),
   ip_index: t.integer(),
   created_at: t.text().notNull(),
