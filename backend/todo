@@ -90,12 +90,12 @@ Next:
   ☐ redis access
   ☐ working with rotated keys.
   ☐ new version correctly working
-  ☐ wireguard vpn connection working.
+  ✔ wireguard vpn connection working.
   ☐ logs appearing in victorologs.
   ☐ longest prefix matchin working for routing.
   ☐ Delete X-Zipup-Internal header from each request, only internal calls can be made with this header.
   ☐ paseto secret storage.
-  ☐ integrate change password in the UI.
+  ✔ integrate change password in the UI.
   ☐ publish the cli package to npm.
   ☐ Better messages in UI like fields explanations, dashboard etc.
   ☐ @bug password loading in secret variable input.

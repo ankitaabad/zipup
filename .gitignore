@@ -35,3 +35,5 @@ backend/meta.json
 release/
 backend/src/db/zipup.db
 artifact
+cli/package
+cli/dist
