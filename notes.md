@@ -6,3 +6,9 @@
 - redis: 
 - we need to use this https://github.com/cmulk/wireguard-docker
 - redis demo app: https://github.com/redis-developer/basic-caching-demo-nodejs
+```yaml
+    logging:
+      driver: "json-file"
+      options:
+        labels: "app_name"
+```

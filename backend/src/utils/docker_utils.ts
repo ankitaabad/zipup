@@ -127,8 +127,8 @@ export async function deployDynamicApp(event: {
       },
       NetworkingConfig: {
         EndpointsConfig: {
-          core_network: {},
-          edge_network: {}
+          zipup_core_network: {},
+          zipup_edge_network: {}
         }
       },
       WorkingDir: `/app/${artifact_id}`,

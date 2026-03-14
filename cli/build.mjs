@@ -7,7 +7,6 @@ await build({
   bundle: true,
   platform: "node",
   target: "node18",
-  format: "esm",
   banner: {
     js: "#!/usr/bin/env node"
   }

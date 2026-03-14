@@ -8,7 +8,8 @@
     "server": "pnpm -F backend dev",
     "dbInit": "pnpm -F backend dbInit",
     "build": "pnpm -F frontend build && pnpm -F backend build",
-    "dockerBuild": "docker build -f Dockerfile.zipup ."
+    "dockerBuild": "docker build -f Dockerfile.zipup .",
+    "dockerup": "docker-compose -f docker-compose.base.yaml -f docker-compose.dev.yaml up"
   },
   "dependencies": {
     "zod": "^4.2.1"

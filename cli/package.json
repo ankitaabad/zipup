@@ -1,19 +1,21 @@
 {
-  "name": "zipup",
-  "version": "0.0.1",
+  "name": "zipup-cli",
+  "version": "0.0.6",
+  "type": "module",
   "description": "zipup cli",
   "main": "index.js",
   "bin": {
-    "zipup": "./dist/index.js"
+    "zipup": "./index.js"
   },
   "scripts": {
     "build": "node build.mjs",
-    "publish": "nr build && npm publish --access public"
+    "prepare-publish": "npm run build && node scripts/prepare-publish.mjs",
+    "publish": "npm run prepare-publish && npm publish ./dist --access public"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ankit/zipup.git",
-    "directory": "apps/zipup"
+    "url": "https://github.com/ankitaabad/zipup.git",
+    "directory": "cli"
   },
   "files": [
     "dist"

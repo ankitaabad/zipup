@@ -211,6 +211,33 @@ appsRouter.get(
   })
 );
 
+appsRouter.get(
+  "/:app_id/config",
+  withErrorHandler(async (c) => {
+    const app_id = c.req.param("app_id");
+    const app = await db
+      .select()
+      .from(appsTable)
+      .where(eq(appsTable.id, app_id))
+      .limit(1)
+      .get();
+    if (!app) {
+      return c.json({ error: "App not found" }, 404);
+    }
+
+    const { app_key, secret_key } = app;
+    // create a config.json file that can be downloaded
+    const config = {
+      HOST: "",
+      APP_KEY: app_key,
+      SECRET_KEY: secret_key,
+      IGNORES: ["**/*/zipup.config.json"]
+    };
+    c.header("Content-Type", "text/plain");
+    c.header("Content-Disposition", 'attachment; filename="zipup.config.json"');
+    return c.text(JSON.stringify(config, null, 2));
+  })
+);
 // rotate app key and secret key
 appsRouter.post(
   "/:id/rotate-keys",

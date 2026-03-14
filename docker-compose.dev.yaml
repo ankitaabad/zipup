@@ -1,0 +1,22 @@
+services:
+  valkey:
+    ports:
+      - "6379:6379"
+  
+  zipup:
+    ports:
+      - "3000:8080"
+    environment:
+      - NODE_ENV=development
+    command: sh -c "npm install -g pnpm && pnpm install && pnpm --filter backend run dev"
+    volumes:
+      - ./:/app
+      - /app/node_modules
+
+  postgres:
+    ports:
+      - "5432:5432"
+
+  victorialogs:
+    ports:
+      - "9428:9428"

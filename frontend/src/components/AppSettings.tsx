@@ -14,6 +14,7 @@ import {
   TextInput
 } from "@mantine/core";
 import {
+  IconDownload,
   IconPlayerPlay,
   IconPlayerStop,
   IconRefresh,
@@ -64,6 +65,9 @@ function getStopTooltip(status: AppStatus) {
       return "App is not running";
   }
 }
+const handleDownload = (appId: string) => {
+  window.open(`/api/apps/${appId}/config`);
+};
 export function AppSettings({ app_id }: { app_id: string }) {
   const appQuery = useApp(app_id);
   const updateApp = useUpdateApp(app_id);
@@ -73,6 +77,7 @@ export function AppSettings({ app_id }: { app_id: string }) {
   const stopApp = useStopApp(app_id);
   const appStatus = useAppStatus(app_id);
   const navigate = useNavigate();
+
   const { type } = useParams<{
     type: string;
     appId: string;
@@ -123,6 +128,15 @@ export function AppSettings({ app_id }: { app_id: string }) {
             <AppStatusBadge status={appStatus?.data! as AppStatus} />
           </Group>
           <Group>
+            <Tooltip label="Download zipup.config.json file. (used for deployment)" withArrow>
+              <Button
+                variant="light"
+                leftSection={<IconDownload size={16} />}
+                onClick={() => handleDownload(app_id)}
+              >
+                Download Config
+              </Button>
+            </Tooltip>
             {!appStatus.isLoading && type === "web" && (
               <>
                 <Tooltip label={getStartTooltip(appStatus.data!)} withArrow>
