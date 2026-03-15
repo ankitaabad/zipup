@@ -45,8 +45,8 @@ cp "$DB_PATH" "$BACKEND_OUT_DIR/db/zipup.db"
 
 # copy open resty folder and docker compose file
 echo "📂 Copying OpenResty and docker-compose.yaml into /out..."
-mkdir -p "$OUT_DIR/openResty"
-cp -r "$ROOT_DIR/openResty/"* "$OUT_DIR/openResty"
+mkdir -p "$OUT_DIR/openresty"
+cp -r "$ROOT_DIR/openresty/"* "$OUT_DIR/openresty"
 cp "$ROOT_DIR/docker-compose.base.yaml" "$OUT_DIR/docker-compose.base.yaml"
 cp "$ROOT_DIR/docker-compose.release.yaml" "$OUT_DIR/docker-compose.release.yaml"
 # copy vector yaml
