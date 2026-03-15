@@ -16,7 +16,12 @@ import {
   IconEdit,
   IconCheck,
   IconX,
-  IconDatabaseOff
+  IconDatabaseOff,
+  IconVariable,
+  IconVariableMinus,
+  IconVariableOff,
+  IconCodeVariableMinus,
+  IconVariablePlus
 } from "@tabler/icons-react";
 import {
   useCreateEnvVar,
@@ -34,20 +39,28 @@ export function EnvVarsTab({ appId }: { appId: string }) {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState("");
+  const [editingDescription, setEditingDescription] = useState("");
 
   const [addOpen, setAddOpen] = useState(false);
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");
+  const [newDescription, setNewDescription] = useState("");
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteKey, setDeleteKey] = useState("");
 
   const saveNewVar = () => {
+    console.log({ newKey, newValue, newDescription });
     if (!newKey.trim()) return;
-    create.mutate({ key: newKey.trim(), value: newValue });
+    create.mutate({
+      key: newKey.trim(),
+      value: newValue,
+      description: newDescription
+    });
     setNewKey("");
     setNewValue("");
+    setNewDescription("");
     setAddOpen(false);
   };
 
@@ -89,7 +102,7 @@ export function EnvVarsTab({ appId }: { appId: string }) {
           style={{ textAlign: "center", backgroundColor: "#f8f9fa" }}
         >
           <Center mb="sm">
-            <IconDatabaseOff size={48} color="#9CA3AF" />
+            <IconVariable size={48} color="#9CA3AF" />
           </Center>
           <Text size="lg" fw={500} mb="xs">
             No environment variables
@@ -106,6 +119,7 @@ export function EnvVarsTab({ appId }: { appId: string }) {
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Key</Table.Th>
+              <Table.Th>Description</Table.Th>
               <Table.Th>Value</Table.Th>
               <Table.Th w={180}>Actions</Table.Th>
             </Table.Tr>
@@ -124,7 +138,18 @@ export function EnvVarsTab({ appId }: { appId: string }) {
                   <Table.Td>
                     <Text fw={500}>{env.key}</Text>
                   </Table.Td>
-
+                  <Table.Td>
+                    {isEditing ? (
+                      <TextInput
+                        value={editingDescription}
+                        onChange={(e) =>
+                          setEditingDescription(e.currentTarget.value)
+                        }
+                      />
+                    ) : (
+                      <Text c="dimmed">{env.description}</Text>
+                    )}
+                  </Table.Td>
                   <Table.Td>
                     {isEditing ? (
                       <TextInput
@@ -148,7 +173,8 @@ export function EnvVarsTab({ appId }: { appId: string }) {
                             onClick={() => {
                               update.mutate({
                                 id: env.id,
-                                value: editingValue
+                                value: editingValue,
+                                description: editingDescription
                               });
                               setEditingId(null);
                             }}
@@ -172,6 +198,7 @@ export function EnvVarsTab({ appId }: { appId: string }) {
                             onClick={() => {
                               setEditingId(env.id);
                               setEditingValue(env.value);
+                              setEditingDescription(env.description || "");
                             }}
                           >
                             Edit
@@ -209,9 +236,13 @@ export function EnvVarsTab({ appId }: { appId: string }) {
             onChange={(e) => setNewKey(e.currentTarget.value)}
           />
           <TextInput
+            label="Description"
+            value={newDescription}
+            onChange={(e) => setNewDescription(e.currentTarget.value)}
+          />
+          <TextInput
             label="Value"
             value={newValue}
-            mt="sm"
             onChange={(e) => setNewValue(e.currentTarget.value)}
           />
           <Group justify="flex-end" mt="md">

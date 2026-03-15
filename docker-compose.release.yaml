@@ -5,7 +5,8 @@ services:
   zipup:
 
     volumes:
-      - ./app/backend:/app:ro
-    command: ["node", "dist/index.js"]
+      - ./app:/app:ro
+    command: ["node", "/app/backend/dist/index.js"]
     environment:
       - NODE_ENV=production
+      - FRONTEND_DIST_DIR=/app/frontend/dist

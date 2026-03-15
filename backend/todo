@@ -28,8 +28,12 @@ Features:
 
   zipup cli: 
     ☐ improve the cli
-    ☐ use the secret key to check integrity of upload.
-    ☐ show warning if start_command is not set.
+    ✔ use the secret key to check integrity of upload.
+    ☐ show error if start_command is not set.
+    ☐ host, app key, secret not presnt. 
+    ☐ host app key , secret wrong values.
+    ☐ ignore files glob.
+    ☐ artifact clean should always happen.
   Alarms:
     ☐ Can we set and send notifications to the user. like on deployment successful etc.
 
@@ -74,9 +78,15 @@ Cleanup:
     ☐ delete the entries in the db (cascade delete). or we want to keep some history
 
 Today:
-  ☐ @low Rotate API/ secret key
-  ☐ @low Remove setting redis prefix , let user do it themselves.
-
+  ✔ @low Rotate API/ secret key
+  ✔ @low Remove setting redis prefix , let user do it themselves.
+  ✔ add description field in envs.
+  ☐ create a working release.
+  ☐ add description field in secret envs.
+  ☐ Add paseto keys and secrets in /secrets volume at startup.
+  ☐ cli fixup.
+  ☐ deploy documents website.
+  ☐ victorialogs working.
 Next:
   ✔ Frontend - fix static app settings, they will be different from dynamic app settings. like no env variables, no secrets
   ✔ Fix Dynamic app settings, remove redis prefix, deployments apis, env and secrets check.

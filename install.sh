@@ -30,8 +30,7 @@ fi
 
 # --- 4. Set variables for GitHub release ---
 REPO_OWNER="ankitaabad"
-# todo: change this to zipup
-REPO_NAME="passup"
+REPO_NAME="zipup"
 
 # Fetch latest release tag
 LATEST_TAG=$(curl -s "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest" \
@@ -51,6 +50,5 @@ cd artifact
 
 # --- 7. Run docker-compose (legacy standalone) ---
 echo "Starting containers..."
-docker-compose -f docker-compose.release.yaml up -d
-
+docker-compose -f docker-compose.base.yaml -f docker-compose.release.yaml up
 echo "✅ Installation complete. Containers are running."

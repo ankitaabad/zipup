@@ -170,6 +170,7 @@ export const secretsTable = table(
       .references(() => appsTable.id, { onDelete: "cascade" }),
     key: t.text().notNull(),
     value: t.text().notNull(),
+    description: t.text(),
     created_at: t.text().notNull(),
     updated_at: t.text().notNull()
   },
@@ -185,6 +186,7 @@ export const envVarsTable = table(
       .references(() => appsTable.id, { onDelete: "cascade" }),
     key: t.text().notNull(),
     value: t.text().notNull(),
+    description: t.text(),
     created_at: t.text().notNull(),
     updated_at: t.text().notNull()
   },
