@@ -14,20 +14,28 @@ on:
           - major
 
 permissions:
-  contents: write  # required to create releases
+  contents: write
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.runner }}
 
     steps:
-      # 1️⃣ Checkout repo with full history
+      # 1️⃣ Checkout repo
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # needed for tags
+          fetch-depth: 0
 
-      # 2️⃣ Fetch all tags
+      # 2️⃣ Fetch tags
       - name: Fetch all tags
         run: git fetch --tags
 
@@ -73,10 +81,11 @@ jobs:
           echo "next=$NEXT" >> $GITHUB_OUTPUT
           echo "Next version: $NEXT"
 
-      # 5️⃣ Create and push tag using a PAT to trigger workflows reliably
+      # 5️⃣ Push tag only once (avoid race between matrix jobs)
       - name: Create and push tag
+        if: matrix.arch == 'x64'
         env:
-          PAT: ${{ secrets.PERSONAL_GITHUB_TOKEN }}  # must be a PAT with repo scope
+          PAT: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -89,7 +98,7 @@ jobs:
           version: 10
           run_install: false
 
-      # 7️⃣ Setup Node.js with caching
+      # 7️⃣ Setup Node
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -98,22 +107,23 @@ jobs:
       # 8️⃣ Install dependencies
       - run: pnpm install --frozen-lockfile
 
-      # 9️⃣ Run release script
+      # 9️⃣ Build release
       - name: Run release script
         run: ./release.sh
 
-      # 🔟 Package release folder
-      - name: Package Release
+      # 🔟 Package release
+      - name: Package release
         run: |
           cd release
           TAG=${{ steps.next.outputs.next }}
-          tar -czf ../myapp-${TAG}-linux-x64.tar.gz .
+          tar -czf ../myapp-${TAG}-linux-${{ matrix.arch }}.tar.gz .
 
-      - name: Create GitHub Release
+      # 1️⃣1️⃣ Upload artifact to release
+      - name: Upload release artifact
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.next.outputs.next }}   # explicitly provide tag
-          files: myapp-${{ steps.next.outputs.next }}-linux-x64.tar.gz
+          tag_name: ${{ steps.next.outputs.next }}
+          files: myapp-${{ steps.next.outputs.next }}-linux-${{ matrix.arch }}.tar.gz
           overwrite_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

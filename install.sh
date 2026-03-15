@@ -33,9 +33,9 @@ if ! docker compose version >/dev/null 2>&1; then
   ARCH=$(uname -m)
 
   if [[ "$ARCH" == "x86_64" ]]; then
-      ARCH="x86_64"
+      COMPOSE_ARCH="x86_64"
   elif [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
-      ARCH="aarch64"
+      COMPOSE_ARCH="aarch64"
   else
       echo "❌ Unsupported architecture: $ARCH"
       exit 1
@@ -44,7 +44,7 @@ if ! docker compose version >/dev/null 2>&1; then
   sudo mkdir -p /usr/lib/docker/cli-plugins
 
   sudo curl -SL \
-    "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$ARCH" \
+    "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-${COMPOSE_ARCH}" \
     -o /usr/lib/docker/cli-plugins/docker-compose
 
   sudo chmod +x /usr/lib/docker/cli-plugins/docker-compose
@@ -60,6 +60,22 @@ if ! groups "$USER" | grep -q '\bdocker\b'; then
   echo "⚠️  Please log out and back in to use Docker without sudo."
 fi
 
+# Detect architecture for Zipup binary
+echo "🧠 Detecting system architecture..."
+
+ARCH=$(uname -m)
+
+if [[ "$ARCH" == "x86_64" ]]; then
+  APP_ARCH="x64"
+elif [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
+  APP_ARCH="arm64"
+else
+  echo "❌ Unsupported architecture: $ARCH"
+  exit 1
+fi
+
+echo "📦 Detected architecture: $ARCH → using ${APP_ARCH} build"
+
 # Fetch latest release
 echo "🔎 Fetching latest release..."
 
@@ -74,9 +90,10 @@ fi
 
 echo "📦 Latest release: $LATEST_TAG"
 
-DOWNLOAD_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${LATEST_TAG}/myapp-${LATEST_TAG}-linux-x64.tar.gz"
+DOWNLOAD_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${LATEST_TAG}/myapp-${LATEST_TAG}-linux-${APP_ARCH}.tar.gz"
 
 echo "⬇️ Downloading release..."
+echo "🔗 $DOWNLOAD_URL"
 
 TMP_ARCHIVE=$(mktemp)
 curl -fL "$DOWNLOAD_URL" -o "$TMP_ARCHIVE"
@@ -107,4 +124,3 @@ echo "Useful commands:"
 echo "  docker compose ps"
 echo "  docker compose logs -f"
 echo ""
-
