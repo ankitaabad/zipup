@@ -300,6 +300,7 @@ appsRouter.post(
       app_id: appId,
       key: body.key,
       value: body.value,
+      description: body.description,
       created_at: now,
       updated_at: now
     };
@@ -333,6 +334,7 @@ appsRouter.put(
       .update(envVarsTable)
       .set({
         value: body.value,
+        description: body.description,
         updated_at: new Date().toISOString()
       })
       .where(and(eq(envVarsTable.id, envId), eq(envVarsTable.app_id, appId)))

@@ -77,11 +77,13 @@ const EnvValueSchema = z.string();
 
 export const CreateEnvVarSchema = z.object({
   key: EnvkeySchema,
-  value: EnvValueSchema
+  value: EnvValueSchema,
+  description: z.string().optional()
 });
 
 export const UpdateEnvVarSchema = z.object({
-  value: EnvValueSchema
+  value: EnvValueSchema,
+  description: z.string().optional()
 });
 
 export const CreatePeerSchema = z.object({

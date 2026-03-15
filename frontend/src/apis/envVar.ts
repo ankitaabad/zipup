@@ -6,6 +6,9 @@ export interface EnvVar {
   id: string;
   key: string;
   value: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 /* ---------------- Queries ---------------- */
@@ -17,7 +20,7 @@ export function useGetAllEnvVars(appId: string) {
       const res = await api.get<{ data: EnvVar[] }>(`/apps/${appId}/env-vars`);
       return res.data.data;
     },
-    enabled: !!appId,
+    enabled: !!appId
   });
 }
 
@@ -27,13 +30,18 @@ export function useCreateEnvVar(appId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: { key: string; value: string }) => {
+    mutationFn: async (data: {
+      key: string;
+      value: string;
+      description?: string;
+    }) => {
+      console.log({ data });
       const res = await api.post(`/apps/${appId}/env-vars`, data);
       return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["env-vars", appId] });
-    },
+    }
   });
 }
 
@@ -41,13 +49,20 @@ export function useUpdateEnvVar(appId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: { id: string; value: string }) => {
-      const res = await api.put(`/apps/${appId}/env-vars/${data.id}`, { value: data.value });
+    mutationFn: async (data: {
+      id: string;
+      value: string;
+      description?: string;
+    }) => {
+      const res = await api.put(`/apps/${appId}/env-vars/${data.id}`, {
+        value: data.value,
+        description: data.description
+      });
       return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["env-vars", appId] });
-    },
+    }
   });
 }
 
@@ -61,6 +76,6 @@ export function useDeleteEnvVar(appId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["env-vars", appId] });
-    },
+    }
   });
 }

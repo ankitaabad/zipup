@@ -18,7 +18,10 @@ import {
   IconCheck,
   IconX,
   IconDatabaseOff,
-  IconLock
+  IconLock,
+  IconScooterElectric,
+  IconLockCog,
+  IconLockPassword
 } from "@tabler/icons-react";
 import {
   useGetAllSecretVarsKeys,
@@ -133,7 +136,7 @@ export function SecretVarsTab({ appId }: { appId: string }) {
           style={{ textAlign: "center", backgroundColor: "#f8f9fa" }}
         >
           <Center mb="sm">
-            <IconDatabaseOff size={48} color="#9CA3AF" />
+            <IconLockPassword size={48} color="#9CA3AF" />
           </Center>
           <Text size="lg" fw={500} mb="xs">
             No secret variables

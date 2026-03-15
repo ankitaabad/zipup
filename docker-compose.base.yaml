@@ -51,12 +51,10 @@ services:
     restart: unless-stopped
     user: root
     volumes:
-      - ./:/app
-      - /app/node_modules
+      # - /app/node_modules
       - zipup_data:/data
       - ./wireguard/wg0.conf:/etc/wireguard/wg0.conf
 
-      # - wireguard_config:/config
       - static_artifacts:/static_artifacts
       - dynamic_artifacts:/dynamic_artifacts
       - secrets:/secrets
