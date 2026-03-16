@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "vite-tsconfig-paths": "^6.0.4"
+    "vite-tsconfig-paths": "^6.1.1"
   },
   "scripts": {
     "ui": "pnpm -F frontend dev",
@@ -12,6 +12,6 @@
     "dockerup": "docker-compose -f docker-compose.base.yaml -f docker-compose.dev.yaml up"
   },
   "dependencies": {
-    "zod": "^4.2.1"
+    "zod": "^4.3.6"
   }
 }

@@ -9,7 +9,7 @@ import * as tar from "tar";
 import { eventBus, zipupEvents } from "../events/event";
 import { getLogger } from "../utils/logger";
 import { getArtifactWithApp } from "../utils/dbQueries";
-import { errorHandler } from "../utils/errorHandler";
+import { BadRequest, BadSignature, errorHandler } from "../utils/errorHandler";
 import {
   DYNAMIC_ARTIFACT_ROOT,
   DYNAMIC_TEMP_DIR,
@@ -35,7 +35,9 @@ artifactsRouter.post("/", async (c) => {
     const { app_key } = await c.req.json();
 
     const app = c.get("app");
-
+    if (!app.start_command) {
+      throw new BadRequest("App does not have a start command.");
+    }
     const app_id = app.id;
     const artifactId = generateId();
     const now = new Date().toISOString();
@@ -112,7 +114,7 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
     );
     console.log({ signature });
     if (!signatureHeader || signatureHeader !== signature) {
-      return c.json({ error: "Invalid signature" }, 401);
+      throw new BadSignature();
     }
     let artifactRoot: string, artifactTemp: string;
     if (app.type === "STATIC") {
@@ -122,7 +124,7 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
       artifactRoot = DYNAMIC_ARTIFACT_ROOT;
       artifactTemp = DYNAMIC_TEMP_DIR;
     } else {
-      return c.json({ error: "Invalid artifact type" }, 400);
+      throw new BadRequest("Invalid app type");
     }
     fs.ensureDirSync(artifactRoot);
     fs.ensureDirSync(artifactTemp);

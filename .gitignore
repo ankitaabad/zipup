@@ -37,3 +37,4 @@ backend/src/db/zipup.db
 artifact
 cli/package
 cli/dist
+cli/zipup.config.json

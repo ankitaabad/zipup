@@ -24,6 +24,12 @@ export class Unauthorized extends HttpError {
   }
 }
 
+export class BadSignature extends HttpError {
+  constructor(message = "Bad signature") {
+    super(401, "BAD_SIGNATURE", message);
+  }
+}
+
 export function errorHandler(c: Context, error: unknown) {
   const logger = getLogger();
   console.error(error);

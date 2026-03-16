@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "node build.mjs",
-    "prepare-publish": "npm run build && node scripts/prepare-publish.mjs",
+    "prepare-publish": "npm run build && node src/scripts/prepare-publish.mjs",
     "publish": "npm run prepare-publish && npm publish ./dist --access public"
   },
   "repository": {

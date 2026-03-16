@@ -2,7 +2,7 @@
 import { build } from "esbuild";
 
 await build({
-  entryPoints: ["index.ts"],
+  entryPoints: ["src/index.ts"],
   outfile: "dist/index.js",
   bundle: true,
   platform: "node",

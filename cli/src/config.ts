@@ -1,4 +1,5 @@
 import fs from "fs";
+import ora from "ora";
 import path from "path";
 import { z } from "zod";
 
@@ -6,10 +7,21 @@ const CONFIG_FILE = "zipup.config.json";
 const ENV_PREFIX = "zipup_";
 
 export const ConfigSchema = z.object({
-  HOST: z.url(),
-  APP_KEY: z.string().min(1),
-  SECRET_KEY: z.string().min(1),
-  BUILD_FOLDER: z.string().default("dist"),
+  HOST: z.url({
+    error: (iss) => {
+      if (iss.input === undefined) {
+        return "HOST is required.";
+      }
+      return "Invalid HOST!";
+    }
+  }),
+  APP_KEY: z
+    .string("APP_KEY is required.")
+    .length(52, "APP_KEY must be 52 characters long."),
+  SECRET_KEY: z
+    .string("SECRET_KEY is required.")
+    .length(73, "SECRET_KEY must be 73 characters long."),
+  BUILD_FOLDER: z.string("BUILD_FOLDER is required."),
   TAGS: z.array(z.string()).default([])
 });
 
@@ -80,7 +92,34 @@ function parseTags(value: string): string[] {
  * Main config loader
  * cliConfig should already be normalized to internal keys
  */
-export function loadConfig(cliConfig: Partial<zipupConfig> = {}): zipupConfig {
+export function loadConfig(options: {
+  host?: string;
+  appKey?: string;
+  secretKey?: string;
+  buildFolder?: string;
+  tag?: string[];
+}): zipupConfig {
+  const cliConfig: Partial<zipupConfig> = {
+    HOST: options.host,
+    APP_KEY: options.appKey,
+    SECRET_KEY: options.secretKey,
+    BUILD_FOLDER: options.buildFolder,
+    TAGS: options.tag?.length ? options.tag : undefined
+  };
+
+  /**
+   * <dir> argument always wins for build folder
+   */
+  // cliConfig.BUILD_FOLDER = dir;
+
+  Object.keys(cliConfig).forEach((key) => {
+    if (
+      cliConfig[key as keyof zipupConfig] === undefined ||
+      cliConfig[key as keyof zipupConfig] === null
+    ) {
+      delete cliConfig[key as keyof zipupConfig];
+    }
+  });
   const fileConfig = loadFileConfig();
   const envConfig = loadEnvConfig();
   const merged = {
@@ -88,14 +127,12 @@ export function loadConfig(cliConfig: Partial<zipupConfig> = {}): zipupConfig {
     ...envConfig,
     ...cliConfig
   };
-  console.log({ cliConfig, merged });
   const parsed = ConfigSchema.safeParse(merged);
-  console.log({ parsed });
   if (!parsed.success) {
-    console.error("❌ Invalid zipup configuration:");
-    console.error(parsed.error.format());
-    process.exit(1);
+    const message = parsed.error.issues
+      .map((issue) => `  • ${issue.path.join(".")}: ${issue.message}`)
+      .join("\n");
+    throw new Error(`Invalid configuration:\n${message}`);
   }
-
   return parsed.data;
 }
