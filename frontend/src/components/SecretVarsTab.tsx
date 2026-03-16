@@ -43,10 +43,12 @@ export function SecretVarsTab({ appId }: { appId: string }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingKey, setEditingKey] = useState("");
   const [editingValue, setEditingValue] = useState("");
+  const [editingDescription, setEditingDescription] = useState("");
 
   const [addOpen, setAddOpen] = useState(false);
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");
+  const [newDescription, setNewDescription] = useState("");
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -54,9 +56,10 @@ export function SecretVarsTab({ appId }: { appId: string }) {
 
   /* ---------- handlers ---------- */
 
-  const openEdit = async (id: string, key: string) => {
+  const openEdit = async (id: string, key: string, description: string) => {
     setEditingId(id);
     setEditingKey(key);
+    setEditingDescription(description);
 
     const res = await fetchSecret.mutateAsync(id);
     setEditingValue(res.value);
@@ -65,6 +68,7 @@ export function SecretVarsTab({ appId }: { appId: string }) {
   const cancelEdit = () => {
     setEditingId(null);
     setEditingKey("");
+    setEditingDescription("");
     setEditingValue("");
   };
 
@@ -73,7 +77,8 @@ export function SecretVarsTab({ appId }: { appId: string }) {
 
     update.mutate({
       secret_id: editingId,
-      value: editingValue
+      value: editingValue,
+      description: editingDescription
     });
 
     cancelEdit();
@@ -84,11 +89,13 @@ export function SecretVarsTab({ appId }: { appId: string }) {
 
     create.mutate({
       key: newKey.trim(),
-      value: newValue
+      value: newValue,
+      description: newDescription
     });
 
     setNewKey("");
     setNewValue("");
+    setNewDescription("");
     setAddOpen(false);
   };
 
@@ -153,6 +160,7 @@ export function SecretVarsTab({ appId }: { appId: string }) {
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Key</Table.Th>
+              <Table.Th>Description</Table.Th>
               <Table.Th>Value</Table.Th>
               <Table.Th w={180}>Actions</Table.Th>
             </Table.Tr>
@@ -173,7 +181,19 @@ export function SecretVarsTab({ appId }: { appId: string }) {
                   <Table.Td>
                     <Text fw={500}>{secret.key}</Text>
                   </Table.Td>
-
+                  <Table.Td>
+                    {isEditing ? (
+                      <TextInput
+                        value={editingDescription}
+                        onChange={(e) =>
+                          setEditingDescription(e.currentTarget.value)
+                        }
+                        size="md"
+                      />
+                    ) : (
+                      <Text c="dimmed">{secret.description}</Text>
+                    )}
+                  </Table.Td>
                   <Table.Td>
                     {isEditing ? (
                       <PasswordInput
@@ -213,7 +233,7 @@ export function SecretVarsTab({ appId }: { appId: string }) {
                           <Button
                             size="xs"
                             leftIcon={<IconEdit size={14} />}
-                            onClick={() => openEdit(secret.id, secret.key)}
+                            onClick={() => openEdit(secret.id, secret.key, secret.description)}
                           >
                             Edit
                           </Button>
@@ -242,8 +262,8 @@ export function SecretVarsTab({ appId }: { appId: string }) {
         title="Add Secret"
         onClose={() => setAddOpen(false)}
       >
-        <Stack>
-          <form autoComplete="off">
+        {/* <form autoComplete="off"> */}
+          <Stack>
             <TextInput
               label="Key"
               value={newKey}
@@ -252,16 +272,22 @@ export function SecretVarsTab({ appId }: { appId: string }) {
               onChange={(e) => setNewKey(e.currentTarget.value)}
             />
             <TextInput
+              label="Description"
+              value={newDescription}
+              autoComplete="off"
+              onChange={(e) => setNewDescription(e.currentTarget.value)}
+            />
+            <TextInput
               label="Value"
               autoComplete="off"
               value={newValue}
               onChange={(e) => setNewValue(e.currentTarget.value)}
             />
-          </form>
-          <Group justify="flex-end" mt="md">
-            <Button onClick={saveNewSecret}>Add</Button>
-          </Group>
-        </Stack>
+            <Group justify="flex-end" mt="md">
+              <Button onClick={saveNewSecret}>Add</Button>
+            </Group>
+          </Stack>
+        {/* </form> */}
       </CustomModal>
 
       {/* Delete Modal */}

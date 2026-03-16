@@ -35,8 +35,17 @@ mkdir -p "$BACKEND_OUT_DIR" "$FRONTEND_OUT_DIR" "$WIREGUARD_DIR"
 echo "📦 Deploying backend prod node_modules into /out..."
 cd "$ROOT_DIR"
 echo "📂 Copying backend dist + package.json..."
-pnpm --filter backend deploy --prod  "$BACKEND_OUT_DIR"
-pnpm --filter backend dbInit
+echo "📦 Installing backend prod dependencies (flattened)..."
+cd "$BACKEND_DIR"
+
+# remove any existing node_modules
+rm -rf node_modules
+
+# install prod dependencies and hoist everything to flat node_modules
+pnpm install --prod --shamefully-hoist
+
+# copy backend code + flattened node_modules into release folder
+rsync -a dist package.json node_modules "$BACKEND_OUT_DIR/" pnpm --filter backend dbInit
 
 echo "📂 Copying database file into /out..."
 # create db folder in out and copy the db file there

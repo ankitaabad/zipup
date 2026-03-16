@@ -391,6 +391,7 @@ appsRouter.get(
       data: secrets.map((secret) => ({
         id: secret.id,
         key: secret.key,
+        description: secret.description,
         created_at: secret.created_at,
         updated_at: secret.updated_at
       }))
@@ -436,6 +437,7 @@ appsRouter.post(
       app_id,
       key: body.key,
       value: body.value,
+      description: body.description,
       created_at: now,
       updated_at: now
     };
@@ -468,6 +470,7 @@ appsRouter.put(
       .update(secretsTable)
       .set({
         value: body.value,
+        description: body.description,
         updated_at: new Date().toISOString()
       })
       .where(
