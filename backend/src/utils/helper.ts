@@ -26,6 +26,7 @@ import {
 import { db } from "@backend/db/dbClient";
 import { eq } from "drizzle-orm";
 import { eventBus, zipupEvents } from "@backend/events/event";
+import { getLatestPasetoKeys, getPasetoKeys } from "./tokenKeys";
 export const generateId = () => {
   return KSUID.randomSync().string;
 };
@@ -75,12 +76,6 @@ export async function verifyPasswordStrength(
   return true;
 }
 
-//todo: move to env variables
-export const paseto_public =
-  "k4.public.A6MGiHZr7HSerutizAV1OrD_Yetd7RxL3M7dBz2_tts";
-export const paseto_secret =
-  "k4.secret.6kiOV7jlw_rThVXqqUC-AtxznaZPwodA6geN1EogdnoDowaIdmvsdJ6u62LMBXU6sP9h613tHEvczt0HPb-22w";
-
 const ACCESS_TTL = 20 * 60 * 1000; // 20 min
 const REFRESH_TTL = 24 * 60 * 60 * 1000; // 1 day
 
@@ -107,8 +102,8 @@ export const generateAccessToken = async (user_id: string) => {
     iat,
     exp
   };
-
-  return await V4.sign(payload, paseto_secret as string);
+  const pasetoKeys = await getPasetoKeys();
+  return await V4.sign(payload, pasetoKeys.secretKey as string);
 };
 //todo: check for rigth value of aud and purpose
 export const generateRefreshToken = async (user_id: string) => {
@@ -125,9 +120,11 @@ export const generateRefreshToken = async (user_id: string) => {
     exp
   };
   storeRefreshJti(jti, exp);
+  const pasetoKeys = await getPasetoKeys();
+
   return {
     jti,
-    token: await V4.sign(payload, paseto_secret as string)
+    token: await V4.sign(payload, pasetoKeys.secretKey as string)
   };
 };
 export const generateCSRFToken = async (user_id: string) => {
@@ -141,7 +138,9 @@ export const generateCSRFToken = async (user_id: string) => {
     iat,
     exp
   };
-  return await V4.sign(payload, paseto_secret as string);
+  const pasetoKeys = await getPasetoKeys();
+
+  return await V4.sign(payload, pasetoKeys.secretKey as string);
 };
 
 export type AccessTokenPayload = {
@@ -156,7 +155,8 @@ export type AccessTokenPayload = {
 export const verifyAccessToken = async (
   token: string
 ): Promise<AccessTokenPayload> => {
-  const payload = (await V4.verify(token, paseto_public as string, {
+  const pasetoKeys = await getPasetoKeys();
+  const payload = (await V4.verify(token, pasetoKeys.publicKey as string, {
     issuer: ISSUER
   })) as AccessTokenPayload;
 
@@ -200,9 +200,10 @@ export type RefreshTokenPayload = {
 export const verifyRefreshToken = async (
   token: string
 ): Promise<RefreshTokenPayload> => {
+  const pasetoKeys = await getPasetoKeys();
   const payload = (await V4.verify(
     token,
-    paseto_public as string
+    pasetoKeys.publicKey
   )) as RefreshTokenPayload;
   if (payload.aud !== AUD.ZIPUP_API) {
     throw new Error("Invalid audience");

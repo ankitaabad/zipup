@@ -41,7 +41,6 @@ services:
       driver: none
 
   zipup:
-    image: node:24-bookworm-slim
     working_dir: /app
     container_name: zipup
     networks:
@@ -52,7 +51,7 @@ services:
     user: root
     volumes:
       # - /app/node_modules
-      - zipup_data:/data
+      # - zipup_data:/data
       - ./wireguard/wg0.conf:/etc/wireguard/wg0.conf
 
       - static_artifacts:/static_artifacts

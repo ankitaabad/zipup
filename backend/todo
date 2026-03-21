@@ -82,9 +82,11 @@ Today:
   ✔ @low Remove setting redis prefix , let user do it themselves.
   ✔ add description field in envs.
   ☐ create a working release.
-  ☐ add description field in secret envs.
-  ☐ Add paseto keys and secrets in /secrets volume at startup.
-  ☐ cli fixup.
+  ☐ Create ghcr image for zipup admin console.
+
+  ✔ add description field in secret envs.
+  ✔ Add paseto keys and secrets in /secrets volume at startup.
+  ✔ cli fixup.
   ☐ deploy documents website.
   ☐ victorialogs working.
 Next:

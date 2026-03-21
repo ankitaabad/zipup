@@ -101,7 +101,7 @@ export async function getPasetoKeys() {
     return pasetoKeys;
   }
   pasetoKeys = await getLatestPasetoKeys();
-  return pasetoKeys;
+  return pasetoKeys!;
 }
 export async function getLatestPasetoKeys() {
   const logger = appLogger.child();
@@ -110,6 +110,7 @@ export async function getLatestPasetoKeys() {
     return pasetoKeys;
   }
   if (!fs.existsSync(pasetoKeysFilePath)) {
+    await ensureTokenKeysExists();
   }
   // get latest token
   const data = fs.readFileSync(pasetoKeysFilePath);
@@ -134,7 +135,3 @@ async function findLatestPasetoKeys(pasetoKeys: Record<string, PasetoKeys>) {
   return pasetoKeys[lateseVersion];
 }
 
-// ensureTokenKeysExists();
-// rotatePasetoKeys();
-// removeOldPasetoKeys();
-//

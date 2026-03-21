@@ -26,6 +26,7 @@ import {
 import { db } from "./db/dbClient";
 import { eq } from "drizzle-orm";
 import { eventBus, zipupEvents } from "./events/event";
+import { getLatestPasetoKeys } from "./utils/tokenKeys";
 
 const frontendDir =
   process.env.FRONTEND_DIST_DIR ?? path.resolve(__dirname, "../frontend/dist");
@@ -74,8 +75,7 @@ app.get("*", async (c) => {
 });
 
 async function main() {
-
- await ensureServerWireguardPeer()
+  await Promise.all([getLatestPasetoKeys(), ensureServerWireguardPeer()]);
   serve(
     {
       fetch: app.fetch,

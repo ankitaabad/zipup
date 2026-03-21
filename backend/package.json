@@ -18,8 +18,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@node-rs/argon2": "^2.0.2",
     "@libsql/client": "^0.15.15",
+    "@node-rs/argon2": "^2.0.2",
     "better-sqlite3": "^12.6.2"
   },
   "devDependencies": {
@@ -40,7 +40,7 @@
     "drizzle-kit": "^0.31.7",
     "drizzle-orm": "^0.44.7",
     "drizzle-zod": "^0.8.3",
-    "esbuild": "^0.27.2",
+    "esbuild": "^0.27.4",
     "form-data": "^4.0.5",
     "fs-extra": "^11.3.3",
     "hono": "^4.10.6",

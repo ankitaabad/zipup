@@ -2,7 +2,7 @@ import { getCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
 import { AUD, CookieType, ISSUER, TokenPurpose } from "./constants";
 import { V4 } from "paseto";
-import { paseto_public, TokenPayload } from "./helper";
+import { TokenPayload } from "./helper";
 import { errorHandler } from "./errorHandler";
 import { Context, Hono } from "hono";
 import { getLogger } from "./logger";
@@ -11,6 +11,7 @@ import { appsTable } from "@backend/db/schema";
 import { db } from "@backend/db/dbClient";
 import { appSchema } from "@backend/db/schema";
 import z from "zod";
+import { getPasetoKeys } from "./tokenKeys";
 const loginPath = "/api/admin/login";
 const refreshTokenPath = "/api/admin/refresh";
 
@@ -19,10 +20,10 @@ async function verifyPasetoToken(
   expectedPurpose: TokenPurpose
 ): Promise<TokenPayload | null> {
   if (!token) return null;
-
+  const pasetoKeys = await getPasetoKeys();
   let payload: TokenPayload;
   try {
-    payload = (await V4.verify(token, paseto_public as string)) as TokenPayload;
+    payload = (await V4.verify(token, pasetoKeys.publicKey as string)) as TokenPayload;
   } catch {
     return null;
   }
@@ -139,6 +140,6 @@ export const createAuthenticatedRouter = () =>
 export const createAppKeyAuthenticatedRouter = () =>
   new Hono<{
     Variables: {
-      app: z.infer<typeof appSchema> ;
+      app: z.infer<typeof appSchema>;
     };
   }>();

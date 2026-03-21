@@ -3,10 +3,10 @@ services:
 
 
   zipup:
+    image: zipup:latest # replace with ghcr 
 
     volumes:
       - ./app:/app:ro
-    command: ["node", "/app/backend/dist/index.js"]
     environment:
       - NODE_ENV=production
       - FRONTEND_DIST_DIR=/app/frontend/dist
