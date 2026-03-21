@@ -63,21 +63,21 @@ fi
 # Detect architecture for Zipup binary
 echo "🧠 Detecting system architecture..."
 
-ARCH=$(uname -m)
+# ARCH=$(uname -m)
 
-if [[ "$ARCH" == "x86_64" ]]; then
-  APP_ARCH="x64"
-elif [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
-  APP_ARCH="arm64"
-else
-  echo "❌ Unsupported architecture: $ARCH"
-  exit 1
-fi
+# if [[ "$ARCH" == "x86_64" ]]; then
+#   APP_ARCH="x64"
+# elif [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
+#   APP_ARCH="arm64"
+# else
+#   echo "❌ Unsupported architecture: $ARCH"
+#   exit 1
+# fi
 
-echo "📦 Detected architecture: $ARCH → using ${APP_ARCH} build"
+# echo "📦 Detected architecture: $ARCH → using ${APP_ARCH} build"
 
-# Fetch latest release
-echo "🔎 Fetching latest release..."
+# # Fetch latest release
+# echo "🔎 Fetching latest release..."
 
 LATEST_TAG=$(curl -fsSL \
   "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest" \
@@ -90,7 +90,7 @@ fi
 
 echo "📦 Latest release: $LATEST_TAG"
 
-DOWNLOAD_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${LATEST_TAG}/myapp-${LATEST_TAG}-linux-${APP_ARCH}.tar.gz"
+DOWNLOAD_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${LATEST_TAG}/zipup-${LATEST_TAG}.tar.gz"
 
 echo "⬇️ Downloading release..."
 echo "🔗 $DOWNLOAD_URL"

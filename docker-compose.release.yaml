@@ -1,12 +1,11 @@
-
 services:
-
-
   zipup:
-    image: zipup:latest # replace with ghcr 
-
+    image: ghcr.io/ankitaabad/zipup:latest
+    ports:
+      - "127.0.0.1:3000:8080"
     volumes:
-      - ./app:/app:ro
+      - ./db:/db
     environment:
       - NODE_ENV=production
       - FRONTEND_DIST_DIR=/app/frontend/dist
+      - DB_PATH=/db

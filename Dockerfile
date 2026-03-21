@@ -71,7 +71,5 @@ COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 # -----------------------------
 # Backend runtime
 # -----------------------------
-WORKDIR /app/backend
 EXPOSE 3000
-ENV NODE_ENV=production
-CMD ["node", "dist/index.js"]
+CMD ["node", "backend/dist/index.js"]
