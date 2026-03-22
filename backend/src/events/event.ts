@@ -235,6 +235,7 @@ eventBus.on(
     version: string;
     internal_port: number;
     start_command: string;
+    deployment_id: string;
     app_name: string;
   }) => {
     try {
@@ -249,22 +250,13 @@ eventBus.on(
         type,
         start_command,
         internal_port,
-        app_name
+        app_name,
+        deployment_id
       } = event;
 
       // create entry in deployment
       const now = new Date().toISOString();
-      const deploymentId = generateId();
-      const result = await db.insert(deploymentsTable).values({
-        app_id,
-        artifact_id,
-        status: "IN_PROGRESS",
-        id: deploymentId,
-        created_at: now,
-        updated_at: now,
-        version,
-        container_name: `zipup_${app_id}_${deploymentId.slice(-8)}`
-      });
+
       if (type === "STATIC") {
         // static deployment
         logger.debug("reloading the config");
@@ -282,10 +274,10 @@ eventBus.on(
             status: "SUCCESS",
             updated_at: now
           })
-          .where(eq(deploymentsTable.id, deploymentId));
+          .where(eq(deploymentsTable.id, deployment_id));
       } else if (type === "DYNAMIC") {
         await deployDynamicApp({
-          deployment_id: deploymentId,
+          deployment_id,
           artifact_id,
           app_id,
           app_name,

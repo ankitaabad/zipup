@@ -1,32 +1,23 @@
 import { serve } from "@hono/node-server";
 
 import { Hono } from "hono";
-import { cors } from "hono/cors";
 import { adminAuthRouter } from "./routes/adminAuth";
 import { appsRouter } from "./routes/apps";
 import { settingsRouter } from "./routes/settings";
 import { artifactsRouter } from "./routes/artifact";
-import { getLogger, loggerMiddleware } from "./utils/logger";
+import { loggerMiddleware } from "./utils/logger";
 import { statsRouter } from "./routes/stats";
 import { appKeyAuthMiddleware, authMiddleware } from "./utils/middlewares";
 import { secureHeaders } from "hono/secure-headers";
 import { serveStatic } from "@hono/node-server/serve-static";
 import path from "path";
-import { fileURLToPath } from "url";
 
 import fs from "fs";
 import { internalRouter } from "./routes/internal";
 import { wireguardRouter } from "./routes/wireguard";
-import { ensureServerWireguardPeer, generateId } from "./utils/helper";
-import {
-  wireguardPeersTable,
-  WireguardPeerStatus,
-  WireguardPeerType
-} from "./db/schema";
-import { db } from "./db/dbClient";
-import { eq } from "drizzle-orm";
-import { eventBus, zipupEvents } from "./events/event";
+import { ensureServerWireguardPeer } from "./utils/helper";
 import { getLatestPasetoKeys } from "./utils/tokenKeys";
+import { deploymentRouter } from "./routes/deployment";
 
 const frontendDir =
   process.env.FRONTEND_DIST_DIR ?? path.resolve(__dirname, "../frontend/dist");
@@ -57,6 +48,8 @@ app.use(
 app.use("/api/*", loggerMiddleware());
 app.route("/api/__zipup_internal__", internalRouter);
 app.use("/api/artifacts/*", appKeyAuthMiddleware);
+app.use("/api/deployment/*", appKeyAuthMiddleware);
+app.route("/api/deployments", deploymentRouter);
 app.route("/api/artifacts", artifactsRouter);
 app.use("/api/*", (c, next) => authMiddleware(c, next));
 app.route("/api/admin", adminAuthRouter);

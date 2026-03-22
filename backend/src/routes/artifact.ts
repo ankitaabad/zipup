@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { db } from "@backend/db/dbClient";
-import { artifactsTable, appsTable } from "../db/schema";
+import { artifactsTable, appsTable, deploymentsTable } from "../db/schema";
 import { generateId } from "../utils/helper";
 import { eq, sql } from "drizzle-orm";
 import fs from "fs-extra";
@@ -17,7 +17,7 @@ import {
   STATIC_TEMP_DIR
 } from "@backend/utils/constants";
 import { File } from "buffer";
-import { createBodyHash, signPayload } from "@zipup/common";
+import { createBodyHash, DEPLOYMENT_STATUS, signPayload } from "@zipup/common";
 import { createAppKeyAuthenticatedRouter } from "@backend/utils/middlewares";
 
 export const artifactsRouter = createAppKeyAuthenticatedRouter();
@@ -152,6 +152,19 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
       .where(eq(artifactsTable.id, artifact_id))
       .run();
     console.log("Artifact uploaded and extracted successfully");
+    const now = new Date().toISOString();
+
+    const deploymentId = generateId();
+    const result = await db.insert(deploymentsTable).values({
+      app_id: app.id,
+      artifact_id,
+      status: DEPLOYMENT_STATUS.IN_PROGRESS,
+      id: deploymentId,
+      created_at: now,
+      updated_at: now,
+      version: artifact.version,
+      container_name: `zipup_${app.id}_${deploymentId.slice(-8)}`
+    });
     //todo: use bullmq
     const eventEmitted = eventBus.emit(zipupEvents.artifact_uploaded, {
       artifact_id: artifact_id,
@@ -159,12 +172,17 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
       type: app.type,
       version: artifact.version,
       start_command: app.start_command,
-      app_name: app.name
+      app_name: app.name,
+      deployment_id: deploymentId
     });
     logger.debug(`artifact uploaded event emitted: ${eventEmitted}`);
     return c.json({
       message: "Upload and extraction complete",
-      path: finalDir
+
+      data: {
+        path: finalDir,
+        deployment_id: deploymentId
+      }
     });
   } catch (error) {
     return errorHandler(c, error);

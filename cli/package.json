@@ -1,6 +1,6 @@
 {
   "name": "zipup-cli",
-  "version": "0.0.6",
+  "version": "0.0.8",
   "type": "module",
   "description": "zipup cli",
   "main": "src/index.js",
@@ -26,6 +26,8 @@
   "packageManager": "pnpm@8.6.0",
   "dependencies": {
     "@zipup/common": "workspace:*",
+    "boxen": "^8.0.1",
+    "cfonts": "^3.3.1",
     "cli-progress": "^3.12.0",
     "commander": "^14.0.2",
     "dotenv": "^17.2.3",

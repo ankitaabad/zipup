@@ -28,7 +28,6 @@ Features:
 
   zipup cli: 
     ☐ improve the cli
-    ✔ use the secret key to check integrity of upload.
     ☐ show error if start_command is not set.
     ☐ host, app key, secret not presnt. 
     ☐ host app key , secret wrong values.
@@ -75,47 +74,30 @@ Cleanup:
   ☐ max 10 artifact per app.
   App Delete Cleanup:
     ☐ delete the docker volumes
-    ☐ delete the entries in the db (cascade delete). or we want to keep some history
-
+    
+    ✔ delete the entries in the db (cascade delete). or we want to keep some history
 Today:
-  ✔ @low Rotate API/ secret key
-  ✔ @low Remove setting redis prefix , let user do it themselves.
-  ✔ add description field in envs.
-  ☐ create a working release.
-  ☐ Create ghcr image for zipup admin console.
+  ☐ @bug Routing not working in multipaas.
+  ☐ store secret key in secrets volume.
+  ☐ use secret key to encrypt before storing in db.
+  ☐ use secret key to decrypt before using them (sending them and setting them as env).
+  ✔ json server eg deploy.
+  ☐ cli should ignore the ignore files.
+  ☐ logs appearing in victorologs.
+  ✔ deployment failed status update.
+  ✔ cli should show container logs for failed deployment.
+  ☐ how to go about creating the whitelist of domain and setting email for lua acme.
+  ☐ Delete X-Zipup-Internal header from each request, only internal calls can be made with this header.
+  ☐ invalid signature failure
+  Next:
+    ☐ longest prefix matchin working for routing.
 
-  ✔ add description field in secret envs.
-  ✔ Add paseto keys and secrets in /secrets volume at startup.
-  ✔ cli fixup.
-  ☐ deploy documents website.
-  ☐ victorialogs working.
-Next:
-  ✔ Frontend - fix static app settings, they will be different from dynamic app settings. like no env variables, no secrets
-  ✔ Fix Dynamic app settings, remove redis prefix, deployments apis, env and secrets check.
-  ✔ @bug deployment is failing
-  ✔ @bug deployed app is not running on the domain.
-
-  ✔ Env and secret variable present in the app deployed.
-  ✔ @high start/stop and delete app.
   ☐ Reserved env ZIPUP_PORT
   ☐ postgres accesss.
   ☐ redis access
-  ☐ working with rotated keys.
   ☐ new version correctly working
-  ✔ wireguard vpn connection working.
-  ☐ logs appearing in victorologs.
-  ☐ longest prefix matchin working for routing.
-  ☐ Delete X-Zipup-Internal header from each request, only internal calls can be made with this header.
-  ☐ paseto secret storage.
-  ✔ integrate change password in the UI.
-  ☐ publish the cli package to npm.
   ☐ Better messages in UI like fields explanations, dashboard etc.
-  ☐ @bug password loading in secret variable input.
-  ✔ show current submenu in the sidebar.
-  ✔ close other menus when one menu is opened in the sidebar.
   ☐ Dashboard stats anything better can be shown?
-  ✔ Remove logs tab and version from UI.
-  ✔ @high Deployment signature check.
 
 Roadmap:
   ☐ Layers @next
@@ -129,6 +111,32 @@ Error Handling:
     ☐ add checks that start command is present before deploying an app.
 
 Done:
+  ✔ paseto secret storage.
+  ✔ @bug password loading in secret variable input.
+  ✔ publish the cli package to npm.
+  ✔ working with rotated keys.
+  ✔ create a working release.
+  ✔ use the secret key to check integrity of upload.
+  ✔ @low Rotate API/ secret key
+  ✔ @low Remove setting redis prefix , let user do it themselves.
+  ✔ add description field in envs.
+  ✔ Create ghcr image for zipup admin console.
+  ✔ add description field in secret envs.
+  ✔ Add paseto keys and secrets in /secrets volume at startup.
+  ✔ cli fixup.
+  ✔ deploy documents website.
+  ✔ Frontend - fix static app settings, they will be different from dynamic app settings. like no env variables, no secrets
+  ✔ Fix Dynamic app settings, remove redis prefix, deployments apis, env and secrets check.
+  ✔ @bug deployment is failing
+  ✔ @bug deployed app is not running on the domain.
+  ✔ Env and secret variable present in the app deployed.
+  ✔ @high start/stop and delete app.
+  ✔ wireguard vpn connection working.
+  ✔ integrate change password in the UI.
+  ✔ show current submenu in the sidebar.
+  ✔ close other menus when one menu is opened in the sidebar.
+  ✔ Remove logs tab and version from UI.
+  ✔ @high Deployment signature check.
   ✘ create redis prefix
   ✘ creating a task and task invocation
   ✘ cron job run with bull

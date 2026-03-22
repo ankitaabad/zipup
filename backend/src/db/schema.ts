@@ -5,6 +5,7 @@ import { index } from "drizzle-orm/sqlite-core";
 import { unique } from "drizzle-orm/sqlite-core";
 import { eq } from "drizzle-orm";
 import { primaryKey } from "drizzle-orm/sqlite-core";
+import { DEPLOYMENT_STATUS } from "@zipup/common";
 export const settingsTable = table("settings", {
   key: t.text().primaryKey(),
   value: t.text().notNull(),
@@ -135,7 +136,6 @@ export const artifactsTable = table(
   },
   (table) => [index("artifacts_app_idx").on(table.app_id)]
 );
-export type DEPLOYMENT_STATUS = "IN_PROGRESS" | "SUCCESS" | "FAILED";
 export const deploymentsTable = table(
   "deployments",
   {
@@ -153,7 +153,7 @@ export const deploymentsTable = table(
     container_name: t.text(),
     // host_port: t.integer(),
     status: t.text().$type<DEPLOYMENT_STATUS>().notNull(),
-
+    failureLogs: t.text(),
     created_at: t.text().notNull(),
     updated_at: t.text().notNull()
   },

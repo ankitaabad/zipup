@@ -33,6 +33,8 @@ import { PORT_FOR_USER_APPS } from "./constants";
 import { db } from "@backend/db/dbClient";
 import { mkdir, writeFile } from "fs/promises";
 import { buildWireguardConfig } from "./helper";
+import { DEPLOYMENT_STATUS } from "@common/index";
+import { PassThrough } from "node:stream";
 var docker = new Docker({ socketPath: "/var/run/docker.sock" });
 export const reverseProxyURL = "http://openresty:8080";
 
@@ -56,6 +58,7 @@ export async function deployDynamicApp(event: {
   internal_port: number;
   app_name: string;
 }) {
+  let container: Docker.Container;
   try {
     const logger = getLogger();
     const {
@@ -111,7 +114,7 @@ export async function deployDynamicApp(event: {
     //wait 8 seconds
     // await new Promise((resolve) => setTimeout(resolve, 8000));
     logger.debug("wait complete, proceeding to create container");
-    const container = await docker.createContainer({
+    container = await docker.createContainer({
       Image: "node:24-bookworm-slim",
       name: containerName,
 
@@ -178,11 +181,11 @@ export async function deployDynamicApp(event: {
     const startupTimeoutMs = 8000; // wait up to 8 seconds for container to be stable
     const pollIntervalMs = 1000;
     let elapsed = 0;
-
+    let runningCount = 0;
     // Poll container state
     while (elapsed < startupTimeoutMs) {
       const info = await container.inspect();
-
+      console.log(`Container ${containerName} info: ${JSON.stringify(info)}`);
       // Check if container exited or dead immediately
       if (info.State.Status === "exited" || info.State.Status === "dead") {
         throw new Error(
@@ -190,9 +193,17 @@ export async function deployDynamicApp(event: {
         );
       }
 
+      console.log(`Restart count: ${info.RestartCount}`);
       // Check for early restart (crash-loop)
       if (info.RestartCount > 0) {
         throw new Error(`Container ${containerName} restarted during startup`);
+      }
+      if (info.State.Running === true) {
+        console.log(`runningCount: ${runningCount}`);
+        runningCount++;
+        if (runningCount > 2) {
+          break;
+        }
       }
 
       // Still running? wait next poll
@@ -216,6 +227,14 @@ export async function deployDynamicApp(event: {
         "Content-Type": "application/json"
       }
     });
+    // update deployment status
+    await db
+      .update(deploymentsTable)
+      .set({
+        status: "SUCCESS",
+        updated_at: new Date().toISOString()
+      })
+      .where(eq(deploymentsTable.id, deployment_id));
     // ----------------------------------------
     // Stop and remove old containers for same app
     // ----------------------------------------
@@ -249,13 +268,65 @@ export async function deployDynamicApp(event: {
     }
 
     console.log("Old containers cleaned up, deployment complete.");
-
-    //todo: remove existing container
   } catch (error) {
     console.error("Error deploying artifact:", error);
+    try {
+      // get container logs
+      if (container) {
+        console.log("container exists");
+      } else {
+        console.log("container does not exist");
+      }
+      let logs;
+      if (container) {
+        logs = await getMergedContainerLogs(container);
+      }
+      await db
+        .update(deploymentsTable)
+        .set({
+          status: DEPLOYMENT_STATUS.FAILED,
+          updated_at: Date.now().toString(),
+          failureLogs: logs || ""
+        })
+        .where(eq(deploymentsTable.id, event.deployment_id));
+      if (container) {
+        try {
+          console.log("removing container.");
+          await container.stop();
+          await container?.remove();
+        } catch (error) {
+          console.error("Error removing container:", error);
+        }
+      }
+    } catch (error) {
+      console.error("Error updating deployment status:", error);
+    }
   }
 }
+async function getMergedContainerLogs(container) {
+  const buffer = await container.logs({
+    stdout: true,
+    stderr: true,
+    follow: false,
+    timestamps: false
+  });
 
+  let offset = 0;
+  let result = "";
+
+  while (offset < buffer.length) {
+    const streamType = buffer[offset]; // 1 = stdout, 2 = stderr
+    const length = buffer.readUInt32BE(offset + 4);
+
+    const content = buffer.slice(offset + 8, offset + 8 + length);
+
+    result += content.toString("utf-8");
+
+    offset += 8 + length;
+  }
+
+  return result;
+}
 export async function getDockerStats() {
   try {
     // Fetch all containers

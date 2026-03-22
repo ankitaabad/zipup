@@ -1,5 +1,13 @@
 import { z } from "zod/v4";
 import crypto from "node:crypto";
+import { TIMEOUT } from "node:dns";
+// export type DEPLOYMENT_STATUS = "IN_PROGRESS" | "SUCCESS" | "FAILED";
+export const enum DEPLOYMENT_STATUS {
+  IN_PROGRESS = "IN_PROGRESS",
+  SUCCESS = "SUCCESS",
+  FAILED = "FAILED",
+  TIMEOUT = "TIMEOUT"
+}
 export const UsernameSchema = z
   .string()
   .min(3, "Username must be at least 3 characters long");

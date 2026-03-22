@@ -1,12 +1,12 @@
-import { createBodyHash, signPayload } from "@zipup/common";
+import { createBodyHash, DEPLOYMENT_STATUS, signPayload } from "@zipup/common";
 import * as tar from "tar";
 import { Command } from "commander";
 import fs from "fs";
 import path from "path";
 import ora from "ora";
 import { loadConfig, zipupConfig } from "../config";
-import { step } from "../helper";
-
+import { printFailureLogs, step } from "../helper";
+import cfonts from "cfonts";
 function formatBytes(bytes: number, decimals = 2) {
   if (bytes === 0) return "0 Bytes";
 
@@ -36,8 +36,18 @@ export const deployCommand = new Command("deploy")
   )
   .action(async (options) => {
     // const spinner = ora("Preparing deployment...").start();
+    cfonts.say("Zipup", {
+      // font: "3d", // slick fonts
+      "font": "slick",
+      align: "left",
+      // colors: ["blue", "magenta"],
+      background: "transparent",
+      gradient: ["white", "blue"],
+      letterSpacing: 1
+    });
     let tarPath: string;
     let deploymentSuccess = false;
+    let deploymentStatus, deploymentLogs;
     try {
       const config = await step<zipupConfig>(
         "Validating configuration...",
@@ -104,7 +114,7 @@ export const deployCommand = new Command("deploy")
         );
         return tarPath;
       });
-      await step("Uploading artifact...", async () => {
+      const deploymentId = await step("Uploading artifact...", async () => {
         const buffer = fs.readFileSync(tarPath);
         const size = formatBytes(buffer.length);
         const bodyHashForUpload = createBodyHash(buffer); // hash the file contents
@@ -130,22 +140,56 @@ export const deployCommand = new Command("deploy")
             "Zipup-Body-Hash": bodyHashForUpload
           }
         });
+        const { deployment_id } = (await uploadRes.json()).data;
+        return deployment_id;
       });
-      deploymentSuccess = true;
+      await step("Checking deployment health status...", async () => {
+        const start = Date.now();
+        const interval = 1000;
+        const timeout = 60000;
+        let status, logs;
+        while (Date.now() - start < timeout) {
+          const res = await fetch(
+            `${config.HOST}/api/deployments/${deploymentId}`
+          );
+          const data = (await res.json()).data;
+          // console.log({ data });
+          status = data.status;
+          logs = data.failureLogs;
+          if (status !== DEPLOYMENT_STATUS.IN_PROGRESS) {
+            break;
+          }
+
+          await new Promise((r) => setTimeout(r, interval));
+        }
+        if (status === DEPLOYMENT_STATUS.IN_PROGRESS) {
+          status = DEPLOYMENT_STATUS.TIMEOUT;
+        }
+        deploymentStatus = status;
+        deploymentLogs = logs;
+        if (status !== DEPLOYMENT_STATUS.SUCCESS) {
+          throw new Error(`Checking deployment health status: ${status}`);
+        }
+        return { status, logs };
+      });
+      // deploymentStatus = status;
+      // deploymentLogs = logs;
+      // deploymentSuccess = true;
     } catch (error) {
-      console.error(error);
-      ora("").fail("Deployment failed!");
-      process.exit(1);
+      // console.error(error);
     } finally {
       await step("Cleaning Up...", async () => {
         if (tarPath && fs.existsSync(tarPath)) {
           fs.unlinkSync(tarPath);
         }
       });
-      if (deploymentSuccess) {
+      if (deploymentStatus === DEPLOYMENT_STATUS.SUCCESS) {
         ora("").succeed("Deployment complete!");
       } else {
         ora("").fail("Deployment failed!");
+        if (deploymentLogs) {
+          printFailureLogs(deploymentLogs);
+        }
         process.exit(1);
       }
       process.exit(0);

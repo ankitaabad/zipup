@@ -1,3 +1,4 @@
+import boxen from "boxen";
 import ora from "ora";
 
 export async function step<T>(
@@ -12,6 +13,17 @@ export async function step<T>(
     return result;
   } catch (err: any) {
     spinner.fail(err.message ?? "Failed");
-    process.exit(1);
+    throw err;
   }
+}
+export function printFailureLogs(logs: string) {
+  console.log(
+    boxen(logs, {
+      title: "Deployment Failed: Container Logs",
+      titleAlignment: "center",
+      padding: 1,
+      margin: 1,
+      borderStyle: "bold"
+    })
+  );
 }
