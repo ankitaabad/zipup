@@ -1,3 +1,5 @@
+import { randomBytes } from "node:crypto";
+import crypto from "node:crypto";
 import fs from "fs";
 import { V4 } from "paseto";
 import path from "path";
@@ -9,7 +11,8 @@ type PasetoKeys = {
   createdAt: string;
   version: string;
 };
-const pasetoKeysFilePath =  path.join("/","secrets", "tokens.json");
+const pasetoKeysFilePath = path.join("/", "secrets", "tokens.json");
+const encryptionKeyFilePath = path.join("/", "secrets", "encryptionKey.json");
 const getNewPasetoKey = async () => {
   const version = generateId();
   const keys = await V4.generateKey("public", { format: "paserk" });
@@ -19,6 +22,53 @@ const getNewPasetoKey = async () => {
     createdAt: new Date().toISOString()
   };
 };
+let encryptionKey: string | undefined;
+
+export function getEncryptionKey(): Buffer {
+  if (encryptionKey) {
+    return Buffer.from(encryptionKey, "base64");
+  }
+
+  if (!fs.existsSync(encryptionKeyFilePath)) {
+    const key = crypto.randomBytes(32).toString("base64");
+
+    fs.writeFileSync(
+      encryptionKeyFilePath,
+      JSON.stringify({ encryptionKey: key }),
+      { flag: "wx" } // avoid overwrite in race condition
+    );
+
+    encryptionKey = key;
+    return Buffer.from(key, "base64");
+  }
+
+  const data = fs.readFileSync(encryptionKeyFilePath, "utf8");
+
+  if (!data || data.trim().length === 0) {
+    throw new Error("Encryption key file is empty");
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(data);
+  } catch {
+    throw new Error("Encryption key file is corrupted");
+  }
+
+  if (!parsed.encryptionKey) {
+    throw new Error("Invalid key structure");
+  }
+
+  encryptionKey = parsed.encryptionKey;
+
+  const keyBuffer = Buffer.from(encryptionKey, "base64");
+
+  if (keyBuffer.length !== 32) {
+    throw new Error("Invalid key length (must be 32 bytes)");
+  }
+
+  return keyBuffer;
+}
 export async function ensureTokenKeysExists() {
   const logger = appLogger.child();
 
@@ -134,4 +184,3 @@ async function findLatestPasetoKeys(pasetoKeys: Record<string, PasetoKeys>) {
   }
   return pasetoKeys[lateseVersion];
 }
-

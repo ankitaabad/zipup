@@ -72,9 +72,9 @@ Today:
   ☐ @bug Routing not working in multipaas.
   ☐ cli working with env and command line args.
   ☐ document cli readme
-  ☐ store secret key in secrets volume.
-  ☐ use secret key to encrypt before storing in db.
-  ☐ use secret key to decrypt before using them (sending them and setting them as env).
+  ✔ store secret key in secrets volume.
+  ✔ use secret key to encrypt before storing in db.
+  ✔ use secret key to decrypt before using them (sending them and setting them as env).
   ☐ logs appearing in victorologs.
   ☐ logs cleanup.
   ☐ Add more logs 

@@ -16,7 +16,7 @@ import fs from "fs";
 import { internalRouter } from "./routes/internal";
 import { wireguardRouter } from "./routes/wireguard";
 import { ensureServerWireguardPeer } from "./utils/helper";
-import { getLatestPasetoKeys } from "./utils/tokenKeys";
+import { getEncryptionKey, getLatestPasetoKeys } from "./utils/tokenKeys";
 import { deploymentRouter } from "./routes/deployment";
 
 const frontendDir =
@@ -68,7 +68,12 @@ app.get("*", async (c) => {
 });
 
 async function main() {
-  await Promise.all([getLatestPasetoKeys(), ensureServerWireguardPeer()]);
+  await Promise.all([
+    getLatestPasetoKeys(),
+    ensureServerWireguardPeer(),
+    getEncryptionKey()
+  ]);
+  
   serve(
     {
       fetch: app.fetch,

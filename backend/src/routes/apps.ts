@@ -3,7 +3,7 @@ import {
   getAppWithLatestArtifact,
   getArtifactWithApp
 } from "@backend/utils/dbQueries";
-import { generateApiKey } from "@backend/utils/secret";
+import { decrypt, encrypt, generateApiKey } from "@backend/utils/secret";
 import { Context, Hono } from "hono";
 import { db } from "@backend/db/dbClient";
 import { omit } from "radash";
@@ -28,6 +28,7 @@ import {
 import { withErrorHandler } from "@backend/utils/middlewares";
 import { isAppRunningByAppId } from "@backend/utils/docker_utils";
 import { eventBus, zipupEvents } from "@backend/events/event";
+import { getEncryptionKey } from "@backend/utils/tokenKeys";
 
 export const appsRouter = new Hono();
 
@@ -417,6 +418,8 @@ appsRouter.get(
     if (!secret) {
       return c.json({ error: "Secret not found" }, 404);
     }
+    const encryptionKey = getEncryptionKey();
+    secret.value = decrypt(secret.value, encryptionKey);
     //todo: decrypt the secret
     return c.json({
       data: secret
@@ -432,11 +435,12 @@ appsRouter.post(
     const body = CreateEnvVarSchema.parse(await c.req.json());
     const now = new Date().toISOString();
     //todo: encrypt the secret later
+    const encryptionKey = await getEncryptionKey();
     const secret = {
       id: generateId(),
       app_id,
       key: body.key,
-      value: body.value,
+      value: encrypt(body.value, encryptionKey),
       description: body.description,
       created_at: now,
       updated_at: now
@@ -452,8 +456,7 @@ appsRouter.post(
       );
     }
     return c.json({
-      message: "Secret variable created",
-      data: secret
+      message: "Secret variable created"
     });
   })
 );
@@ -464,12 +467,12 @@ appsRouter.put(
   withErrorHandler(async (c) => {
     const app_id = c.req.param("app_id");
     const secret_id = c.req.param("secret_id");
-
+    const encryptionKey = getEncryptionKey();
     const body = UpdateEnvVarSchema.parse(await c.req.json());
     const result = await db
       .update(secretsTable)
       .set({
-        value: body.value,
+        value: encrypt(body.value, encryptionKey),
         description: body.description,
         updated_at: new Date().toISOString()
       })
