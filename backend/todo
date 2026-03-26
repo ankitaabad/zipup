@@ -72,6 +72,10 @@ Today:
   ☐ @bug Routing not working in multipaas.
   ☐ cli working with env and command line args.
   ☐ document cli readme
+  ☐ determine scheme (http vs https) at lua and forward to zipup
+  ☐ lua api that we can hit whenever domain/ lets encrypt email/ global domain is updated.
+  ☐ internal api that lua can hit when domain is updated.
+
   ✔ store secret key in secrets volume.
   ✔ use secret key to encrypt before storing in db.
   ✔ use secret key to decrypt before using them (sending them and setting them as env).
@@ -80,9 +84,11 @@ Today:
   ☐ Add more logs 
   ☐ Ensure the events dont crash the app.
   ☐ how to go about creating the whitelist of domain and setting email for lua acme.
-  ☐ Delete X-Zipup-Internal header from each request, only internal calls can be made with this header.
+  ☐ Internal openresty apis should be on different port for calling from node js.
+  ✔ Delete Zipup-Internal-Source header from each request, only internal calls can be made with this header.
+  
   Next:
-    ☐ longest prefix matchin working for routing.
+  ☐ longest prefix matchin working for routing.
 
   ☐ Reserved env ZIPUP_PORT
   ☐ postgres accesss.

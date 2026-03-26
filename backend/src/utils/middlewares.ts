@@ -1,6 +1,6 @@
 import { getCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
-import { AUD, CookieType, ISSUER, TokenPurpose } from "./constants";
+import { AUD, CookieType, INTERNAL_SOURCE, ISSUER, TokenPurpose } from "./constants";
 import { V4 } from "paseto";
 import { TokenPayload } from "./helper";
 import { errorHandler, Unauthorized } from "./errorHandler";
@@ -63,6 +63,19 @@ export const appKeyAuthMiddleware = createMiddleware(async (c, next) => {
       throw new Unauthorized("Unauthorized: Invalid app key");
     }
     c.set("app", app);
+    await next();
+  } catch (error) {
+    return errorHandler(c, error);
+  }
+});
+export const internalRoutesAuthMiddleware = createMiddleware(async (c, next) => {
+  try {
+    const logger = getLogger();
+    const source = c.req.header("Zipup-Internal-Source");
+    logger.debug(`source: ${source}`);
+    if (source !== INTERNAL_SOURCE) {
+      throw new Unauthorized();
+    }
     await next();
   } catch (error) {
     return errorHandler(c, error);

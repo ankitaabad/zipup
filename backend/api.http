@@ -2,14 +2,19 @@
 get {{server}}
 
 ### create app
-post {{server}}/apps
+post {{server}}/api/apps
 Content-Type: application/json
+Zipup-Internal-Source: yesboss
 
 {
   "name": "docs",
   "type": "static"
 }
 
+### Get routes
+
+GET {{server}}/api/__zipup_internal__/routes
+Zipup-Internal-Source: openresty
 ### create dynamic app
 post {{server}}/apps
 Content-Type: application/json

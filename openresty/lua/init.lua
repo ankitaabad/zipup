@@ -32,7 +32,7 @@ local function fetch_and_store_routes(premature)
         method  = "GET",
         headers = {
             ["Accept"]            = "application/json",
-            ["X-Zipup-Internal"]  = "1",
+            ["Zipup-Internal-Source"]  = "openresty",
         },
     })
 

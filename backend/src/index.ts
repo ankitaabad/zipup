@@ -7,7 +7,11 @@ import { settingsRouter } from "./routes/settings";
 import { artifactsRouter } from "./routes/artifact";
 import { loggerMiddleware } from "./utils/logger";
 import { statsRouter } from "./routes/stats";
-import { appKeyAuthMiddleware, authMiddleware } from "./utils/middlewares";
+import {
+  appKeyAuthMiddleware,
+  authMiddleware,
+  internalRoutesAuthMiddleware
+} from "./utils/middlewares";
 import { secureHeaders } from "hono/secure-headers";
 import { serveStatic } from "@hono/node-server/serve-static";
 import path from "path";
@@ -46,6 +50,7 @@ app.use(
 // );
 
 app.use("/api/*", loggerMiddleware());
+app.use("/api/__zipup_internal__/*", internalRoutesAuthMiddleware);
 app.route("/api/__zipup_internal__", internalRouter);
 app.use("/api/artifacts/*", appKeyAuthMiddleware);
 app.use("/api/deployment/*", appKeyAuthMiddleware);
@@ -73,7 +78,7 @@ async function main() {
     ensureServerWireguardPeer(),
     getEncryptionKey()
   ]);
-  
+
   serve(
     {
       fetch: app.fetch,

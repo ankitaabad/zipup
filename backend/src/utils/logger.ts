@@ -15,11 +15,13 @@ type ContextType = {
 };
 export const loggerMiddleware = (): MiddlewareHandler => {
   return createMiddleware(async (c, next) => {
-    const requestId = c.req.header("X-Request-ID") || generateId();
+    const requestId = c.req.header("Zipup-Request-ID") || generateId();
     const logger = appLogger.child({
       requestId
     });
-    c.header("X-Request-ID", requestId);
+    c.header("Zipup-Request-ID", requestId);
+    const scheme = c.req.header("X-Forwarded-Proto");
+    c.set("scheme", scheme || "http");
     return asyncLocalStorage.run({ logger }, async () => {
       await next();
     });

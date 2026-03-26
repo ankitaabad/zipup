@@ -8,6 +8,8 @@ import {
   AUD,
   DYNAMIC_ARTIFACT_ROOT,
   DYNAMIC_TEMP_DIR,
+  Environment,
+  envVar,
   ISSUER,
   STATIC_ARTIFACT_ROOT,
   STATIC_TEMP_DIR,
@@ -307,6 +309,10 @@ export const getArtifactStorageLocation = (
 };
 
 export const addAllTokensToCookie = async (c: Context, userId: string) => {
+  const scheme = c.get("scheme");
+  const secure =
+    envVar.environment === Environment.development || scheme !== "http";
+  console.log(`setting cookie with scheme: ${scheme}`);
   const [access_token, refresh_token, csrf_token] = await Promise.all([
     generateAccessToken(userId),
     generateRefreshToken(userId),
@@ -314,17 +320,17 @@ export const addAllTokensToCookie = async (c: Context, userId: string) => {
   ]);
   setCookie(c, "access_token", access_token, {
     httpOnly: true,
-    secure: true,
+    secure,
     sameSite: "Lax"
   });
   setCookie(c, "refresh_token", refresh_token.token, {
     httpOnly: true,
-    secure: true,
+    secure,
     path: "/api/admin/refresh"
   });
   setCookie(c, "csrf_token", csrf_token, {
     httpOnly: false,
-    secure: true,
+    secure,
     sameSite: "strict"
   });
 };
