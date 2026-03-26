@@ -22,7 +22,8 @@ export const ConfigSchema = z.object({
     .string("SECRET_KEY is required.")
     .length(73, "SECRET_KEY must be 73 characters long."),
   BUILD_FOLDER: z.string("BUILD_FOLDER is required."),
-  TAGS: z.array(z.string()).default([])
+  TAGS: z.array(z.string()).default([]),
+  IGNORES: z.array(z.string()).default([])
 });
 
 export type zipupConfig = z.infer<typeof ConfigSchema>;
@@ -98,13 +99,15 @@ export function loadConfig(options: {
   secretKey?: string;
   buildFolder?: string;
   tag?: string[];
+  ignore?: string[];
 }): zipupConfig {
   const cliConfig: Partial<zipupConfig> = {
     HOST: options.host,
     APP_KEY: options.appKey,
     SECRET_KEY: options.secretKey,
     BUILD_FOLDER: options.buildFolder,
-    TAGS: options.tag?.length ? options.tag : undefined
+    TAGS: options.tag?.length ? options.tag : undefined,
+    IGNORES: options.ignore?.length ? options.ignore : undefined
   };
 
   /**
@@ -125,7 +128,14 @@ export function loadConfig(options: {
   const merged = {
     ...fileConfig,
     ...envConfig,
-    ...cliConfig
+    ...cliConfig,
+    IGNORES: Array.from(
+      new Set([
+        ...(fileConfig.IGNORES || []),
+        ...(envConfig.IGNORES || []),
+        ...(cliConfig.IGNORES || [])
+      ])
+    )
   };
   const parsed = ConfigSchema.safeParse(merged);
   if (!parsed.success) {

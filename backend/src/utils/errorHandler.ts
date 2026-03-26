@@ -25,7 +25,7 @@ export class Unauthorized extends HttpError {
 }
 
 export class BadSignature extends HttpError {
-  constructor(message = "Bad signature") {
+  constructor(message = "Failed to verify signature.") {
     super(401, "BAD_SIGNATURE", message);
   }
 }

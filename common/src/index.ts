@@ -1,3 +1,4 @@
+import { signPayload } from "@zipup/common";
 import { z } from "zod/v4";
 import crypto from "node:crypto";
 import { TIMEOUT } from "node:dns";
@@ -107,13 +108,15 @@ export function signPayload(
   bodyHash: string,
   secretKey: string
 ) {
+
   const expires = Math.floor(Date.now() / 1000) + 300; // expires in 5 minutes
   const canonical = [method.toUpperCase(), path, expires, bodyHash].join("\n");
 
-  return crypto
-    .createHmac("sha256", Buffer.from(secretKey, "hex"))
+  const signature = crypto
+    .createHmac("sha256", secretKey)
     .update(canonical)
     .digest("hex");
+  return signature;
 }
 
 export const createBodyHash = (data: string | Buffer) => {

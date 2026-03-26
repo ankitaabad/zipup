@@ -231,7 +231,7 @@ appsRouter.get(
       HOST: "",
       APP_KEY: app_key,
       SECRET_KEY: secret_key,
-      IGNORES: ["**/*/zipup.config.json"]
+      IGNORES: ["**/zipup.config.json", "**/.git/**"]
     };
     c.header("Content-Type", "text/plain");
     c.header("Content-Disposition", 'attachment; filename="zipup.config.json"');

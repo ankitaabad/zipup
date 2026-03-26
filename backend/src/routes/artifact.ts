@@ -112,7 +112,6 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
       bodyHash,
       app.secret_key
     );
-    console.log({ signature });
     if (!signatureHeader || signatureHeader !== signature) {
       throw new BadSignature();
     }
@@ -135,7 +134,6 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
     const finalDir = path.join(artifactRoot, artifact_id);
     fs.ensureDirSync(finalDir);
 
-    console.log({ bodyHash });
     await fs.writeFile(tempPath, Buffer.from(arrayBuffer));
 
     // extract and cleanup

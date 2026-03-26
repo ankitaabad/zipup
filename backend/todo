@@ -13,7 +13,7 @@ Features:
     ☐ helmet headers.
     ☐ apply cors.
     ☐ 2fa implementation.
-    ☐ paseto secret keep in db only encrypted. 
+    ✘ paseto secret keep in db only encrypted. 
     ☐ take additional tags from the user for an artifact that can be displayed with the version (can be used for parity with user's git tags.)
   openresty:
     ☐ Auth from lua side with paseto.
@@ -26,28 +26,21 @@ Features:
     ☐ User Apis
     ☐ Apis for User Groups
 
-  zipup cli: 
-    ☐ improve the cli
-    ☐ show error if start_command is not set.
-    ☐ host, app key, secret not presnt. 
-    ☐ host app key , secret wrong values.
-    ☐ ignore files glob.
-    ☐ artifact clean should always happen.
   Alarms:
     ☐ Can we set and send notifications to the user. like on deployment successful etc.
 
   Backup and Restore:
     ☐ how to implement this?
 CI/CD:
-  ☐ init db to bake in image.
-  ☐ init server : create paseto keys
+  ✔ init db to bake in image.
+  ✔ init server : create paseto keys
   ☐ init server : create secret key for encrypting secret keys
   ☐ get hetzner account
-  ☐ get a domain name for zipup
-  ☐ build frontend and serve from node js.
-  ☐ docker hub create zipup image
-  ☐ Release artifact 
-  ☐ Separate docker for dev and prod.
+  ✔ get a domain name for zipup
+  ✔ build frontend and serve from node js.
+  ✔ ghcr create zipup image
+  ✔ Release artifact 
+  ✔ Separate docker for dev and prod.
 Testing:
   ☐ e2e test cases before releasing artifacts.
 
@@ -75,20 +68,19 @@ Cleanup:
   App Delete Cleanup:
     ☐ delete the docker volumes
     
-    ✔ delete the entries in the db (cascade delete). or we want to keep some history
 Today:
   ☐ @bug Routing not working in multipaas.
+  ☐ cli working with env and command line args.
+  ☐ document cli readme
   ☐ store secret key in secrets volume.
   ☐ use secret key to encrypt before storing in db.
   ☐ use secret key to decrypt before using them (sending them and setting them as env).
-  ✔ json server eg deploy.
-  ☐ cli should ignore the ignore files.
   ☐ logs appearing in victorologs.
-  ✔ deployment failed status update.
-  ✔ cli should show container logs for failed deployment.
+  ☐ logs cleanup.
+  ☐ Add more logs 
+  ☐ Ensure the events dont crash the app.
   ☐ how to go about creating the whitelist of domain and setting email for lua acme.
   ☐ Delete X-Zipup-Internal header from each request, only internal calls can be made with this header.
-  ☐ invalid signature failure
   Next:
     ☐ longest prefix matchin working for routing.
 
@@ -111,6 +103,19 @@ Error Handling:
     ☐ add checks that start command is present before deploying an app.
 
 Done:
+  ✔ improve the cli
+  ✔ show error if start_command is not set.
+  ✔ host, app key, secret not presnt. 
+  ✔ host app key , secret wrong values.
+  ✔ ignore files glob.
+  ✔ artifact clean should always happen.
+  ✔ delete the entries in the db (cascade delete). or we want to keep some history
+  ✔ @bug cfonts not getting bundled.
+  ✔ json server eg deploy.
+  ✔ cli should ignore the ignore files.
+  ✔ deployment failed status update.
+  ✔ cli should show container logs for failed deployment.
+  ✔ invalid signature failure
   ✔ paseto secret storage.
   ✔ @bug password loading in secret variable input.
   ✔ publish the cli package to npm.

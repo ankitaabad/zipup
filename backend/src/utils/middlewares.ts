@@ -3,7 +3,7 @@ import { createMiddleware } from "hono/factory";
 import { AUD, CookieType, ISSUER, TokenPurpose } from "./constants";
 import { V4 } from "paseto";
 import { TokenPayload } from "./helper";
-import { errorHandler } from "./errorHandler";
+import { errorHandler, Unauthorized } from "./errorHandler";
 import { Context, Hono } from "hono";
 import { getLogger } from "./logger";
 import { eq } from "drizzle-orm";
@@ -23,7 +23,10 @@ async function verifyPasetoToken(
   const pasetoKeys = await getPasetoKeys();
   let payload: TokenPayload;
   try {
-    payload = (await V4.verify(token, pasetoKeys.publicKey as string)) as TokenPayload;
+    payload = (await V4.verify(
+      token,
+      pasetoKeys.publicKey as string
+    )) as TokenPayload;
   } catch {
     return null;
   }
@@ -43,23 +46,27 @@ async function verifyPasetoToken(
   return payload;
 }
 export const appKeyAuthMiddleware = createMiddleware(async (c, next) => {
-  const logger = getLogger();
-  const appKey = c.req.header("Zipup-App-Key");
-  if (!appKey) {
-    logger.error("Unauthorized: No app key provided");
-    return c.json({ error: "Unauthorized" }, 401);
+  try {
+    const logger = getLogger();
+    const appKey = c.req.header("Zipup-App-Key");
+    if (!appKey) {
+      logger.error("Unauthorized: No app key provided");
+      throw new Unauthorized("Unauthorized: No app key provided");
+    }
+    const app = await db
+      .select()
+      .from(appsTable)
+      .where(eq(appsTable.app_key, appKey))
+      .get();
+    if (!app) {
+      logger.error("Unauthorized: Invalid app key", { appKey });
+      throw new Unauthorized("Unauthorized: Invalid app key");
+    }
+    c.set("app", app);
+    await next();
+  } catch (error) {
+    return errorHandler(c, error);
   }
-  const app = await db
-    .select()
-    .from(appsTable)
-    .where(eq(appsTable.app_key, appKey))
-    .get();
-  if (!app) {
-    logger.error("Unauthorized: Invalid app key", { appKey });
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-  c.set("app", app);
-  await next();
 });
 export const authMiddleware = createMiddleware(async (c, next) => {
   const { method, path } = c.req;

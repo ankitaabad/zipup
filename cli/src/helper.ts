@@ -27,3 +27,40 @@ export function printFailureLogs(logs: string) {
     })
   );
 }
+
+export async function callFetch<T>(fn: () => Promise<Response>): Promise<T> {
+  try {
+    let response;
+    try {
+      response = await fn();
+    } catch (error) {
+      throw new Error(
+        `${error?.cause || error?.message || "Unexpected error occurred"}`
+      );
+    }
+
+    let json: any;
+
+    try {
+      json = await response.json();
+    } catch {
+      throw new Error(`Invalid JSON response (status: ${response.status})`);
+    }
+    if (!response.ok) {
+      const message =
+        json?.error?.message ||
+        json?.message ||
+        `Request failed with status ${response.status}`;
+
+      throw new Error(message);
+    }
+
+    if (json?.error) {
+      throw new Error(json.error.message);
+    }
+
+    return json.data as T;
+  } catch (err: any) {
+    throw new Error(err?.message || "Unexpected error occurred");
+  }
+}

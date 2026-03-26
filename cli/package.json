@@ -1,11 +1,10 @@
 {
   "name": "zipup-cli",
-  "version": "0.0.8",
-  "type": "module",
+  "version": "0.0.14",
   "description": "zipup cli",
   "main": "src/index.js",
   "bin": {
-    "zipup": "./index.js"
+    "zipup": "./index.cjs"
   },
   "scripts": {
     "build": "node build.mjs",
@@ -25,19 +24,21 @@
   "license": "ISC",
   "packageManager": "pnpm@8.6.0",
   "dependencies": {
+    "cfonts": "^3.3.1"
+  },
+  "devDependencies": {
+    "picomatch": "^4.0.3",
+    "@types/picomatch": "^4.0.2",
     "@zipup/common": "workspace:*",
     "boxen": "^8.0.1",
-    "cfonts": "^3.3.1",
     "cli-progress": "^3.12.0",
     "commander": "^14.0.2",
     "dotenv": "^17.2.3",
+    "esbuild": "^0.27.2",
     "fs-extra": "^11.3.3",
     "ignore": "^7.0.5",
     "ora": "^9.0.0",
     "tar": "^7.5.2",
     "zod": "^4.2.1"
-  },
-  "devDependencies": {
-    "esbuild": "^0.27.2"
   }
 }

@@ -5,8 +5,9 @@ import fs from "fs";
 import path from "path";
 import ora from "ora";
 import { loadConfig, zipupConfig } from "../config";
-import { printFailureLogs, step } from "../helper";
+import { callFetch, printFailureLogs, step } from "../helper";
 import cfonts from "cfonts";
+import pm from "picomatch";
 function formatBytes(bytes: number, decimals = 2) {
   if (bytes === 0) return "0 Bytes";
 
@@ -28,6 +29,15 @@ export const deployCommand = new Command("deploy")
   .option(
     "--tag <tag>",
     "Tag (repeatable)",
+    (val, acc) => {
+      acc.push(val);
+      return acc;
+    },
+    [] as string[]
+  )
+  .option(
+    "--ignore <pattern>",
+    "Ignore files (glob, repeatable, relative to build folder)",
     (val, acc) => {
       acc.push(val);
       return acc;
@@ -56,19 +66,16 @@ export const deployCommand = new Command("deploy")
         }
       );
 
-      const buildDir = await step(
-        "Checking if build folder exists.",
-        async () => {
-          const buildDir = path.resolve(config.BUILD_FOLDER);
+      const buildDir = await step("Verifying build folder...", async () => {
+        const buildDir = path.resolve(config.BUILD_FOLDER);
 
-          if (!fs.existsSync(buildDir)) {
-            throw new Error("Build directory does not exist.");
-          }
-          return buildDir;
+        if (!fs.existsSync(buildDir)) {
+          throw new Error("Build folder does not exist.");
         }
-      );
+        return buildDir;
+      });
 
-      const artifactId = await step("Creating artifact record...", async () => {
+      const artifactId = await step("Creating artifact...", async () => {
         const body = JSON.stringify({
           app_key: config.APP_KEY,
           tags: config.TAGS
@@ -83,77 +90,99 @@ export const deployCommand = new Command("deploy")
           config.SECRET_KEY
         );
 
-        const res = await fetch(`${config.HOST}/api/artifacts`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Zipup-App-Key": config.APP_KEY,
-            "Zipup-Timestamp": timestamp,
-            "Zipup-Signature": signature
-          },
-          body
+        const res = await callFetch<{ id: string }>(async () => {
+          return await fetch(`${config.HOST}/api/artifacts`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Zipup-App-Key": config.APP_KEY,
+              "Zipup-Timestamp": timestamp,
+              "Zipup-Signature": signature
+            },
+            body
+          });
         });
-        const { id } = (await res.json()).data;
+        const { id } = res;
         if (!id) {
           throw new Error("Artifact creation failed");
         }
         return id;
       });
-      tarPath = await step("Archiving Build Folder...", async () => {
+      tarPath = await step("Archiving build folder...", async () => {
         const tarPath = path.resolve(`zipup_artifact_${artifactId}.tgz`);
         const files = fs.readdirSync(buildDir);
-
+        const picoMatches = config.IGNORES.map((x) => pm(x));
         await tar.c(
           {
             gzip: true,
             cwd: buildDir,
             portable: true,
-            file: tarPath
+            file: tarPath,
+            filter: (filePath) => {
+              // filePath is relative to cwd
+              const shouldIgnore = picoMatches.some((isMatch) =>
+                isMatch(filePath)
+              );
+              if (shouldIgnore) {
+                console.log(`Ignoring file: ${filePath}`);
+              }
+
+              return !shouldIgnore;
+            }
           },
           files
         );
         return tarPath;
       });
-      const deploymentId = await step("Uploading artifact...", async () => {
-        const buffer = fs.readFileSync(tarPath);
-        const size = formatBytes(buffer.length);
-        const bodyHashForUpload = createBodyHash(buffer); // hash the file contents
-        const uploadPath = `/api/artifacts/${artifactId}/upload`;
-        const signatureForUpload = signPayload(
-          "POST",
-          uploadPath,
-          bodyHashForUpload,
-          config.SECRET_KEY
-        );
-        const blob = new Blob([buffer], { type: "application/gzip" });
-        const form = new FormData();
-        form.append("artifact", blob, path.basename(tarPath));
-
-        const uploadRes = await fetch(`${config.HOST}${uploadPath}`, {
-          method: "POST",
-          body: form,
-          headers: {
-            // "Content-Type": "application/json",
-            "Zipup-App-Key": config.APP_KEY,
-            // "Zipup-Timestamp": timestamp,
-            "Zipup-Signature": signatureForUpload,
-            "Zipup-Body-Hash": bodyHashForUpload
-          }
-        });
-        const { deployment_id } = (await uploadRes.json()).data;
-        return deployment_id;
-      });
-      await step("Checking deployment health status...", async () => {
+      const buffer = fs.readFileSync(tarPath);
+      const size = formatBytes(buffer.length);
+      const deploymentId = await step(
+        `Uploading artifact (${size})...`,
+        async () => {
+          const bodyHashForUpload = createBodyHash(buffer); // hash the file contents
+          const uploadPath = `/api/artifacts/${artifactId}/upload`;
+          const signatureForUpload = signPayload(
+            "POST",
+            uploadPath,
+            bodyHashForUpload,
+            config.SECRET_KEY
+          );
+          const blob = new Blob([buffer], { type: "application/gzip" });
+          const form = new FormData();
+          form.append("artifact", blob, path.basename(tarPath));
+          const { deployment_id } = await callFetch<{ deployment_id: string }>(
+            async () => {
+              return await fetch(`${config.HOST}${uploadPath}`, {
+                method: "POST",
+                body: form,
+                headers: {
+                  // "Content-Type": "application/json",
+                  "Zipup-App-Key": config.APP_KEY,
+                  // "Zipup-Timestamp": timestamp,
+                  "Zipup-Signature": signatureForUpload,
+                  "Zipup-Body-Hash": bodyHashForUpload
+                }
+              });
+            }
+          );
+          return deployment_id;
+        }
+      );
+      await step("Verifying deployment health...", async () => {
         const start = Date.now();
         const interval = 1000;
         const timeout = 60000;
         let status, logs;
         while (Date.now() - start < timeout) {
-          const res = await fetch(
-            `${config.HOST}/api/deployments/${deploymentId}`
-          );
-          const data = (await res.json()).data;
-          // console.log({ data });
+          const data = await callFetch<{
+            status: DEPLOYMENT_STATUS;
+            failureLogs: string;
+          }>(async () => {
+            return await fetch(
+              `${config.HOST}/api/deployments/${deploymentId}`
+            );
+          });
+
           status = data.status;
           logs = data.failureLogs;
           if (status !== DEPLOYMENT_STATUS.IN_PROGRESS) {
@@ -168,23 +197,20 @@ export const deployCommand = new Command("deploy")
         deploymentStatus = status;
         deploymentLogs = logs;
         if (status !== DEPLOYMENT_STATUS.SUCCESS) {
-          throw new Error(`Checking deployment health status: ${status}`);
+          throw new Error(`Verifying deployment health: ${status}`);
         }
         return { status, logs };
       });
-      // deploymentStatus = status;
-      // deploymentLogs = logs;
-      // deploymentSuccess = true;
     } catch (error) {
       // console.error(error);
     } finally {
-      await step("Cleaning Up...", async () => {
-        if (tarPath && fs.existsSync(tarPath)) {
+      if (tarPath && fs.existsSync(tarPath)) {
+        await step("Cleaning up temporary files...", async () => {
           fs.unlinkSync(tarPath);
-        }
-      });
+        });
+      }
       if (deploymentStatus === DEPLOYMENT_STATUS.SUCCESS) {
-        ora("").succeed("Deployment complete!");
+        ora("").succeed("Deployment successful 🎉");
       } else {
         ora("").fail("Deployment failed!");
         if (deploymentLogs) {
