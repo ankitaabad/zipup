@@ -30,3 +30,5 @@ export const enum Environment {
 export const envVar = {
   environment: process.env.NODE_ENV
 };
+
+export const reverseProxyURL = "http://openresty:9090";

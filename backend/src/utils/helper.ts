@@ -11,6 +11,7 @@ import {
   Environment,
   envVar,
   ISSUER,
+  reverseProxyURL,
   STATIC_ARTIFACT_ROOT,
   STATIC_TEMP_DIR,
   TokenPurpose
@@ -428,4 +429,14 @@ export async function ensureServerWireguardPeer() {
   }
 
   return serverPeer;
+}
+
+export async function initiateRouteReload() {
+  console.log("initiating route reload")
+  await fetch(`${reverseProxyURL}/__proxy__/reload`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
 }

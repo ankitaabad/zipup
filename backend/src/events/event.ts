@@ -2,14 +2,15 @@ import { fs } from "fs";
 import EventEmitter from "events";
 import { desc, eq } from "drizzle-orm";
 import { getLogger } from "@backend/utils/logger";
-import { generateId, getArtifactStorageLocation } from "@backend/utils/helper";
-import { updateRouteConfig } from "@backend/utils/routeConfig";
+import {
+  generateId,
+  getArtifactStorageLocation,
+  initiateRouteReload
+} from "@backend/utils/helper";
 import { db } from "@backend/db/dbClient";
 import {
   deployDynamicApp,
-  generateWireguardKeys,
-  rebuildAndRestartWireguard,
-  removeAllContainersOfAnApp
+  generateWireguardKeys, removeAllContainersOfAnApp
 } from "@backend/utils/docker_utils";
 import {
   appsTable,
@@ -20,9 +21,9 @@ import {
   WireguardPeerType
 } from "@backend/db/schema";
 import { mkdir, writeFile } from "fs/promises";
+import { DEPLOYMENT_STATUS } from "@common/index";
 
 export const eventBus = new EventEmitter();
-export const reverseProxyURL = "http://openresty:8080";
 export const zipupEvents = {
   "app_deployed": "app_deployed",
   "artifact_uploaded": "artifact_uploaded",
@@ -150,6 +151,19 @@ eventBus.on("deploy_latest_app", async (event: { app_id: string }) => {
       );
       return;
     }
+    const now = new Date().toISOString();
+
+    const deploymentId = generateId();
+    const result = await db.insert(deploymentsTable).values({
+      app_id: app.id,
+      artifact_id: latestDeployment.artifact_id,
+      status: DEPLOYMENT_STATUS.IN_PROGRESS,
+      id: deploymentId,
+      created_at: now,
+      updated_at: now,
+      version: artifact.version,
+      container_name: `zipup_${app.id}_${deploymentId.slice(-8)}`
+    });
     // trigger redeployment of the latest artifact
     eventBus.emit(zipupEvents.artifact_uploaded, {
       artifact_id: artifact.id,
@@ -158,7 +172,8 @@ eventBus.on("deploy_latest_app", async (event: { app_id: string }) => {
       version: artifact.version,
       internal_port: 3000,
       start_command: app.start_command,
-      app_name: app.name
+      app_name: app.name,
+      deployment_id: deploymentId
     });
   } catch (error) {}
 });
@@ -261,12 +276,7 @@ eventBus.on(
         // static deployment
         logger.debug("reloading the config");
         // await updateRouteConfig();
-        await fetch(`${reverseProxyURL}/__reload__`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          }
-        });
+        await initiateRouteReload();
         logger.debug("route config reloaded");
         await db
           .update(deploymentsTable)

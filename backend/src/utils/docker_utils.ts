@@ -29,14 +29,13 @@ import {
 import { eq } from "drizzle-orm";
 import { getLogger } from "./logger";
 import { updateRouteConfig } from "./routeConfig";
-import { PORT_FOR_USER_APPS } from "./constants";
+import { PORT_FOR_USER_APPS, reverseProxyURL } from "./constants";
 import { db } from "@backend/db/dbClient";
 import { mkdir, writeFile } from "fs/promises";
-import { buildWireguardConfig } from "./helper";
+import { buildWireguardConfig, initiateRouteReload } from "./helper";
 import { DEPLOYMENT_STATUS } from "@common/index";
 import { PassThrough } from "node:stream";
 var docker = new Docker({ socketPath: "/var/run/docker.sock" });
-export const reverseProxyURL = "http://openresty:8080";
 
 async function createDynamicApp(deploymentId: string) {
   const deployment = await db
@@ -221,12 +220,7 @@ export async function deployDynamicApp(event: {
     // Your app-specific logic to update config, reverse proxy, or route traffic
     // e.g., update openresty or nginx upstream to point to this container
     // await updateRouteConfig();
-    await fetch(`${reverseProxyURL}/__reload__`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      }
-    });
+    await initiateRouteReload();
     // update deployment status
     await db
       .update(deploymentsTable)

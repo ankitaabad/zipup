@@ -126,7 +126,7 @@ export const artifactsTable = table(
       .text()
       .notNull()
       .references(() => appsTable.id, { onDelete: "cascade" }),
-    version: t.text().notNull(),
+    version: t.integer().notNull(),
     status: t.text().$type<ARTIFACT_STATUS>().notNull(),
     path: t.text(),
     size: t.integer(),

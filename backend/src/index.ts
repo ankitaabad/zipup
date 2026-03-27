@@ -15,7 +15,6 @@ import {
 import { secureHeaders } from "hono/secure-headers";
 import { serveStatic } from "@hono/node-server/serve-static";
 import path from "path";
-
 import fs from "fs";
 import { internalRouter } from "./routes/internal";
 import { wireguardRouter } from "./routes/wireguard";

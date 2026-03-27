@@ -12,7 +12,7 @@ httpc:set_timeout(3000)
 local res, err = httpc:request_uri(ROUTES_API, {
     method = "GET",
     headers = {
-        ["X-Zipup-Internal"] = "1"
+        ["Zipup-Internal-Source"] = "openresty"
     }
 })
 

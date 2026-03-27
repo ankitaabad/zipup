@@ -13,7 +13,7 @@ import {
   envVarsTable,
   secretsTable
 } from "@backend/db/schema";
-import { generateId } from "@backend/utils/helper";
+import { generateId, initiateRouteReload } from "@backend/utils/helper";
 import { and, eq } from "drizzle-orm";
 import { getLogger } from "@backend/utils/logger";
 import { createSecretKey } from "@backend/utils/secret";
@@ -107,6 +107,9 @@ appsRouter.patch("/:app_id", async (c) => {
     const app_id = c.req.param("app_id");
     const { action, ...body } = AppPatchSchema.parse(await c.req.json());
     await db.update(appsTable).set(body).where(eq(appsTable.id, app_id));
+    if (action === "UpdateDomain") {
+      await initiateRouteReload();
+    }
     return c.json({
       message: "App updated successfully"
     });
@@ -184,6 +187,7 @@ appsRouter.post(
   "/:app_id/start",
   withErrorHandler(async (c) => {
     const app_id = c.req.param("app_id");
+
     eventBus.emit(zipupEvents.deploy_latest_app, { app_id });
     return c.json({
       message: "App starting in progress."

@@ -123,9 +123,6 @@ export const deployCommand = new Command("deploy")
               const shouldIgnore = picoMatches.some((isMatch) =>
                 isMatch(filePath)
               );
-              if (shouldIgnore) {
-                console.log(`Ignoring file: ${filePath}`);
-              }
 
               return !shouldIgnore;
             }
