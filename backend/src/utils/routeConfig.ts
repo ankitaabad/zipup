@@ -90,15 +90,7 @@ export const getRouteConfig = async () => {
   logger.debug(JSON.stringify(apps));
   // const ip = await publicIpv4();
   // logger.debug(`Public IP: ${ip}`);
-  const routes = [
-    {
-      "host": "*",
-      "path": "/",
-      "type": "dynamic",
-      "upstream": "http://zipup:8080",
-      "auth_required": false
-    }
-  ];
+  const routes = [];
   await Promise.all(
     apps.map(async (app) => {
       // get latest deployment of the app

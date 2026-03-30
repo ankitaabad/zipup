@@ -48,9 +48,10 @@ for i, route in ipairs(routes) do
 end
 
 if not matched_route then
-    ngx.log(ngx.WARN, "No route matched for host: ", host, " URI: ", uri)
-    ngx.status = 404
-    ngx.say("Route not found")
+    ngx.log(ngx.WARN, "No route matched, falling back to default zipup")
+
+    ngx.var.upstream = "http://zipup:8080"
+    ngx.exec("@dynamic_proxy")
     return
 end
 
