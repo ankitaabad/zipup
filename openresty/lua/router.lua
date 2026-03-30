@@ -36,7 +36,7 @@ local matched_route
 local max_path_len = 0
 for i, route in ipairs(routes) do
     ngx.log(ngx.INFO, "Checking route #", i, ": host=", route.host, " path=", route.path)
-    if route.host == host or route.host == "*" then
+    if route.host == host then
         if uri:sub(1, #route.path) == route.path then
             if #route.path > max_path_len then
                 matched_route = route

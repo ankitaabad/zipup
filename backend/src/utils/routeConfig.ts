@@ -11,13 +11,6 @@ export const updateRouteConfig = async () => {
   const apps = await db.select().from(appsTable);
   logger.debug(JSON.stringify(apps));
   const routes = [
-    {
-      "host": "*",
-      "path": "/",
-      "type": "dynamic",
-      "upstream": "http://zipup:8080",
-      "auth_required": false
-    }
   ];
   await Promise.all(
     apps.map(async (app) => {
