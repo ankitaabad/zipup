@@ -164,8 +164,8 @@ export async function deployDynamicApp(event: {
         "zipup.app_id": app_id,
         "zipup.deployment_id": deployment_id,
         "zipup.artifact_id": artifact_id,
-        "app_type": "user",
-        "app_name": app_name
+        "appType": "user",
+        "appName": app_name
       }
     });
     logger.debug("container created successfully.");
@@ -184,7 +184,6 @@ export async function deployDynamicApp(event: {
     // Poll container state
     while (elapsed < startupTimeoutMs) {
       const info = await container.inspect();
-      console.log(`Container ${containerName} info: ${JSON.stringify(info)}`);
       // Check if container exited or dead immediately
       if (info.State.Status === "exited" || info.State.Status === "dead") {
         throw new Error(
@@ -192,13 +191,13 @@ export async function deployDynamicApp(event: {
         );
       }
 
-      console.log(`Restart count: ${info.RestartCount}`);
+      logger.info(`Restart count: ${info.RestartCount}`);
       // Check for early restart (crash-loop)
       if (info.RestartCount > 0) {
         throw new Error(`Container ${containerName} restarted during startup`);
       }
       if (info.State.Running === true) {
-        console.log(`runningCount: ${runningCount}`);
+        logger.info(`runningCount: ${runningCount}`);
         runningCount++;
         if (runningCount > 2) {
           break;
@@ -210,7 +209,7 @@ export async function deployDynamicApp(event: {
       elapsed += pollIntervalMs;
     }
 
-    console.log(
+    logger.info(
       `Container ${containerName} is running after ${startupTimeoutMs / 1000}s`
     );
 
@@ -237,15 +236,15 @@ export async function deployDynamicApp(event: {
       filters: { label: [`zipup.app_id=${app_id}`] }
     });
     const existingContainerNames = existingContainers.map((c) => c.Names[0]);
-    console.log("Existing container names:", existingContainerNames);
-    console.log("NEw containe Name: ", `${containerName}`);
+    logger.info("Existing container names:", existingContainerNames);
+    logger.info("NEw containe Name: ", `${containerName}`);
     for (const c of existingContainers) {
       // skip the new container
       logger.debug(`container names: ${c.Names}`);
       if (c.Names.includes(`/${containerName}`)) continue;
 
       const oldContainer = docker.getContainer(c.Id);
-      console.log(`Stopping old container ${c.Names[0]}`);
+      logger.info(`Stopping old container ${c.Names[0]}`);
 
       try {
         await oldContainer.stop({ t: 5 }); // graceful stop
@@ -255,21 +254,21 @@ export async function deployDynamicApp(event: {
 
       try {
         await oldContainer.remove({ force: true });
-        console.log(`Removed old container ${c.Names[0]}`);
+        logger.info(`Removed old container ${c.Names[0]}`);
       } catch (err) {
-        console.warn(`Error removing container ${c.Names[0]}: ${err.message}`);
+        logger.warn(`Error removing container ${c.Names[0]}: ${err.message}`);
       }
     }
 
-    console.log("Old containers cleaned up, deployment complete.");
+    logger.info("Old containers cleaned up, deployment complete.");
   } catch (error) {
     console.error("Error deploying artifact:", error);
     try {
       // get container logs
       if (container) {
-        console.log("container exists");
+        logger.info("container exists");
       } else {
-        console.log("container does not exist");
+        logger.info("container does not exist");
       }
       let logs;
       if (container) {
@@ -285,7 +284,7 @@ export async function deployDynamicApp(event: {
         .where(eq(deploymentsTable.id, event.deployment_id));
       if (container) {
         try {
-          console.log("removing container.");
+          logger.info("removing container.");
           await container.stop();
           await container?.remove();
         } catch (error) {
@@ -324,16 +323,14 @@ async function getMergedContainerLogs(container) {
 export async function getDockerStats() {
   try {
     // Fetch all containers
+    const logger = getLogger();
     const containers = await docker.listContainers({ all: false });
-    console.log({ containers: JSON.stringify(containers) });
     // Prepare stats promises
     const statsPromises = containers.map(async (containerInfo) => {
       const container = docker.getContainer(containerInfo.Id);
-      console.log({ container: JSON.stringify(container) });
       // Fetch live stats (non-streaming)
       const statsStream = await container.stats({ stream: false });
       // statsStream.memory_stats, cpu_stats, networks, etc.
-      console.log({ statsStream: JSON.stringify(statsStream) });
       // Calculate CPU %
       const cpuDelta =
         statsStream.cpu_stats.cpu_usage.total_usage -
@@ -363,10 +360,9 @@ export async function getDockerStats() {
 
       // Labels to distinguish app type
       const labels = containerInfo.Labels || {};
-      console.log({ labels: JSON.stringify(labels) });
 
-      const appName = labels["app_name"] || containerInfo.Names[0];
-      const appType = labels["app_type"] || "user";
+      const appName = labels["appName"] || containerInfo.Names[0];
+      const appType = labels["appType"] || "user";
       const instance = labels["zipup.deployment_id"] || "1";
 
       return {
@@ -401,6 +397,7 @@ export const isAppRunningByAppId = async (appId: string) => {
   });
 };
 export const removeAllContainersOfAnApp = async (appId: string) => {
+  const logger = getLogger();
   const containers = await docker.listContainers({ all: true });
   const targetContainers = containers.filter((c) => {
     const labels = c.Labels || {};
@@ -414,7 +411,7 @@ export const removeAllContainersOfAnApp = async (appId: string) => {
         await container.stop({ t: 5 });
       }
       await container.remove({ force: true });
-      console.log(`Removed container ${c.Names[0]} for app ${appId}`);
+      logger.info(`Removed container ${c.Names[0]} for app ${appId}`);
     } catch (err) {
       console.warn(
         `Error stopping/removing container ${c.Names[0]} for app ${appId}: ${err.message}`
@@ -464,8 +461,8 @@ export async function execInWireguard(cmd: string[]) {
 const WG_DIR = "/config/wg_confs";
 const WG_CONFIG_PATH = "/config/wg_confs/wg0.conf";
 export async function rebuildAndRestartWireguard() {
+  const logger = getLogger();
   const config = await buildWireguardConfig();
-  console.log({ config });
   await mkdir(WG_DIR, { recursive: true });
   await writeFile(WG_CONFIG_PATH, config, "utf8");
 
@@ -477,7 +474,7 @@ export async function rebuildAndRestartWireguard() {
   // await execInWireguard(["wg", "syncconf", "wg0", WG_CONFIG_PATH]);
   // await execInWireguard(["wg-quick", "syncconf", "wg0", WG_CONFIG_PATH]);
 
-  console.log("WireGuard config reloaded");
+  logger.info("WireGuard config reloaded");
 }
 // export async function generateWireguardKeys() {
 //   const privateKey = await execInWireguard(["sh", "-c", "wg genkey"]);

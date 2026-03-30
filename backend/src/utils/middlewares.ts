@@ -1,6 +1,12 @@
 import { getCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
-import { AUD, CookieType, INTERNAL_SOURCE, ISSUER, TokenPurpose } from "./constants";
+import {
+  AUD,
+  CookieType,
+  INTERNAL_SOURCE,
+  ISSUER,
+  TokenPurpose
+} from "./constants";
 import { V4 } from "paseto";
 import { TokenPayload } from "./helper";
 import { errorHandler, Unauthorized } from "./errorHandler";
@@ -68,23 +74,25 @@ export const appKeyAuthMiddleware = createMiddleware(async (c, next) => {
     return errorHandler(c, error);
   }
 });
-export const internalRoutesAuthMiddleware = createMiddleware(async (c, next) => {
-  try {
-    const logger = getLogger();
-    const source = c.req.header("Zipup-Internal-Source");
-    logger.debug(`source: ${source}`);
-    if (source !== INTERNAL_SOURCE) {
-      throw new Unauthorized();
+export const internalRoutesAuthMiddleware = createMiddleware(
+  async (c, next) => {
+    try {
+      const logger = getLogger();
+      const source = c.req.header("Zipup-Internal-Source");
+      logger.debug(`source: ${source}`);
+      if (source !== INTERNAL_SOURCE) {
+        throw new Unauthorized();
+      }
+      await next();
+    } catch (error) {
+      return errorHandler(c, error);
     }
-    await next();
-  } catch (error) {
-    return errorHandler(c, error);
   }
-});
+);
 export const authMiddleware = createMiddleware(async (c, next) => {
   const { method, path } = c.req;
   const logger = getLogger();
-  logger.debug("Method and path", { method, path });
+  logger.debug(`Method ${method} and path ${path}`, { method, path });
 
   // 1️⃣ Login route → no auth
   if (path === loginPath) {

@@ -1,12 +1,7 @@
-import {
-  getAppWithLatestArtifact,
-  getAppWithLatestArtifact,
-  getArtifactWithApp
-} from "@backend/utils/dbQueries";
+import { getAppWithLatestArtifact } from "@backend/utils/dbQueries";
 import { decrypt, encrypt, generateApiKey } from "@backend/utils/secret";
-import { Context, Hono } from "hono";
+import { Hono } from "hono";
 import { db } from "@backend/db/dbClient";
-import { omit } from "radash";
 import {
   appsTable,
   appSchema,
@@ -17,7 +12,11 @@ import { generateId, initiateRouteReload } from "@backend/utils/helper";
 import { and, eq } from "drizzle-orm";
 import { getLogger } from "@backend/utils/logger";
 import { createSecretKey } from "@backend/utils/secret";
-import { errorHandler } from "@backend/utils/errorHandler";
+import {
+  BadRequest,
+  errorHandler,
+  MissingRequiredParams
+} from "@backend/utils/errorHandler";
 import {
   AppPatchSchema,
   AppStatus,
@@ -27,7 +26,7 @@ import {
 } from "@zipup/common";
 import { withErrorHandler } from "@backend/utils/middlewares";
 import { isAppRunningByAppId } from "@backend/utils/docker_utils";
-import { eventBus, zipupEvents } from "@backend/events/event";
+import { emitEvent } from "@backend/events/event";
 import { getEncryptionKey } from "@backend/utils/tokenKeys";
 
 export const appsRouter = new Hono();
@@ -128,7 +127,7 @@ appsRouter.delete(
       return c.json({ error: "Please stop the app before deleting." }, 400);
     }
 
-    eventBus.emit(zipupEvents.app_delete_initiated, { app_id });
+    emitEvent("app_delete_initiated", { app_id });
     return c.json({
       message: "App deletion in progress."
     });
@@ -138,13 +137,16 @@ appsRouter.post(
   "/:app_id/stop",
   withErrorHandler(async (c) => {
     const app_id = c.req.param("app_id");
+    if (!app_id) {
+      throw new BadRequest("app_id is required");
+    }
     // ensure that no running version before deleting the app
     const isAppRunning = await isAppRunningByAppId(app_id);
     if (!isAppRunning) {
       return c.json({ error: "App is not running." }, 400);
     }
 
-    eventBus.emit(zipupEvents.app_stop_initiated, { app_id });
+    emitEvent("app_stop_initiated", { app_id });
     return c.json({
       message: "App stopping in progress."
     });
@@ -161,7 +163,6 @@ appsRouter.get("/:app_id/status", async (c) => {
     });
   }
   const { app, artifact } = await getAppWithLatestArtifact(app_id);
-  console.log({ app, artifact });
   if (!app) {
     return c.json({ error: "App not found" }, 404);
   }
@@ -186,9 +187,8 @@ appsRouter.get("/:app_id/status", async (c) => {
 appsRouter.post(
   "/:app_id/start",
   withErrorHandler(async (c) => {
-    const app_id = c.req.param("app_id");
-
-    eventBus.emit(zipupEvents.deploy_latest_app, { app_id });
+    const app_id = c.req.param("app_id")!;
+    emitEvent("deploy_latest_app", { app_id });
     return c.json({
       message: "App starting in progress."
     });
@@ -247,7 +247,7 @@ appsRouter.get(
 appsRouter.post(
   "/:id/rotate-keys",
   withErrorHandler(async (c) => {
-    const id = c.req.param("id");
+    const id = c.req.param("id")!;
     const app = await db
       .select()
       .from(appsTable)
@@ -276,7 +276,7 @@ appsRouter.post(
 appsRouter.get(
   "/:app_id/env-vars",
   withErrorHandler(async (c) => {
-    const app_id = c.req.param("app_id");
+    const app_id = c.req.param("app_id")!;
 
     const envs = await db
       .select()
@@ -293,7 +293,7 @@ appsRouter.get(
 appsRouter.post(
   "/:appId/env-vars",
   withErrorHandler(async (c) => {
-    const appId = c.req.param("appId");
+    const appId = c.req.param("appId")!;
     const logger = getLogger();
 
     const body = CreateEnvVarSchema.parse(await c.req.json());
@@ -330,8 +330,8 @@ appsRouter.post(
 appsRouter.put(
   "/:appId/env-vars/:envId",
   withErrorHandler(async (c) => {
-    const appId = c.req.param("appId");
-    const envId = c.req.param("envId");
+    const appId = c.req.param("appId")!;
+    const envId = c.req.param("envId")!;
 
     const body = UpdateEnvVarSchema.parse(await c.req.json());
 
@@ -361,7 +361,9 @@ appsRouter.delete(
   withErrorHandler(async (c) => {
     const appId = c.req.param("appId");
     const envId = c.req.param("envId");
-
+    if (!appId || !envId) {
+      throw new MissingRequiredParams();
+    }
     const result = await db
       .delete(envVarsTable)
       .where(and(eq(envVarsTable.id, envId), eq(envVarsTable.app_id, appId)))
@@ -386,6 +388,9 @@ appsRouter.get(
   withErrorHandler(async (c) => {
     const app_id = c.req.param("app_id");
 
+    if (!app_id) {
+      throw new MissingRequiredParams();
+    }
     const secrets = await db
       .select()
       .from(secretsTable)
@@ -409,7 +414,9 @@ appsRouter.get(
   withErrorHandler(async (c) => {
     const app_id = c.req.param("app_id");
     const secret_id = c.req.param("secret_id");
-
+    if (!app_id || !secret_id) {
+      throw new MissingRequiredParams();
+    }
     const secret = await db
       .select()
       .from(secretsTable)
@@ -502,7 +509,9 @@ appsRouter.delete(
   withErrorHandler(async (c) => {
     const app_id = c.req.param("app_id");
     const secret_id = c.req.param("secret_id");
-
+    if (!app_id || !secret_id) {
+      throw new MissingRequiredParams();
+    }
     const result = await db
       .delete(secretsTable)
       .where(

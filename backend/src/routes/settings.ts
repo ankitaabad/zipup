@@ -65,7 +65,6 @@ settingsRouter.put(
   "/domain",
   withErrorHandler(async (c) => {
     const { domain } = DomainNameSchema.parse(await c.req.json());
-    console.log({ domain });
     const now = new Date().toISOString();
     await db
       .insert(settingsTable)

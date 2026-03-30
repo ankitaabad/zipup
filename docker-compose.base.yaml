@@ -12,8 +12,8 @@ services:
       - valkey_data:/data
     command: ["valkey-server", "--appendonly", "yes"]
     labels:
-      - app_type=system
-      - app_name=valkey
+      - appType=system
+      - appName=valkey
     logging:
       driver: none
 
@@ -35,10 +35,13 @@ services:
     depends_on:
       - zipup
     labels:
-      - app_type=system
-      - app_name=openresty
+      - appType=system
+      - appName=openresty
     logging:
-      driver: none
+      driver: json-file
+      options:
+        labels: "appName,appType"
+        
 
   zipup:
     working_dir: /app
@@ -50,30 +53,29 @@ services:
     restart: unless-stopped
     user: root
     volumes:
-      # - /app/node_modules
-      # - zipup_data:/data
       - ./wireguard/wg0.conf:/etc/wireguard/wg0.conf
 
       - static_artifacts:/static_artifacts
       - dynamic_artifacts:/dynamic_artifacts
       - secrets:/secrets
       - /var/run/docker.sock:/var/run/docker.sock
-    # command: sh -c "npm install -g pnpm && pnpm install && pnpm --filter backend run dev"
-    # environment:
-    #   - NODE_ENV=development
-    # ports:
-    #   - "3000:8080"
     labels:
-      - app_type=system
-      - app_name=zipup
+      - appType=system
+      - appName=zipup
     depends_on:
       - vector
       - wireguard
-
+    logging:
+      driver: json-file
+      options:
+        labels: "appName,appType"
+        
   postgres:
     image: postgres:16-alpine
     container_name: postgres
     restart: unless-stopped
+    logging:
+      driver: none
     networks:
       core_network: {}
       wireguard_network:
@@ -86,8 +88,8 @@ services:
       POSTGRES_PASSWORD: zipup
 
     labels:
-      - app_type=system
-      - app_name=postgres
+      - appType=system
+      - appName=postgres
 
   vector:
     image: timberio/vector:0.38.X-alpine
@@ -97,14 +99,16 @@ services:
       - type: bind
         source: /var/lib/docker
         target: /var/lib/docker
+    networks:
+      core_network: {}
     ports:
       - "8686:8686"
     depends_on:
       - victorialogs
     user: root
     labels:
-      - app_type=system
-      - app_name=vector
+      - appType=system
+      - appName=vector
 
   victorialogs:
     image: victoriametrics/victoria-logs:latest
@@ -116,8 +120,8 @@ services:
     volumes:
       - vldata:/vlogs
     labels:
-      - app_type=system
-      - app_name=victorialogs
+      - appType=system
+      - appName=victorialogs
     logging:
       driver: none
     networks:
@@ -148,8 +152,12 @@ services:
       wireguard_network:
         ipv4_address: 172.25.0.5
     labels:
-      - app_type=system
-      - app_name=wireguard
+      - appType=system
+      - appName=wireguard
+    logging:
+      driver: json-file
+      options:
+        labels: "appName,appType"
 volumes:
   vldata:
   zipup_data:

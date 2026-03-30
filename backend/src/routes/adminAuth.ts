@@ -34,7 +34,6 @@ adminAuthRouter.post(
   "/login",
   withErrorHandler(async (c) => {
     const protocol = c.header("x-forwarded-proto");
-    console.log({ protocol });
     const logger = getLogger();
 
     logger.debug("Login attempt");

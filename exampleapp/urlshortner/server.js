@@ -33,8 +33,6 @@ app.use(express.static(path.join(__dirname, "public")));
 // ---- create short url ----
 app.post("/api/shorten", (req, res) => {
   const { secret_one, env_one } = process.env;
-  console.log("secret_one:", secret_one);
-  console.log("env_one:", env_one);
   const { url } = req.body;
 
   if (!url || !url.startsWith("http")) {

@@ -4,12 +4,12 @@ import {
   WireguardPeerStatus,
   WireguardPeerType
 } from "@backend/db/schema";
-import { eventBus, zipupEvents } from "@backend/events/event";
+import { emitEvent } from "@backend/events/event";
 import { generateId, getServerAddress } from "@backend/utils/helper";
 import { getLogger } from "@backend/utils/logger";
 import { createAuthenticatedRouter } from "@backend/utils/middlewares";
 import { CreatePeerSchema } from "@zipup/common";
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 
 export const wireguardRouter = createAuthenticatedRouter();
 
@@ -45,7 +45,7 @@ wireguardRouter.post("/peers", async (c) => {
     updated_at: now
   });
   logger.debug("Created new Wireguard peer", { peerId, name });
-  eventBus.emit(zipupEvents.create_wireguard_peer, {
+  emitEvent("create_wireguard_peer", {
     id: peerId,
     type: WireguardPeerType.CLIENT,
     ip_index: availableIpIndex
@@ -119,7 +119,7 @@ wireguardRouter.delete("/peers/:id", async (c) => {
     return c.json({ error: "Peer not found" }, 404);
   }
   logger.debug("Deleted Wireguard peer", { peerId });
-  eventBus.emit(zipupEvents.update_wireguard_config);
+  emitEvent("update_wireguard_config", {});
   return c.json({ message: "Peer deleted" });
 });
 

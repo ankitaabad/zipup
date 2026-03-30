@@ -46,6 +46,7 @@ app.use(
 //     allowMethods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
 //     allowHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"]
 //   })
+
 // );
 
 app.use("/api/*", loggerMiddleware());

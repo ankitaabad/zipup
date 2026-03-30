@@ -17,6 +17,11 @@ export class BadRequest extends HttpError {
     super(400, "BAD_REQUEST", message);
   }
 }
+export class MissingRequiredParams extends HttpError {
+  constructor(message = "Missing Required Params") {
+    super(400, "BAD_REQUEST", message);
+  }
+}
 
 export class Unauthorized extends HttpError {
   constructor(message = "Unauthorized") {

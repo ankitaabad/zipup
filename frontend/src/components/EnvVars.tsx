@@ -51,7 +51,6 @@ export function EnvVarsTab({ appId }: { appId: string }) {
   const [deleteKey, setDeleteKey] = useState("");
 
   const saveNewVar = () => {
-    console.log({ newKey, newValue, newDescription });
     if (!newKey.trim()) return;
     create.mutate({
       key: newKey.trim(),

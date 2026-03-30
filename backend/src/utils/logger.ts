@@ -1,10 +1,9 @@
 import { AsyncLocalStorage } from "async_hooks";
 import SenseLogs from "senselogs";
-import { generateId } from "./helper";
+import { asyncLocalStorage, generateId } from "./helper";
 import type { MiddlewareHandler } from "hono";
 import { createMiddleware } from "hono/factory";
 
-const asyncLocalStorage = new AsyncLocalStorage<ContextType>();
 export const appLogger = new SenseLogs(
   { timestamp: true },
   { service: "zipup-service" }

@@ -15,11 +15,20 @@ transforms:
       if (.docker == null){
         abort
       }
-      _stream = .docker.attrs.app_name
-      . = parse_json!(strip_whitespace!(.docker.log))
-      ._stream = _stream
+      appName = .docker.attrs.appName
+      appType = .docker.attrs.appType
+      .parsed,err = parse_json(strip_whitespace!(.docker.log))
+      if err != null {
+        message = strip_whitespace!(.docker.log)
+        del(.)
+        .message = message
+      } else {
+        . = .parsed
+      }
+      ._stream = appName
+      .appName = appName
+      .appType = appType
       ._msg = .message
-
       del(.message)
 
 

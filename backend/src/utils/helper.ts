@@ -28,8 +28,10 @@ import {
 } from "@backend/db/schema";
 import { db } from "@backend/db/dbClient";
 import { eq } from "drizzle-orm";
-import { eventBus, zipupEvents } from "@backend/events/event";
-import { getLatestPasetoKeys, getPasetoKeys } from "./tokenKeys";
+import { emitEvent } from "@backend/events/event";
+import { getPasetoKeys } from "./tokenKeys";
+import { AsyncLocalStorage } from "async_hooks";
+import { getLogger } from "./logger";
 export const generateId = () => {
   return KSUID.randomSync().string;
 };
@@ -310,10 +312,11 @@ export const getArtifactStorageLocation = (
 };
 
 export const addAllTokensToCookie = async (c: Context, userId: string) => {
+  const logger = getLogger();
   const scheme = c.get("scheme");
   const secure =
     envVar.environment === Environment.development || scheme !== "http";
-  console.log(`setting cookie with scheme: ${scheme}`);
+  logger.info(`setting cookie with scheme: ${scheme}`);
   const [access_token, refresh_token, csrf_token] = await Promise.all([
     generateAccessToken(userId),
     generateRefreshToken(userId),
@@ -421,7 +424,7 @@ export async function ensureServerWireguardPeer() {
 
   // 2️⃣ Generate keys if missing
   if (!serverPeer.public_key || !serverPeer.private_key) {
-    eventBus.emit(zipupEvents.create_wireguard_peer, {
+    emitEvent("create_wireguard_peer", {
       id: serverPeer.id,
       type: WireguardPeerType.SERVER,
       ip_index: serverPeer.ip_index
@@ -432,7 +435,8 @@ export async function ensureServerWireguardPeer() {
 }
 
 export async function initiateRouteReload() {
-  console.log("initiating route reload")
+  const logger = getLogger();
+  logger.info("initiating route reload");
   await fetch(`${reverseProxyURL}/__proxy__/reload`, {
     method: "POST",
     headers: {
@@ -440,3 +444,4 @@ export async function initiateRouteReload() {
     }
   });
 }
+export const asyncLocalStorage = new AsyncLocalStorage<ContextType>();

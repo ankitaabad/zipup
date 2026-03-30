@@ -1,12 +1,11 @@
-import { Hono } from "hono";
+import { emitEvent } from "@backend/events/event";
 import { db } from "@backend/db/dbClient";
-import { artifactsTable, appsTable, deploymentsTable } from "../db/schema";
+import { artifactsTable, deploymentsTable } from "../db/schema";
 import { generateId } from "../utils/helper";
 import { eq, sql } from "drizzle-orm";
 import fs from "fs-extra";
 import path from "path";
 import * as tar from "tar";
-import { eventBus, zipupEvents } from "../events/event";
 import { getLogger } from "../utils/logger";
 import { getArtifactWithApp } from "../utils/dbQueries";
 import { BadRequest, BadSignature, errorHandler } from "../utils/errorHandler";
@@ -32,7 +31,6 @@ artifactsRouter.post("/", async (c) => {
   try {
     const logger = getLogger();
     logger.debug("creating artifact");
-    const { app_key } = await c.req.json();
 
     const app = c.get("app");
     if (!app.start_command) {
@@ -56,7 +54,7 @@ artifactsRouter.post("/", async (c) => {
         id: artifactId,
         app_id,
         version,
-        status: "uploading",
+        status: "UPLOADING",
         created_at: now,
         updated_at: now
       });
@@ -81,6 +79,7 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
   try {
     const logger = getLogger();
     const artifact_id = c.req.param("artifact_id");
+    
     // todo: can get app from context set by appKeyAuthMiddleware
     const bodyHashHeader = c.req.header("Zipup-Body-Hash");
     const signatureHeader = c.req.header("Zipup-Signature");
@@ -96,10 +95,7 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
     //   return c.json({ error: "Unauthorized" }, 401);
     // }
     const body = await c.req.parseBody();
-    console.log("Received body: ", body);
     const file = body["artifact"];
-    console.log("file" + file);
-    console.log("filetype " + typeof file);
 
     const arrayBuffer = await (file as File).arrayBuffer();
     const bodyHash = createBodyHash(Buffer.from(arrayBuffer));
@@ -138,7 +134,6 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
 
     // extract and cleanup
 
-    // console.log({ tempPath, finalDir });
     await tar.extract({ file: tempPath, cwd: finalDir });
 
     await fs.unlink(tempPath);
@@ -149,7 +144,7 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
       .set({ status: "SUCCESS", updated_at: new Date().toISOString() })
       .where(eq(artifactsTable.id, artifact_id))
       .run();
-    console.log("Artifact uploaded and extracted successfully");
+    logger.info("Artifact uploaded and extracted successfully");
     const now = new Date().toISOString();
 
     const deploymentId = generateId();
@@ -164,16 +159,15 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
       container_name: `zipup_${app.id}_${deploymentId.slice(-8)}`
     });
     //todo: use bullmq
-    const eventEmitted = eventBus.emit(zipupEvents.artifact_uploaded, {
+    emitEvent("artifact_uploaded", {
       artifact_id: artifact_id,
       app_id: app.id,
       type: app.type,
       version: artifact.version,
-      start_command: app.start_command,
+      start_command: app.start_command!,
       app_name: app.name,
       deployment_id: deploymentId
     });
-    logger.debug(`artifact uploaded event emitted: ${eventEmitted}`);
     return c.json({
       message: "Upload and extraction complete",
 
