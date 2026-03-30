@@ -4,6 +4,9 @@ local cjson = require "cjson.safe"
 local dict = ngx.shared.routes
 
 local host = ngx.var.host
+if host == "0.0.0.0" then
+    host = "localhost"
+end
 local uri = ngx.var.uri
 
 ngx.log(ngx.INFO, "==== Incoming request ====")
