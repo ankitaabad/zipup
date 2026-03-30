@@ -12,7 +12,7 @@ export const updateRouteConfig = async () => {
   logger.debug(JSON.stringify(apps));
   const routes = [
     {
-      "host": "localhost",
+      "host": "*",
       "path": "/",
       "type": "dynamic",
       "upstream": "http://zipup:8080",
@@ -88,9 +88,11 @@ export const getRouteConfig = async () => {
   logger.debug("get route config");
   const apps = await db.select().from(appsTable);
   logger.debug(JSON.stringify(apps));
+  // const ip = await publicIpv4();
+  // logger.debug(`Public IP: ${ip}`);
   const routes = [
     {
-      "host": "localhost",
+      "host": "*",
       "path": "/",
       "type": "dynamic",
       "upstream": "http://zipup:8080",
