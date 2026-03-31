@@ -41,6 +41,7 @@ adminAuthRouter.post(
       password
     );
     logger.debug("Password verification result", { isPasswordValid });
+
     if (!isPasswordValid) {
       return c.json({ error: "Invalid username or password" }, 401);
     }

@@ -84,6 +84,11 @@ jobs:
       - name: Run release script
         run: ./release.sh
 
+      - name: Generate env file
+        run: |
+          TAG=${{ steps.next.outputs.tag }}
+          echo "ZIPUP_VERSION=$TAG" > release/.env
+          
       - name: Package release
         run: |
           cd release

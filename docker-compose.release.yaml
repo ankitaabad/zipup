@@ -1,6 +1,6 @@
 services:
   zipup:
-    image: ghcr.io/ankitaabad/zipup:latest
+    image: ghcr.io/ankitaabad/zipup:${ZIPUP_VERSION:-latest}
     ports:
       - "127.0.0.1:3000:8080"
     volumes:
