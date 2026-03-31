@@ -1,22 +1,10 @@
-import { Hono } from "hono";
-import { omit } from "radash";
-import { appsTable, appSchema, platformAdminsTable } from "../db/schema";
+import { platformAdminsTable } from "../db/schema";
 import {
-  ACCESS_AUD,
   addAllTokensToCookie,
-  consumeRefreshJti,
-  generateAccessToken,
-  generateCSRFToken,
-  generateId,
-  generateRefreshToken,
-  hashPassword,
-  mustBeTrue,
-  REFRESH_AUD,
-  TokenPayload,
-  verifyAccessToken,
+  consumeRefreshJti, hashPassword,
+  mustBeTrue, verifyAccessToken,
   verifyPasswordHash,
-  verifyPasswordStrength,
-  verifyRefreshToken
+  verifyPasswordStrength
 } from "../utils/helper";
 import { eq } from "drizzle-orm";
 import { setCookie, getCookie } from "hono/cookie";

@@ -8,7 +8,7 @@ export const appLogger = new SenseLogs(
   { timestamp: true },
   { service: "zipup-service" }
 );
-appLogger.addFilter(["debug"]);
+appLogger.addFilter(["debug", "info", "warn", "error", "fatal"]);
 type ContextType = {
   logger: SenseLogs;
 };
