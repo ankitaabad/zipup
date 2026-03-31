@@ -88,6 +88,13 @@ Today:
   ☐ json logs working correctly.
   ☐ simple console logs working correctly.
   ☐ nginx logs working correctly.
+  ☐ vector container name incorrect.
+  ☐ install script working in new zipup container
+  ☐ if no route match then default to admin console.
+  ☐ longest prefix matching for routing.
+  ☐ @bug getting secure cookies in multipass
+  ☐ pin versions of images in docker compose.
+  ☐ wireguard not working in multipass.
   ✔ Ensure the events dont crash the app.
   ☐ how to go about creating the whitelist of domain and setting email for lua acme.
   ✔ Internal openresty apis should be on different port for calling from node js.

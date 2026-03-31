@@ -20,6 +20,7 @@ export const loggerMiddleware = (): MiddlewareHandler => {
     });
     c.header("Zipup-Request-ID", requestId);
     const scheme = c.req.header("X-Forwarded-Proto");
+    logger.debug(`Request scheme: ${scheme}`);
     c.set("scheme", scheme || "http");
     return asyncLocalStorage.run({ logger }, async () => {
       await next();

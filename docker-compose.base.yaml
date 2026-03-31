@@ -1,7 +1,7 @@
 name: zipup
 services:
   valkey:
-    image: valkey/valkey:7-alpine
+    image: valkey/valkey:8.1-alpine3.23
     container_name: valkey
     restart: unless-stopped
     networks:
@@ -71,7 +71,7 @@ services:
         labels: "appName,appType"
         
   postgres:
-    image: postgres:16-alpine
+    image: postgres:17-bookworm
     container_name: postgres
     restart: unless-stopped
     logging:
@@ -93,6 +93,7 @@ services:
 
   vector:
     image: timberio/vector:0.38.X-alpine
+    container_name: vector
     volumes:
       - ./vector.yaml:/etc/vector/vector.yaml:ro
       - /var/run/docker.sock:/var/run/docker.sock
@@ -111,7 +112,7 @@ services:
       - appName=vector
 
   victorialogs:
-    image: victoriametrics/victoria-logs:latest
+    image: victoriametrics/victoria-logs:v1.48.0
     container_name: victorialogs
     # ports:
     #   - "9428:9428"
@@ -130,7 +131,7 @@ services:
         ipv4_address: 172.25.0.4
 
   wireguard:
-    image: cmulk/wireguard-docker:alpine
+    image: ghcr.io/ankitaabad/zipup-wireguard:latest
     container_name: wireguard
     restart: unless-stopped
     cap_add:

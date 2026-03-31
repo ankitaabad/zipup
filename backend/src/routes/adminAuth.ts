@@ -33,7 +33,6 @@ export const adminAuthRouter = createAuthenticatedRouter();
 adminAuthRouter.post(
   "/login",
   withErrorHandler(async (c) => {
-    const protocol = c.header("x-forwarded-proto");
     const logger = getLogger();
 
     logger.debug("Login attempt");

@@ -314,8 +314,10 @@ export const getArtifactStorageLocation = (
 export const addAllTokensToCookie = async (c: Context, userId: string) => {
   const logger = getLogger();
   const scheme = c.get("scheme");
-  const secure =
-    envVar.environment === Environment.development || scheme !== "http";
+  const host = c.req.header("host");
+  logger.debug(`Host: ${host}, Scheme: ${scheme}`);
+  logger.info(`setting cookie with scheme: ${scheme}`);
+  const secure = scheme !== "http";
   logger.info(`setting cookie with scheme: ${scheme}`);
   const [access_token, refresh_token, csrf_token] = await Promise.all([
     generateAccessToken(userId),
