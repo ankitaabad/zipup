@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
+
 echo "🚀 Installing Zipup4..."
 
 REPO_OWNER="ankitaabad"
@@ -17,6 +18,7 @@ if command -v snap >/dev/null 2>&1 && snap list 2>/dev/null | grep -q '^docker '
   echo "🧹 Removing Snap-installed Docker to avoid conflicts..."
   sudo snap remove docker
 fi
+
 # Install docker if missing
 if ! command -v docker >/dev/null; then
   echo "🐳 Installing Docker..."
@@ -25,12 +27,16 @@ fi
 
 sudo systemctl enable docker
 sudo systemctl start docker
-if ! docker info >/dev/null 2>&1; then
+
+# Check docker daemon (use sudo to be safe)
+if ! sudo docker info >/dev/null 2>&1; then
   echo "❌ Docker daemon is not running or not accessible."
   exit 1
 fi
+
 echo "🐳 Docker version:"
 docker --version
+
 # Verify compose (fail fast if missing)
 if ! docker compose version >/dev/null 2>&1; then
   echo "❌ Docker Compose not found. Something went wrong with Docker install."
@@ -40,36 +46,22 @@ fi
 echo "✅ Docker Compose version:"
 docker compose version
 
-# Add user to docker group
+# Add user to docker group (for future runs)
 if ! groups "$USER" | grep -q '\bdocker\b'; then
-  if [[ "${ZIPUP_REEXEC:-}" != "1" ]]; then
-    echo "👤 Adding $USER to docker group..."
-    sudo usermod -aG docker "$USER"
-
-    echo "⚠️  Re-running script with new group..."
-
-    exec sg docker "ZIPUP_REEXEC=1 bash \"$0\" $@"
-  fi
+  echo "👤 Adding $USER to docker group..."
+  sudo usermod -aG docker "$USER"
+  echo "⚠️  Docker will work without sudo after next login."
 fi
 
-# Detect architecture for Zipup binary
+# Decide how to run docker NOW
+if docker info >/dev/null 2>&1; then
+  DOCKER_CMD="docker"
+else
+  echo "⚠️  Using sudo for Docker (group not active yet)"
+  DOCKER_CMD="sudo docker"
+fi
+
 echo "🧠 Detecting system architecture..."
-
-# ARCH=$(uname -m)
-
-# if [[ "$ARCH" == "x86_64" ]]; then
-#   APP_ARCH="x64"
-# elif [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
-#   APP_ARCH="arm64"
-# else
-#   echo "❌ Unsupported architecture: $ARCH"
-#   exit 1
-# fi
-
-# echo "📦 Detected architecture: $ARCH → using ${APP_ARCH} build"
-
-# # Fetch latest release
-# echo "🔎 Fetching latest release..."
 
 LATEST_TAG=$(curl -fsSL \
   "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest" \
@@ -91,7 +83,7 @@ echo "⬇️ Downloading release..."
 echo "🔗 $DOWNLOAD_URL"
 
 TMP_ARCHIVE=$(mktemp)
-curl -fL --retry 3 --retry-delay 2  "$DOWNLOAD_URL" -o "$TMP_ARCHIVE"
+curl -fL --retry 3 --retry-delay 2 "$DOWNLOAD_URL" -o "$TMP_ARCHIVE"
 
 echo "📂 Extracting files..."
 
@@ -108,7 +100,7 @@ cd "$INSTALL_DIR" || {
 
 echo "🐳 Starting zipup cloud..."
 
-docker compose \
+$DOCKER_CMD compose \
   -f docker-compose.base.yaml \
   -f docker-compose.release.yaml \
   up -d
