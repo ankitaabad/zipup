@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
+export DEBIAN_FRONTEND=noninteractive
 echo "🚀 Installing Zipup4..."
 
 REPO_OWNER="ankitaabad"
@@ -8,15 +8,15 @@ REPO_NAME="zipup"
 INSTALL_DIR="$HOME/zipup"
 
 echo "📦 Installing system dependencies..."
-sudo apt update -y
+echo "📦 Updating package lists..."
+sudo apt update -y >/dev/null
 sudo apt install -y curl tar jq ca-certificates
 
 # Remove snap docker if present
-if command -v snap >/dev/null && snap list | grep -q '^docker '; then
-  echo "🧹 Removing Snap Docker..."
+if command -v snap >/dev/null 2>&1 && snap list 2>/dev/null | grep -q '^docker '; then
+  echo "🧹 Removing Snap-installed Docker to avoid conflicts..."
   sudo snap remove docker
 fi
-
 # Install docker if missing
 if ! command -v docker >/dev/null; then
   echo "🐳 Installing Docker..."
@@ -25,29 +25,16 @@ fi
 
 sudo systemctl enable docker
 sudo systemctl start docker
-
-# Install compose plugin if missing
+if ! docker info >/dev/null 2>&1; then
+  echo "❌ Docker daemon is not running or not accessible."
+  exit 1
+fi
+echo "🐳 Docker version:"
+docker --version
+# Verify compose (fail fast if missing)
 if ! docker compose version >/dev/null 2>&1; then
-  echo "🔧 Installing Docker Compose plugin..."
-
-  ARCH=$(uname -m)
-
-  if [[ "$ARCH" == "x86_64" ]]; then
-      COMPOSE_ARCH="x86_64"
-  elif [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
-      COMPOSE_ARCH="aarch64"
-  else
-      echo "❌ Unsupported architecture: $ARCH"
-      exit 1
-  fi
-
-  sudo mkdir -p /usr/lib/docker/cli-plugins
-
-  sudo curl -SL \
-    "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-${COMPOSE_ARCH}" \
-    -o /usr/lib/docker/cli-plugins/docker-compose
-
-  sudo chmod +x /usr/lib/docker/cli-plugins/docker-compose
+  echo "❌ Docker Compose not found. Something went wrong with Docker install."
+  exit 1
 fi
 
 echo "✅ Docker Compose version:"
@@ -55,9 +42,14 @@ docker compose version
 
 # Add user to docker group
 if ! groups "$USER" | grep -q '\bdocker\b'; then
-  echo "👤 Adding $USER to docker group..."
-  sudo usermod -aG docker "$USER"
-  echo "⚠️  Please log out and back in to use Docker without sudo."
+  if [[ "${ZIPUP_REEXEC:-}" != "1" ]]; then
+    echo "👤 Adding $USER to docker group..."
+    sudo usermod -aG docker "$USER"
+
+    echo "⚠️  Re-running script with new group..."
+
+    exec sg docker "ZIPUP_REEXEC=1 bash \"$0\" $@"
+  fi
 fi
 
 # Detect architecture for Zipup binary
@@ -81,7 +73,10 @@ echo "🧠 Detecting system architecture..."
 
 LATEST_TAG=$(curl -fsSL \
   "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest" \
-  | jq -r '.tag_name')
+  | jq -r '.tag_name') || {
+    echo "❌ Failed to fetch latest release (network or GitHub rate limit)."
+    exit 1
+}
 
 if [[ -z "$LATEST_TAG" || "$LATEST_TAG" == "null" ]]; then
   echo "❌ Failed to fetch latest release."
@@ -96,18 +91,22 @@ echo "⬇️ Downloading release..."
 echo "🔗 $DOWNLOAD_URL"
 
 TMP_ARCHIVE=$(mktemp)
-curl -fL "$DOWNLOAD_URL" -o "$TMP_ARCHIVE"
+curl -fL --retry 3 --retry-delay 2  "$DOWNLOAD_URL" -o "$TMP_ARCHIVE"
 
 echo "📂 Extracting files..."
 
+rm -rf "$INSTALL_DIR"
 mkdir -p "$INSTALL_DIR"
 tar --no-same-owner -xzf "$TMP_ARCHIVE" -C "$INSTALL_DIR"
 
 rm "$TMP_ARCHIVE"
 
-cd "$INSTALL_DIR"
+cd "$INSTALL_DIR" || {
+  echo "❌ Failed to enter install directory."
+  exit 1
+}
 
-echo "🐳 Starting containers..."
+echo "🐳 Starting zipup cloud..."
 
 docker compose \
   -f docker-compose.base.yaml \
