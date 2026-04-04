@@ -24,7 +24,7 @@ import {
   artifactsTable,
   deploymentsTable,
   envVarsTable,
-  secretsTable
+  secretsTable,
 } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { getLogger } from "./logger";
@@ -44,7 +44,7 @@ async function createDynamicApp(deploymentId: string) {
     .leftJoin(appsTable, eq(deploymentsTable.app_id, appsTable.id))
     .leftJoin(
       artifactsTable,
-      eq(deploymentsTable.artifact_id, artifactsTable.id)
+      eq(deploymentsTable.artifact_id, artifactsTable.id),
     )
     .where(eq(deploymentsTable.id, deploymentId));
 }
@@ -66,7 +66,7 @@ export async function deployDynamicApp(event: {
       app_id,
       internal_port,
       start_command,
-      app_name
+      app_name,
     } = event;
     logger.debug(`start command ${start_command}`);
 
@@ -78,7 +78,7 @@ export async function deployDynamicApp(event: {
       db
         .select()
         .from(secretsTable)
-        .where(eq(secretsTable.app_id, event.app_id))
+        .where(eq(secretsTable.app_id, event.app_id)),
     ]);
     const envs: Record<string, string> = {};
     for (const env of env_vars) {
@@ -105,7 +105,7 @@ export async function deployDynamicApp(event: {
     });
     if (!isDataVolumeExists) {
       await docker.createVolume({
-        Name: dataVolumeName
+        Name: dataVolumeName,
       });
     }
     const containerName = `zipup_${app_id}_${deployment_id.slice(-8)}`;
@@ -121,20 +121,26 @@ export async function deployDynamicApp(event: {
 
       Env: [
         ...Object.entries(envs).map(([k, v]) => `${k}=${v}`),
-        `ZIPUP_PORT=${PORT_FOR_USER_APPS}`
+        `ZIPUP_PORT=${PORT_FOR_USER_APPS}`,
       ],
 
       ExposedPorts: {
-        [`${PORT_FOR_USER_APPS}/tcp`]: {}
+        [`${PORT_FOR_USER_APPS}/tcp`]: {},
       },
       NetworkingConfig: {
         EndpointsConfig: {
           zipup_core_network: {},
-          zipup_edge_network: {}
-        }
+          zipup_edge_network: {},
+        },
       },
       WorkingDir: `/app/${artifact_id}`,
       HostConfig: {
+        LogConfig: {
+          Type: "json-file",
+          Config: {
+            labels: "appName,appType",
+          },
+        },
         // PortBindings: {
         //   [`${internal_port}/tcp`]: [{ HostPort: port?.toString() }]
         // },
@@ -144,7 +150,7 @@ export async function deployDynamicApp(event: {
             // todo: any better approach instead of mounting whole volume
             Source: "zipup_dynamic_artifacts",
             Target: "/app",
-            ReadOnly: true
+            ReadOnly: true,
             // VolumeOptions: {
             //   Subpath: artifact_id
             // }
@@ -153,11 +159,11 @@ export async function deployDynamicApp(event: {
             Type: "volume",
             Source: dataVolumeName,
             Target: "/data",
-            ReadOnly: false
-          }
+            ReadOnly: false,
+          },
         ],
         // Binds: [`artifact_${artifact_id}:/app:ro`, `data_${app_id}:/data`],
-        RestartPolicy: { Name: "unless-stopped" }
+        RestartPolicy: { Name: "unless-stopped" },
       },
 
       Labels: {
@@ -165,8 +171,8 @@ export async function deployDynamicApp(event: {
         "zipup.deployment_id": deployment_id,
         "zipup.artifact_id": artifact_id,
         "appType": "user",
-        "appName": app_name
-      }
+        "appName": app_name,
+      },
     });
     logger.debug("container created successfully.");
     // if (!container) {
@@ -187,7 +193,7 @@ export async function deployDynamicApp(event: {
       // Check if container exited or dead immediately
       if (info.State.Status === "exited" || info.State.Status === "dead") {
         throw new Error(
-          `Container ${containerName} failed to start. ExitCode: ${info.State.ExitCode}`
+          `Container ${containerName} failed to start. ExitCode: ${info.State.ExitCode}`,
         );
       }
 
@@ -210,7 +216,7 @@ export async function deployDynamicApp(event: {
     }
 
     logger.info(
-      `Container ${containerName} is running after ${startupTimeoutMs / 1000}s`
+      `Container ${containerName} is running after ${startupTimeoutMs / 1000}s`,
     );
 
     // -----------------------------
@@ -225,7 +231,7 @@ export async function deployDynamicApp(event: {
       .update(deploymentsTable)
       .set({
         status: "SUCCESS",
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .where(eq(deploymentsTable.id, deployment_id));
     // ----------------------------------------
@@ -233,7 +239,7 @@ export async function deployDynamicApp(event: {
     // ----------------------------------------
     const existingContainers = await docker.listContainers({
       all: true,
-      filters: { label: [`zipup.app_id=${app_id}`] }
+      filters: { label: [`zipup.app_id=${app_id}`] },
     });
     const existingContainerNames = existingContainers.map((c) => c.Names[0]);
     logger.info("Existing container names:", existingContainerNames);
@@ -279,7 +285,7 @@ export async function deployDynamicApp(event: {
         .set({
           status: DEPLOYMENT_STATUS.FAILED,
           updated_at: Date.now().toString(),
-          failureLogs: logs || ""
+          failureLogs: logs || "",
         })
         .where(eq(deploymentsTable.id, event.deployment_id));
       if (container) {
@@ -301,7 +307,7 @@ async function getMergedContainerLogs(container) {
     stdout: true,
     stderr: true,
     follow: false,
-    timestamps: false
+    timestamps: false,
   });
 
   let offset = 0;
@@ -376,7 +382,7 @@ export async function getDockerStats() {
         memoryLimit,
         memoryPercent: parseFloat(memoryPercent.toFixed(2)),
         networkRx,
-        networkTx
+        networkTx,
       };
     });
 
@@ -414,7 +420,7 @@ export const removeAllContainersOfAnApp = async (appId: string) => {
       logger.info(`Removed container ${c.Names[0]} for app ${appId}`);
     } catch (err) {
       console.warn(
-        `Error stopping/removing container ${c.Names[0]} for app ${appId}: ${err.message}`
+        `Error stopping/removing container ${c.Names[0]} for app ${appId}: ${err.message}`,
       );
     }
   }
@@ -430,7 +436,7 @@ export async function execInWireguard(cmd: string[]) {
   const exec = await container.exec({
     Cmd: cmd,
     AttachStdout: true,
-    AttachStderr: true
+    AttachStderr: true,
   });
 
   const stream = await exec.start({});
@@ -441,11 +447,11 @@ export async function execInWireguard(cmd: string[]) {
   container.modem.demuxStream(
     stream,
     {
-      write: (chunk: Buffer) => stdout.push(chunk)
+      write: (chunk: Buffer) => stdout.push(chunk),
     },
     {
-      write: (chunk: Buffer) => stderr.push(chunk)
-    }
+      write: (chunk: Buffer) => stderr.push(chunk),
+    },
   );
 
   await new Promise((resolve, reject) => {
@@ -503,7 +509,7 @@ export function generateWireguardKeys(): WireguardKeys {
   // Extract 32 byte private key
   const rawPrivate = privateKey.export({
     type: "pkcs8",
-    format: "der"
+    format: "der",
   });
 
   const wgPrivate = rawPrivate.slice(-32).toString("base64");
@@ -511,7 +517,7 @@ export function generateWireguardKeys(): WireguardKeys {
   // Extract 32 byte public key
   const rawPublic = publicKey.export({
     type: "spki",
-    format: "der"
+    format: "der",
   });
 
   const wgPublic = rawPublic.slice(-32).toString("base64");
@@ -522,6 +528,6 @@ export function generateWireguardKeys(): WireguardKeys {
   return {
     privateKey: wgPrivate,
     publicKey: wgPublic,
-    presharedKey
+    presharedKey,
   };
 }

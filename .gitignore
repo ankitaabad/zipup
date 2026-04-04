@@ -38,3 +38,4 @@ artifact
 cli/package
 cli/dist
 cli/zipup.config.json
+exampleapp/urlshortner/zipup.config.json

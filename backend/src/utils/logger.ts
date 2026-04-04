@@ -32,7 +32,10 @@ export const loggerMiddleware = (): MiddlewareHandler => {
 export const getLogger = () => {
   const store = asyncLocalStorage.getStore();
   if (!store) {
-    throw new Error("Logger accessed outside request context");
+    return appLogger.child({
+      requestId: "system",
+      phase: "startup"
+    });
   }
   return store.logger;
 };

@@ -1,5 +1,6 @@
 // src/components/Loader.tsx
 import { Center, Stack, Text } from "@mantine/core";
+import classes from "../styles/loader.module.css";
 
 type LoaderProps = {
   label?: string;
@@ -15,7 +16,7 @@ export function CustomLoader({ label, fullPage = false }: LoaderProps) {
       }}
     >
       <Stack align="center"  gap="sm">
-        <div className="loader" />
+        <div className={classes.loader} />
         {label && (
           <Text size="sm" c="dimmed">
             {label}

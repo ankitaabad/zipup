@@ -32,9 +32,10 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // ---- create short url ----
 app.post("/api/shorten", (req, res) => {
+  console.log("Received request to shorten URL");
   const { secret_one, env_one } = process.env;
   const { url } = req.body;
-
+  console.log("Received URL:", url);
   if (!url || !url.startsWith("http")) {
     return res.status(400).json({ error: "Invalid URL" });
   }
@@ -52,6 +53,7 @@ app.post("/api/shorten", (req, res) => {
 
 // ---- redirect ----
 app.get("/:id", (req, res) => {
+  console.log("Received request to redirect ID:", req.params.id);
   const data = loadData();
   const target = data[req.params.id];
 

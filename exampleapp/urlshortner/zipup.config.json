@@ -1,7 +1,7 @@
 {
   "HOST": "http://localhost:8080",
-  "APP_KEY": "zipup_ak_WR9tt2MlIua0wN0JT9QZx3kENBWbDyfWgvGr8rhsrHw",
-  "SECRET_KEY": "zipup_sk_f9bec3c617b7ce574da133312d54d7778bbc1be933152a2e369365f0bd959619",
+  "APP_KEY": "zipup_ak_BLsnk-G_xR2TptEwJzjcC9paZe4nfJyYdxfw21BSv44",
+  "SECRET_KEY": "zipup_sk_6bdd8bde6ba5151191f9acb752d9a3f43103438042fe54724cf05938a49be659",
   "IGNORES": [
     "**/zipup.config.json"
   ]

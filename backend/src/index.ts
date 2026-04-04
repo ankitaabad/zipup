@@ -21,6 +21,7 @@ import { wireguardRouter } from "./routes/wireguard";
 import { ensureServerWireguardPeer } from "./utils/helper";
 import { getEncryptionKey, getLatestPasetoKeys } from "./utils/tokenKeys";
 import { deploymentRouter } from "./routes/deployment";
+import { Unauthorized } from "./utils/errorHandler";
 
 const frontendDir =
   process.env.FRONTEND_DIST_DIR ?? path.resolve(__dirname, "../frontend/dist");
@@ -50,6 +51,14 @@ app.use(
 // );
 
 app.use("/api/*", loggerMiddleware());
+app.use("*", async (c, next) => {
+  const secFetchSite = c.req.header("sec-fetch-site");
+  // 1. If browser gives strong signal → enforce it
+  if (secFetchSite && secFetchSite === "cross-site") {
+    throw new Unauthorized();
+  }
+  await next();
+});
 app.use("/api/__zipup_internal__/*", internalRoutesAuthMiddleware);
 app.route("/api/__zipup_internal__", internalRouter);
 app.use("/api/artifacts/*", appKeyAuthMiddleware);

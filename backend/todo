@@ -10,14 +10,10 @@ Features:
     ☐ we are able to make http calls to the outside world.
     ☐ cache headers handling.
   zipup:
-    ☐ helmet headers.
-    ☐ apply cors.
     ☐ 2fa implementation.
-    ✘ paseto secret keep in db only encrypted. 
     ☐ take additional tags from the user for an artifact that can be displayed with the version (can be used for parity with user's git tags.)
   openresty:
     ☐ Auth from lua side with paseto.
-    ☐ use a different port for lua side http api only accessible over the network.
   frontend:
     ☐ Create a static app.
     ☐ create a dynamic app.
@@ -32,15 +28,8 @@ Features:
   Backup and Restore:
     ☐ how to implement this?
 CI/CD:
-  ✔ init db to bake in image.
-  ✔ init server : create paseto keys
   ☐ init server : create secret key for encrypting secret keys
   ☐ get hetzner account
-  ✔ get a domain name for zipup
-  ✔ build frontend and serve from node js.
-  ✔ ghcr create zipup image
-  ✔ Release artifact 
-  ✔ Separate docker for dev and prod.
 Testing:
   ☐ e2e test cases before releasing artifacts.
 
@@ -69,39 +58,20 @@ Cleanup:
     ☐ delete the docker volumes
     
 Today:
-  ☐ @bug Routing not working in multipaas.
+  ☐ @bug Loader not working in multipass.
+  ✔ add option labels to the docker container while creating with dockerode
+  ✔ User created apps logs should be visible in victorologs.
+  ✔ add stale time for react query.
   ☐ cli working with env and command line args.
+  ☐ Path mapping works fine with domain.
+  ✔ @bug refresh token is not working.
   ☐ document cli readme
-  ✔ determine scheme (http vs https) at lua and forward to zipup
-  ✔ Use a different port for lua apis. so that only control plane can hit it.
-  ✔ reload route config on domain update (both app and global).
   ☐ lua api that we can hit whenever domain/ lets encrypt email/ global domain is updated.
   ☐ internal api that lua can hit when domain is updated.
-  ✔ Use header Zipup-Internal-Source = openresty for auth when calling internal auth apis.
-  ✔ store secret key in secrets volume.
-  ✔ use secret key to encrypt before storing in db.
-  ✔ use secret key to decrypt before using them (sending them and setting them as env).
-  ✔ @bug logs not appearing in victorologs.
   ☐ logs cleanup.
-  ☐ add option labels to the docker container while creating with dockerode
   ☐ Add more logs.
-  ✔ json logs working correctly.
-  ✔ simple console logs working correctly.
-  ☐ @bug copy app key and secret key is no longer working.
   ☐ check nginx logs working correctly.
-  ✔ vector container name incorrect.
-  ☐ install script working in new zipup container
-  ✔ if no route match then default to admin console.
-  ☐ longest prefix matching for routing.
-  ✔ @bug getting secure cookies in multipass
-  ✔ pin versions of images in docker compose.
-  ✔ wireguard not working in multipass.
-  ✔ Ensure the events dont crash the app.
   ☐ how to go about creating the whitelist of domain and setting email for lua acme.
-  ✔ Internal openresty apis should be on different port for calling from node js.
-  ✔ Delete Zipup-Internal-Source header from each request, only internal calls can be made with this header.
-  
-  Next:
   ☐ longest prefix matchin working for routing.
 
   ☐ Reserved env ZIPUP_PORT
@@ -110,6 +80,7 @@ Today:
   ☐ new version correctly working
   ☐ Better messages in UI like fields explanations, dashboard etc.
   ☐ Dashboard stats anything better can be shown?
+  ☐ Create account on hetzner.
 
 Roadmap:
   ☐ Layers @next
@@ -123,6 +94,40 @@ Error Handling:
     ☐ add checks that start command is present before deploying an app.
 
 Done:
+  ✔ helmet headers.
+  ✔ apply cors.
+  ✔ use a different port for lua side http api only accessible over the network.
+  ✘ @bug copy app key and secret key is no longer working. (navigator.clipboard works on https only)
+  ✔ install script working in new zipup container
+  ✔ @bug Routing not working in multipaas.
+  ✘ paseto secret keep in db only encrypted. 
+  ✔ init db to bake in image.
+  ✔ init server : create paseto keys
+  ✔ get a domain name for zipup
+  ✔ build frontend and serve from node js.
+  ✔ ghcr create zipup image
+  ✔ Release artifact 
+  ✔ Separate docker for dev and prod.
+  ✔ determine scheme (http vs https) at lua and forward to zipup
+  ✔ Use a different port for lua apis. so that only control plane can hit it.
+  ✔ reload route config on domain update (both app and global).
+  ✔ Use header Zipup-Internal-Source = openresty for auth when calling internal auth apis.
+  ✔ store secret key in secrets volume.
+  ✔ use secret key to encrypt before storing in db.
+  ✔ use secret key to decrypt before using them (sending them and setting them as env).
+  ✔ @bug logs not appearing in victorologs.
+  ✔ Logger accessed outside request context error in zipup.
+  ✔ json logs working correctly.
+  ✔ simple console logs working correctly.
+  ✔ vector container name incorrect.
+  ✔ docker install working from scratch in a new ubuntu machine.
+  ✔ if no route match then default to admin console.
+  ✔ @bug getting secure cookies in multipass
+  ✔ pin versions of images in docker compose.
+  ✔ wireguard not working in multipass.
+  ✔ Ensure the events dont crash the app.
+  ✔ Internal openresty apis should be on different port for calling from node js.
+  ✔ Delete Zipup-Internal-Source header from each request, only internal calls can be made with this header.
   ✔ improve the cli
   ✔ show error if start_command is not set.
   ✔ host, app key, secret not presnt. 

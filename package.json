@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "chokidar-cli": "^3.0.0",
     "vite-tsconfig-paths": "^6.1.1"
   },
   "scripts": {
@@ -10,7 +11,8 @@
     "build": "pnpm -F frontend build && pnpm -F backend build",
     "dockerBuild": "docker build -f Dockerfile.zipup .",
     "dockerup": "docker-compose -f docker-compose.base.yaml -f docker-compose.dev.yaml up",
-    "dockeruprelease": "docker-compose -f docker-compose.base.yaml -f docker-compose.release.yaml up"
+    "dockeruprelease": "docker-compose -f docker-compose.base.yaml -f docker-compose.release.yaml up",
+    "sync": "chokidar \".\" -i  \".git/**\" -i  \"**/dist/**\" -d 500 -c \"./scripts/sshsync.sh\""
   },
   "dependencies": {
     "zod": "^4.3.6"
