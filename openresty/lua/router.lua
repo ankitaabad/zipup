@@ -1,12 +1,12 @@
 -- router.lua
 local cjson = require "cjson.safe"
--- local http = require "resty.http"
 local dict = ngx.shared.routes
 
 local host = ngx.var.host
 if host == "0.0.0.0" then
     host = "localhost"
 end
+
 local uri = ngx.var.uri
 
 ngx.log(ngx.INFO, "==== Incoming request ====")
@@ -31,11 +31,13 @@ end
 
 ngx.log(ngx.INFO, "Loaded ", #routes, " routes from shared dict")
 
--- Find the longest matching path for the host
+-- Longest prefix match
 local matched_route
 local max_path_len = 0
+
 for i, route in ipairs(routes) do
     ngx.log(ngx.INFO, "Checking route #", i, ": host=", route.host, " path=", route.path)
+
     if route.host == host then
         if uri:sub(1, #route.path) == route.path then
             if #route.path > max_path_len then
@@ -47,19 +49,24 @@ for i, route in ipairs(routes) do
     end
 end
 
+-- fallback
 if not matched_route then
     ngx.log(ngx.WARN, "No route matched, falling back to default zipup")
 
+    local args = ngx.var.is_args .. (ngx.var.args or "")
     ngx.var.upstream = "http://zipup:8080"
+    ngx.var.upstream_uri = uri .. args
+
     ngx.exec("@dynamic_proxy")
     return
 end
 
 ngx.log(ngx.INFO, "Final matched route: host=", matched_route.host, " path=", matched_route.path, " type=", matched_route.type)
 
--- Optional authentication check
+-- auth
 if matched_route.auth_required then
     ngx.log(ngx.INFO, "Authentication required for this route")
+
     local token = ngx.var.http_authorization or ngx.var.cookie_access_token
     if not token then
         ngx.log(ngx.WARN, "Authentication token missing")
@@ -67,12 +74,28 @@ if matched_route.auth_required then
         ngx.say("Authentication required")
         return
     end
-    ngx.log(ngx.INFO, "Token found, proceed with verification (TODO)")
 end
 
--- Handle static routes
+-- 🔥 PATH STRIPPING
+local route_path = matched_route.path
+local suffix = uri:sub(#route_path + 1)
+
+if suffix == "" or suffix == nil then
+    suffix = "/"
+elseif suffix:sub(1, 1) ~= "/" then
+    suffix = "/" .. suffix
+end
+
+-- ✅ REQUIRED: preserve query string
+local args = ngx.var.is_args .. (ngx.var.args or "")
+local final_uri = suffix .. args
+
+ngx.log(ngx.INFO, "Computed upstream URI: '", final_uri, "'")
+
+-- STATIC
 if matched_route.type == "static" then
     local artifact_id = matched_route.artifact_id
+
     if not artifact_id or artifact_id == "" then
         ngx.log(ngx.WARN, "Static route has no artifact_id configured")
         ngx.status = 404
@@ -82,25 +105,18 @@ if matched_route.type == "static" then
 
     ngx.log(ngx.INFO, "Serving static artifact_id: ", artifact_id)
 
-    local route_path = matched_route.path
-    local suffix = uri:sub(#route_path + 1)
-    if suffix == "" or suffix == nil then
-        suffix = "/"
-    elseif suffix:sub(1,1) ~= "/" then
-        suffix = "/" .. suffix
-    end
-
-    ngx.log(ngx.INFO, "Computed suffix for request: '", suffix, "'")
-
-    -- Internal redirect to static location
-    local internal_path = "/static/" .. artifact_id .. suffix
+    local internal_path = "/static/" .. artifact_id .. final_uri
     ngx.log(ngx.INFO, "Internal redirect to: ", internal_path)
+
     ngx.exec(internal_path)
 
--- Handle dynamic routes
+-- DYNAMIC
 elseif matched_route.type == "dynamic" then
     ngx.log(ngx.INFO, "Serving dynamic route via upstream: ", matched_route.upstream)
+
     ngx.var.upstream = matched_route.upstream
+    ngx.var.upstream_uri = final_uri  -- ✅ includes query params
+
     ngx.exec("@dynamic_proxy")
 
 else

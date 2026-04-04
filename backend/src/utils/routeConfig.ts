@@ -10,8 +10,7 @@ export const updateRouteConfig = async () => {
   logger.debug("Updating route config");
   const apps = await db.select().from(appsTable);
   logger.debug(JSON.stringify(apps));
-  const routes = [
-  ];
+  const routes = [];
   await Promise.all(
     apps.map(async (app) => {
       // get latest deployment of the app
@@ -75,7 +74,14 @@ export const updateRouteConfig = async () => {
   logger.debug(`Routes config : ${JSON.stringify(routes)}`);
   // fs.writeFileSync("/config/routes.json", JSON.stringify({ routes }));
 };
+export const parseDomain = (domain: string) => {
+  const url = new URL(`http://${domain}`);
 
+  return {
+    host: url.hostname,
+    path: url.pathname || "/"
+  };
+};
 export const getRouteConfig = async () => {
   const logger = getLogger();
   logger.debug("get route config");
@@ -103,29 +109,28 @@ export const getRouteConfig = async () => {
         return;
       }
       const { artifact_id } = latestDeployment;
+      const { domain } = app;
+      if (!domain) {
+        logger.debug(`No domain found for app ${app.name}`);
+        return;
+      }
+      const { host, path } = parseDomain(domain);
       if (app.type === "STATIC") {
-        const { domain } = app;
-        if (!domain) {
-          logger.debug(`No domain found for app ${app.name}`);
-          return;
-        }
         if (!artifact_id) {
           logger.debug(`No artifact found for app ${app.name}`);
           return;
         }
         routes.push({
-          host: domain,
+          host,
+          path,
           // path: path_prefix || "/",
           type: "static",
           artifact_id,
           port: PORT_FOR_USER_APPS
         });
         logger.debug(JSON.stringify(routes));
-        // write to config/routes.json
-        fs.writeFileSync("/config/routes.json", JSON.stringify({ routes }));
       } else if (app.type === "DYNAMIC") {
         //todo: need to implement
-        const { domain, path_prefix } = app;
         const upstream = `http://${latestDeployment.container_name}:${PORT_FOR_USER_APPS}`;
         logger.debug(`upstream : ${upstream}`);
         if (!domain) {
@@ -133,8 +138,8 @@ export const getRouteConfig = async () => {
           return;
         }
         routes.push({
-          host: domain,
-          path: path_prefix || "/",
+          host,
+          path,
           "type": "dynamic",
           "upstream": upstream,
           "auth_required": false

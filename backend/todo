@@ -62,17 +62,28 @@ Today:
   ✔ add option labels to the docker container while creating with dockerode
   ✔ User created apps logs should be visible in victorologs.
   ✔ add stale time for react query.
-  ☐ cli working with env and command line args.
-  ☐ Path mapping works fine with domain.
+  ✔ longest prefix matchin working for routing.
   ✔ @bug refresh token is not working.
+  ✔ Path mapping works fine with domain.
+  ✔ centralize error handling.
+  ✔ sqlite unique constraint error handling.
+  ✔ add unique constraint on env key and secret key in the db and wiregurad name.
+  ☐ @high Create account on hetzner.
+  ☐ cli working with env and command line args.
+
   ☐ document cli readme
   ☐ lua api that we can hit whenever domain/ lets encrypt email/ global domain is updated.
   ☐ internal api that lua can hit when domain is updated.
   ☐ logs cleanup.
+  ☐ Remove withError wrapper as we are using onError handler in hono.
   ☐ Add more logs.
   ☐ check nginx logs working correctly.
   ☐ how to go about creating the whitelist of domain and setting email for lua acme.
-  ☐ longest prefix matchin working for routing.
+  ☐ should check if user is logged in when the focus comes back to the tab.
+  ☐ mantine forms should use common zod for validation.
+  ☐ Move app options under action.
+  ☐ Add Restart option for app.
+  ☐ @bug @low changing app name doesn't reflect in sidebar until refresh.
 
   ☐ Reserved env ZIPUP_PORT
   ☐ postgres accesss.
@@ -80,7 +91,6 @@ Today:
   ☐ new version correctly working
   ☐ Better messages in UI like fields explanations, dashboard etc.
   ☐ Dashboard stats anything better can be shown?
-  ☐ Create account on hetzner.
 
 Roadmap:
   ☐ Layers @next

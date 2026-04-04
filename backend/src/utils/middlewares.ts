@@ -51,6 +51,7 @@ async function verifyPasetoToken(
 
   return payload;
 }
+
 export const appKeyAuthMiddleware = createMiddleware(async (c, next) => {
   try {
     const logger = getLogger();

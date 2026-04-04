@@ -23,12 +23,6 @@ export const appsTable = table(
     type: t.text().$type<APP_TYPE>().notNull(),
     start_command: t.text(),
     domain: t.text(),
-    //todo: do we need a status here or do we infer from deployment and container status.
-    // path_prefix: t.text(),
-    // internal_port: t.integer(),
-    redis_prefix: t.text(),
-    redis_username: t.text(),
-    redis_password: t.text(),
     created_at: t.text().notNull(),
     updated_at: t.text().notNull(),
     private: t.integer({ mode: "boolean" }),
@@ -39,8 +33,7 @@ export const appsTable = table(
     unique("apps_app_key_idx").on(table.app_key),
     unique("apps_name_idx").on(table.name),
     unique("apps_secret_key_idx").on(table.secret_key),
-    unique("apps_redis_prefix_idx").on(table.redis_prefix)
-    //todo: an index on domain + path prefix
+    unique("apps_domain_idx").on(table.domain)
   ]
 );
 
@@ -174,7 +167,10 @@ export const secretsTable = table(
     created_at: t.text().notNull(),
     updated_at: t.text().notNull()
   },
-  (table) => [index("secrets_app_idx").on(table.app_id)]
+  (table) => [
+    index("secrets_app_idx").on(table.app_id),
+    unique("secrets_key_idx").on(table.key)
+  ]
 );
 export const envVarsTable = table(
   "env_vars",
@@ -190,7 +186,11 @@ export const envVarsTable = table(
     created_at: t.text().notNull(),
     updated_at: t.text().notNull()
   },
-  (table) => [index("env_vars_app_idx").on(table.app_id)]
+  (table) => [
+    index("env_vars_app_idx").on(table.app_id),
+    unique("env_vars_key_idx").on(table.key)
+  ]
+  // unique index on key
 );
 
 export const enum WireguardPeerStatus {
@@ -202,19 +202,26 @@ export const enum WireguardPeerType {
   SERVER = "SERVER"
 }
 // wireguard peer table
-export const wireguardPeersTable = table("wireguard_peers", {
-  id: t.text().primaryKey(),
-  name: t.text().notNull(),
-  description: t.text(),
-  type: t.text().$type<WireguardPeerType>().notNull(),
-  public_key: t.text(),
-  private_key: t.text(),
-  preshared_key: t.text(),
-  status: t.text().$type<WireguardPeerStatus>().notNull(),
-  ip_index: t.integer(),
-  created_at: t.text().notNull(),
-  updated_at: t.text().notNull()
-});
+export const wireguardPeersTable = table(
+  "wireguard_peers",
+  {
+    id: t.text().primaryKey(),
+    name: t.text().notNull(),
+    description: t.text(),
+    type: t.text().$type<WireguardPeerType>().notNull(),
+    public_key: t.text(),
+    private_key: t.text(),
+    preshared_key: t.text(),
+    status: t.text().$type<WireguardPeerStatus>().notNull(),
+    ip_index: t.integer(),
+    created_at: t.text().notNull(),
+    updated_at: t.text().notNull()
+  },
+  (table) => [
+    index("wireguard_peers_app_idx").on(table.id),
+    unique("wireguard_peers_name_idx").on(table.name)
+  ]
+);
 
 export const appSchema = createSelectSchema(appsTable);
 export const userSchema = createSelectSchema(platformAdminsTable);

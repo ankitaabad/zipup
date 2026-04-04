@@ -39,9 +39,51 @@ export const RedisPrefixSchema = z
   .min(2, "Redis prefix must be at least 2 characters long")
   .max(8, "Redis prefix must be at most 8 characters long");
 
-// todo: find suitable schema
+const domainSchema = z
+  .string()
+  .trim()
+  .min(1, "Domain is required")
+  .transform((val) => val.replace(/^https?:\/\//, ""))
+  .transform((val) => {
+    try {
+      const url = new URL(`http://${val}`);
+
+      const hostname = url.hostname;
+      let path = url.pathname || "/";
+
+      // normalize path
+      if (!path.startsWith("/")) {
+        path = "/" + path;
+      }
+
+      // remove trailing slash (except root)
+      if (path.length > 1 && path.endsWith("/")) {
+        path = path.slice(0, -1);
+      }
+
+      // 👇 do NOT include "/" for root in final string
+      return hostname + (path === "/" ? "" : path);
+    } catch {
+      return val; // let refine handle invalid
+    }
+  })
+  .refine((val) => {
+    try {
+      const url = new URL(`http://${val}`);
+
+      const hostname = url.hostname;
+
+      const isValidHost = hostname === "localhost" || hostname.includes(".");
+
+      const isCleanPath = !url.search && !url.hash;
+
+      return isValidHost && isCleanPath;
+    } catch {
+      return false;
+    }
+  }, "Invalid domain or domain/path");
 export const DomainNameSchema = z.object({
-  domain: z.string().min(3)
+  domain: domainSchema
 });
 
 export const AppNameSchema = z.string().min(3);
@@ -59,26 +101,26 @@ export const AppPatchActionSchema = z.enum([
 ]);
 export type AppPatchActionSchema = z.infer<typeof AppPatchActionSchema>;
 
+export const nonEmptyString = z
+  .string("Must be a string")
+  .trim()
+  .min(1, "Value cannot be empty");
 export const AppPatchSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal(AppPatchActionSchema.enum.UpdateDomain),
-    domain: z.string()
+    domain: domainSchema
   }),
 
   z.object({
     action: z.literal(AppPatchActionSchema.enum.UpdateStartCommand),
-    start_command: z.string()
+    start_command: nonEmptyString
   }),
 
   z.object({
     action: z.literal(AppPatchActionSchema.enum.UpdateAppName),
-    name: z.string()
-  }),
-
-  z.object({
-    action: z.literal(AppPatchActionSchema.enum.UpdateRedisPrefix),
-    redis_prefix: z.string()
+    name: nonEmptyString
   })
+
 ]);
 
 const EnvkeySchema = z.string();
@@ -108,7 +150,6 @@ export function signPayload(
   bodyHash: string,
   secretKey: string
 ) {
-
   const expires = Math.floor(Date.now() / 1000) + 300; // expires in 5 minutes
   const canonical = [method.toUpperCase(), path, expires, bodyHash].join("\n");
 

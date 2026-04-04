@@ -21,12 +21,16 @@ import { wireguardRouter } from "./routes/wireguard";
 import { ensureServerWireguardPeer } from "./utils/helper";
 import { getEncryptionKey, getLatestPasetoKeys } from "./utils/tokenKeys";
 import { deploymentRouter } from "./routes/deployment";
-import { Unauthorized } from "./utils/errorHandler";
+import { errorHandler, Unauthorized } from "./utils/errorHandler";
 
 const frontendDir =
   process.env.FRONTEND_DIST_DIR ?? path.resolve(__dirname, "../frontend/dist");
 
 const app = new Hono();
+app.onError((err, c) => {
+  return errorHandler(c, err);
+});
+
 app.use(secureHeaders());
 app.use(
   "/assets/*",

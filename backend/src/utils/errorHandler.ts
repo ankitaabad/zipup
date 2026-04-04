@@ -70,18 +70,17 @@ export function errorHandler(c: Context, error: unknown) {
       400
     );
   }
-  // 2. ArkType validation errors
-  // if (error instanceof TraversalError) {
-  //   return c.json(
-  //     {
-  //       error: {
-  //         code: "BAD_REQUEST",
-  //         message: "Invalid request payload"
-  //       }
-  //     },
-  //     400
-  //   );
-  // }
+  if (error?.cause?.code === "SQLITE_CONSTRAINT_UNIQUE") {
+    return c.json(
+      {
+        error: {
+          code: "BAD_REQUEST",
+          message: "Resource Already Exists. "
+        }
+      },
+      400
+    );
+  }
 
   return c.json(
     {
