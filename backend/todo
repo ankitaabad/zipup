@@ -68,9 +68,9 @@ Today:
   ✔ centralize error handling.
   ✔ sqlite unique constraint error handling.
   ✔ add unique constraint on env key and secret key in the db and wiregurad name.
+  ✔ if the stats polling fails then stop polling
   ☐ @high Create account on hetzner.
   ☐ cli working with env and command line args.
-
   ☐ document cli readme
   ☐ lua api that we can hit whenever domain/ lets encrypt email/ global domain is updated.
   ☐ internal api that lua can hit when domain is updated.

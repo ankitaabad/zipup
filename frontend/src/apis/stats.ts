@@ -23,7 +23,12 @@ export function useAppStats(enabled: boolean = true) {
       const res = await api.get<{ data: AppStat[] }>("/stats");
       return res.data.data;
     },
-    refetchInterval: enabled ? 3000 : false, // poll every 3s if enabled
-    staleTime: 2000,
+    refetchInterval: (query) => {
+      if(query.state.error){
+        return false
+      }
+      return 3000
+    },
+    staleTime: 4000
   });
 }
