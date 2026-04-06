@@ -15,6 +15,10 @@ Zipup-Internal-Source: yesboss
 
 GET {{server}}/api/__zipup_internal__/routes
 Zipup-Internal-Source: openresty
+
+### Get domain whitelist
+GET {{server}}/api/__zipup_internal__/domain-whitelist
+Zipup-Internal-Source: openresty
 ### create dynamic app
 post {{server}}/apps
 Content-Type: application/json

@@ -59,31 +59,24 @@ Cleanup:
     
 Today:
   ☐ @bug Loader not working in multipass.
-  ✔ add option labels to the docker container while creating with dockerode
-  ✔ User created apps logs should be visible in victorologs.
-  ✔ add stale time for react query.
-  ✔ longest prefix matchin working for routing.
-  ✔ @bug refresh token is not working.
-  ✔ Path mapping works fine with domain.
-  ✔ centralize error handling.
-  ✔ sqlite unique constraint error handling.
-  ✔ add unique constraint on env key and secret key in the db and wiregurad name.
-  ✔ if the stats polling fails then stop polling
-  ☐ @high Create account on hetzner.
+  ✔ @high Create account on hetzner.
   ☐ cli working with env and command line args.
+
   ☐ document cli readme
   ☐ lua api that we can hit whenever domain/ lets encrypt email/ global domain is updated.
-  ☐ internal api that lua can hit when domain is updated.
+  ☐ @high An api to get whitelist of domains.
   ☐ logs cleanup.
+  ☐ seamless sync your local changes to hetzner server and testing there.
   ☐ Remove withError wrapper as we are using onError handler in hono.
   ☐ Add more logs.
   ☐ check nginx logs working correctly.
   ☐ how to go about creating the whitelist of domain and setting email for lua acme.
-  ☐ should check if user is logged in when the focus comes back to the tab.
+  ☐ should check if user is logged in when the focus comes back to the tab.(https://mantine.dev/hooks/use-document-visibility/)
   ☐ mantine forms should use common zod for validation.
   ☐ Move app options under action.
   ☐ Add Restart option for app.
   ☐ @bug @low changing app name doesn't reflect in sidebar until refresh.
+  ☐ use #F0E9E9 and #4B8DF7 as colors in dark theme.
 
   ☐ Reserved env ZIPUP_PORT
   ☐ postgres accesss.
@@ -104,6 +97,16 @@ Error Handling:
     ☐ add checks that start command is present before deploying an app.
 
 Done:
+  ✔ add option labels to the docker container while creating with dockerode
+  ✔ User created apps logs should be visible in victorologs.
+  ✔ add stale time for react query.
+  ✔ longest prefix matchin working for routing.
+  ✔ @bug refresh token is not working.
+  ✔ Path mapping works fine with domain.
+  ✔ centralize error handling.
+  ✔ sqlite unique constraint error handling.
+  ✔ add unique constraint on env key and secret key in the db and wiregurad name.
+  ✔ if the stats polling fails then stop polling
   ✔ helmet headers.
   ✔ apply cors.
   ✔ use a different port for lua side http api only accessible over the network.

@@ -1,8 +1,11 @@
-import { INTERNAL_SOURCE } from "@backend/utils/constants";
-import { errorHandler, Unauthorized } from "@backend/utils/errorHandler";
+import { settingsTable } from "./../db/schema";
+import { appsTable } from "@backend/db/schema";
+import { db } from "@backend/db/dbClient";
+import { errorHandler } from "@backend/utils/errorHandler";
 import { getLogger } from "@backend/utils/logger";
-import { getRouteConfig } from "@backend/utils/routeConfig";
+import { getRouteConfig, parseDomain } from "@backend/utils/routeConfig";
 import { Hono } from "hono";
+import { eq } from "drizzle-orm";
 
 export const internalRouter = new Hono();
 
@@ -20,4 +23,32 @@ internalRouter.get("/routes", async (c) => {
   } catch (error) {
     return errorHandler(c, error);
   }
+});
+
+internalRouter.get("/domain-whitelist", async (c) => {
+  const logger = getLogger();
+  logger.debug("get domain whitelist");
+  const [apps, adminConsoleDomain] = await Promise.all([
+    await db.select().from(appsTable).all(),
+    db.select().from(settingsTable).where(eq(settingsTable.key, "domain")).get()
+  ]);
+  logger.debug(`apps: ${JSON.stringify(apps)}`);
+
+  const domains = apps
+    .map((app) => app.domain)
+    .filter((domain): domain is string => !!domain);
+  if (adminConsoleDomain?.value) {
+    domains.push(adminConsoleDomain.value);
+  }
+  const whitelistedDomains: string[] = [];
+  domains.forEach((domain) => {
+    try {
+      const { host } = parseDomain(domain);
+      whitelistedDomains.push(host);
+    } catch (error) {
+      logger.error(`Error parsing domain: ${domain}`);
+    }
+  });
+  logger.debug(`parsed domains: ${JSON.stringify(whitelistedDomains)}`);
+  return c.json({ domains: whitelistedDomains });
 });
