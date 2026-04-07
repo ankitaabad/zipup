@@ -7,7 +7,9 @@ echo "🚀 Installing Zipup4..."
 REPO_OWNER="ankitaabad"
 REPO_NAME="zipup"
 INSTALL_DIR="$HOME/zipup"
-
+echo "📂 Installation directory: $INSTALL_DIR"
+echo "cleaning up old install if exists..."
+rm -rf "$INSTALL_DIR"
 CERT_DIR="$INSTALL_DIR/certs"
 
 ACCOUNT_KEY="$CERT_DIR/account.key"
@@ -131,7 +133,7 @@ curl -fL --retry 3 --retry-delay 2 "$DOWNLOAD_URL" -o "$TMP_ARCHIVE"
 
 echo "📂 Extracting files..."
 
-rm -rf "$INSTALL_DIR"
+
 mkdir -p "$INSTALL_DIR"
 tar --no-same-owner -xzf "$TMP_ARCHIVE" -C "$INSTALL_DIR"
 
