@@ -149,8 +149,8 @@ echo "🐳 Starting zipup cloud..."
 $DOCKER_CMD compose \
   -f docker-compose.base.yaml \
   -f docker-compose.release.yaml \
-  up -d
-
+  up -d \
+  --build
 echo ""
 echo "✅ Zipup installed successfully!"
 echo ""
