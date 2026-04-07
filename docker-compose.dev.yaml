@@ -2,7 +2,11 @@ services:
   valkey:
     ports:
       - "6379:6379"
-  
+  openresty:
+    ports:
+      - "8080:8080"
+    environment:
+      - ENV=development
   zipup:
     image: node:24-bookworm-slim
     ports:

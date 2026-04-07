@@ -59,31 +59,28 @@ Cleanup:
     
 Today:
   ☐ @bug Loader not working in multipass.
-  ✔ @high Create account on hetzner.
   ☐ cli working with env and command line args.
-
+  ☐ Move app options under action.
   ☐ document cli readme
-  ☐ lua api that we can hit whenever domain/ lets encrypt email/ global domain is updated.
-  ☐ @high An api to get whitelist of domains.
+  ☐ Add Restart option for app.
+  ☐ Remove setting up email for lets encrypt.
   ☐ logs cleanup.
   ☐ seamless sync your local changes to hetzner server and testing there.
   ☐ Remove withError wrapper as we are using onError handler in hono.
   ☐ Add more logs.
-  ☐ check nginx logs working correctly.
   ☐ how to go about creating the whitelist of domain and setting email for lua acme.
   ☐ should check if user is logged in when the focus comes back to the tab.(https://mantine.dev/hooks/use-document-visibility/)
   ☐ mantine forms should use common zod for validation.
-  ☐ Move app options under action.
-  ☐ Add Restart option for app.
   ☐ @bug @low changing app name doesn't reflect in sidebar until refresh.
   ☐ use #F0E9E9 and #4B8DF7 as colors in dark theme.
-
   ☐ Reserved env ZIPUP_PORT
   ☐ postgres accesss.
   ☐ redis access
   ☐ new version correctly working
+  ☐ Non existing domain gives internal server error, should give a better message. `server: _, request: "GET / HTTP/1.1", host: "fr.localhost:8080" zipup         | Error: ENOENT: no such file or directory, open '/app/backend/frontend/dist/index.html'`
   ☐ Better messages in UI like fields explanations, dashboard etc.
   ☐ Dashboard stats anything better can be shown?
+  ☐ @perf currently the routes is json decoded on each requset, we need to optmize it.
 
 Roadmap:
   ☐ Layers @next
@@ -97,6 +94,10 @@ Error Handling:
     ☐ add checks that start command is present before deploying an app.
 
 Done:
+  ✔ @high Create account on hetzner.
+  ✔ lua api that we can hit whenever domain/ lets encrypt global domain is updated.
+  ✔ @high An api to get whitelist of domains.
+  ✔ check nginx logs working correctly.
   ✔ add option labels to the docker container while creating with dockerode
   ✔ User created apps logs should be visible in victorologs.
   ✔ add stale time for react query.

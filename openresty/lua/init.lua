@@ -4,7 +4,8 @@ local lock  = require "resty.lock"
 
 local api   = require "internal_routes"
 
-local dict = ngx.shared.routes
+local routes_dict = ngx.shared.routes
+local whitelist_domains_dict = ngx.shared.whitelist_domains
 
 local LOCK_KEY = "routes_init_lock"
 local RETRY_IN = 3  -- seconds
@@ -45,7 +46,7 @@ local function fetch_and_store(premature)
     end
 
     -- ✅ store routes
-    local ok1, err1 = dict:set("routes", cjson.encode(routes))
+    local ok1, err1 = routes_dict:set("routes", cjson.encode(routes))
     if not ok1 then
         ngx.log(ngx.ERR, "[init] failed to store routes: ", err1)
         l:unlock()
@@ -54,7 +55,7 @@ local function fetch_and_store(premature)
     end
 
     -- ✅ store domains
-    local ok2, err2 = dict:set("domains", cjson.encode(domains))
+    local ok2, err2 = whitelist_domains_dict:set("domains", cjson.encode(domains))
     if not ok2 then
         ngx.log(ngx.ERR, "[init] failed to store domains: ", err2)
         l:unlock()

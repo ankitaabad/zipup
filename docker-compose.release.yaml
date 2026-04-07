@@ -1,4 +1,11 @@
 services:
+
+  openresty:
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - ENV=production     
   zipup:
     image: ghcr.io/ankitaabad/zipup:${ZIPUP_VERSION:-latest}
     ports:

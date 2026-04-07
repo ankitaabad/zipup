@@ -39,3 +39,4 @@ cli/package
 cli/dist
 cli/zipup.config.json
 exampleapp/urlshortner/zipup.config.json
+**/zipup.config.json
