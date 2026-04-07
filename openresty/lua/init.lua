@@ -1,7 +1,7 @@
 -- init.lua
 local cjson = require "cjson.safe"
 local lock  = require "resty.lock"
-
+require("resty.acme.autossl").init_worker()
 local api   = require "internal_routes"
 
 local routes_dict = ngx.shared.routes

@@ -1,5 +1,6 @@
 -- router.lua
 local cjson = require "cjson.safe"
+local utils = require "internal_utils"
 local dict = ngx.shared.routes
 
 local host = ngx.var.host
@@ -11,6 +12,25 @@ local uri = ngx.var.uri
 
 ngx.log(ngx.INFO, "==== Incoming request ====")
 ngx.log(ngx.INFO, "Host: ", host, " | URI: ", uri)
+
+-- 🔒 HTTPS enforcement (SAFE: no breaking changes)
+do
+    local normalized_host = utils.normalize_host(host)
+
+    -- skip in dev
+    if not utils.is_dev() then
+        -- skip ACME challenge
+        if not uri:find("^/.well%-known") then
+            -- only enforce for domains (not IPs)
+            if ngx.var.scheme == "http" and not utils.is_ip(normalized_host) then
+                local host_with_port = ngx.var.http_host or host
+                local redirect_url = "https://" .. host_with_port .. ngx.var.request_uri
+                ngx.log(ngx.INFO, "Redirecting to HTTPS: ", redirect_url)
+                return ngx.redirect(redirect_url, 301)
+            end
+        end
+    end
+end
 
 -- Fetch routes from shared dict
 local routes_json = dict:get("routes")

@@ -1,4 +1,4 @@
--- helpers.lua
+-- internal_utils.lua
 local _M = {}
 local cjson = require "cjson.safe"
 -- Normalize host (lowercase + strip port)

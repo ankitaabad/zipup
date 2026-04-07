@@ -25,6 +25,7 @@ services:
     volumes:
       - ./openresty/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
       - ./openresty/lua:/lua:ro
+      - ./certs:/etc/openresty:ro
       # - ./config:/config:ro
       - static_artifacts:/static_artifacts
     networks:
