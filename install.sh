@@ -8,7 +8,7 @@ REPO_OWNER="ankitaabad"
 REPO_NAME="zipup"
 INSTALL_DIR="$HOME/zipup"
 
-CERT_DIR="./certs"
+CERT_DIR="$INSTALL_DIR/certs"
 
 ACCOUNT_KEY="$CERT_DIR/account.key"
 DEFAULT_KEY="$CERT_DIR/default.key"
