@@ -48,7 +48,18 @@ async function createDynamicApp(deploymentId: string) {
     )
     .where(eq(deploymentsTable.id, deploymentId));
 }
-
+async function ensureImage(image: string) {
+  try {
+    await docker.getImage(image).inspect()
+  } catch {
+    await new Promise((resolve, reject) => {
+      docker.pull(image, (err, stream) => {
+        if (err) return reject(err)
+        docker.modem.followProgress(stream, resolve)
+      })
+    })
+  }
+}
 export async function deployDynamicApp(event: {
   deployment_id: string;
   artifact_id: string;
@@ -58,8 +69,10 @@ export async function deployDynamicApp(event: {
   app_name: string;
 }) {
   let container: Docker.Container;
+  const logger = getLogger();
   try {
-    const logger = getLogger();
+    await ensureImage("node:24-bookworm-slim")
+
     const {
       deployment_id,
       artifact_id,
