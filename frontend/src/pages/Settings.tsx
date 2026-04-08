@@ -98,14 +98,14 @@ export function Settings() {
               <Divider />
 
               {/* ---------------- Email ---------------- */}
-              <ConfigurableSettingRow
+              {/* <ConfigurableSettingRow
                 label="Let’s Encrypt Email"
                 value={email}
                 description="Used for certificate expiration notices and security alerts."
                 onClick={() => setEditTarget("email")}
               />
 
-              <Divider />
+              <Divider /> */}
 
               {/* ---------------- Domain ---------------- */}
               <ConfigurableSettingRow

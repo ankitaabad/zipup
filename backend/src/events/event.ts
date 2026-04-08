@@ -1,5 +1,7 @@
+import axios from "axios";
 import { fs } from "fs";
 import EventEmitter from "events";
+import https from "https";
 import { desc, eq } from "drizzle-orm";
 import { appLogger, getLogger } from "@backend/utils/logger";
 import {
@@ -24,6 +26,7 @@ import {
 } from "@backend/db/schema";
 import { mkdir, writeFile } from "fs/promises";
 import { DEPLOYMENT_STATUS } from "@common/index";
+import { envVar } from "@backend/utils/constants";
 
 const eventBus = new EventEmitter();
 // export const zipupEvents = {
@@ -72,6 +75,9 @@ export type EventMap = {
     deployment_id: string;
     status: string; // or DEPLOYMENT_STATUS if you want tighter typing
   };
+  "domain_updated": {
+    domain: string;
+  };
 };
 
 export type AppEvent<K extends keyof EventMap> = {
@@ -116,6 +122,39 @@ export const onEvent = <K extends keyof EventMap>(
     });
   });
 };
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: false, // important during cert bootstrap
+  timeout: 5000
+});
+onEvent("domain_updated", async (event) => {
+  const logger = getLogger();
+  const { domain } = event;
+  const url = `https://${domain}`;
+  logger.info(`Prewarming SSL for domain: ${domain} , url: ${url}`);
+
+  let attempts = 0;
+  const maxAttempts = 3;
+  if (envVar.environment === "development") {
+    logger.info("Skipping SSL prewarm in development mode");
+    return;
+  }
+  while (attempts < maxAttempts) {
+    try {
+      await axios.get(url, {
+        timeout: 5000,
+        httpsAgent
+      });
+      console.log(`✅ SSL ready for ${domain}`);
+      return;
+    } catch (err) {
+      attempts++;
+      console.log(`⏳ SSL not ready (${attempts}) for ${domain}`);
+      await new Promise((r) => setTimeout(r, 2000 * attempts)); // backoff
+    }
+  }
+
+  console.error(`❌ SSL prewarm failed for ${domain}`);
+});
 onEvent("app_delete_initiated", async (event) => {
   const logger = getLogger();
   logger.debug(
@@ -223,7 +262,7 @@ onEvent(
         updated_at: new Date().toISOString()
       })
       .where(eq(wireguardPeersTable.id, id));
-    logger.info("successfully updated the keys in the table.")
+    logger.info("successfully updated the keys in the table.");
     emitEvent("update_wireguard_config", {});
   }
 );

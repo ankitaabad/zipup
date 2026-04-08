@@ -108,6 +108,7 @@ appsRouter.patch("/:app_id", async (c) => {
     await db.update(appsTable).set(body).where(eq(appsTable.id, app_id));
     if (action === "UpdateDomain") {
       await initiateRouteReload();
+      await emitEvent("domain_updated", { domain: body.domain });
     }
     return c.json({
       message: "App updated successfully"

@@ -5,6 +5,7 @@ import { settingsTable } from "../db/schema";
 import { errorHandler } from "../utils/errorHandler";
 import { DomainNameSchema } from "@common/index";
 import { initiateRouteReload } from "@backend/utils/helper";
+import { emitEvent } from "@backend/events/event";
 
 // change global secret key
 
@@ -79,6 +80,7 @@ settingsRouter.put(
         set: { value: domain, updated_at: now }
       });
     await initiateRouteReload();
+    await emitEvent("domain_updated", { domain });
     return c.json({
       message: "Admin console domain updated successfully",
       data: { domain }

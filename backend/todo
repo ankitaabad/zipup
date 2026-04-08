@@ -61,6 +61,7 @@ Today:
   ✔ Take acme email as input and set it in openresty container.
   ✔ Check if ports are open before deploying an app.
   ✔ Update logo with underline.
+  ☐ pre warm ssl when domain is updated.
   ☐ seamless sync your local changes to hetzner server and testing there.
   ☐ cli working with env and command line args.
   ☐ Move app options under action.
