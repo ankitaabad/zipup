@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+
 export DEBIAN_FRONTEND=noninteractive
 
 echo "🚀 Installing Zipup..."
@@ -187,7 +188,7 @@ cd "$INSTALL_DIR" || {
 }
 ENV_FILE=".env"
 KEY="ACME_EMAIL"
-
+echo ""
 # Simple email regex
 is_valid_email() {
   local email="$1"
@@ -196,7 +197,7 @@ is_valid_email() {
 
 # Prompt until valid email
 while true; do
-  read -rp "Enter your email (Let's Encrypt / ACME will use this for certificate expiry notices): " EMAIL
+  read -rp "👉 Enter your email (Let's Encrypt / ACME will use this for certificate expiry notices): " EMAIL </dev/tty
 
   if is_valid_email "$EMAIL"; then
     break
