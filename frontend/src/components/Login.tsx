@@ -83,7 +83,7 @@ export const Login: React.FC = () => {
               <span style={{ color: "var(--mantine-primary-color-7)" }}>
                 up
               </span> */}
-                <Image src={logoImage} h={40} w="auto" fit="contain" mx="auto" />
+                <Image src={logoImage} h={60} w="auto" fit="contain" mx="auto" />
             </Text>
           </Box>
 

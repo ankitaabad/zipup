@@ -22,6 +22,8 @@ services:
       context: ./openresty
       dockerfile: Dockerfile
     container_name: openresty
+    environment:
+      - ACME_EMAIL=${ACME_EMAIL:?ACME_EMAIL is required in .env}
     volumes:
       - ./openresty/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
       - ./openresty/lua:/lua:ro

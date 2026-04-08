@@ -162,7 +162,7 @@ export function AppSidebar() {
               <Link to="/">
                 <Image
                   src={logoImage}
-                  h={25}
+                  h={35}
                   w="auto"
                   fit="contain"
                   mx="auto"
