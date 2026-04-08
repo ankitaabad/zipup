@@ -46,8 +46,7 @@ fi
 
 echo ""
 read -rp "⚠️ Ensure ports 80, 443, 51820 are accessible from internet (firewall). Press Enter to continue..."
-REPO_OWNER="ankitaabad"
-REPO_NAME="zipup"
+
 INSTALL_DIR="$HOME/zipup"
 echo "📂 Installation directory: $INSTALL_DIR"
 echo "cleaning up old install if exists..."
@@ -149,11 +148,12 @@ else
   DOCKER_CMD="sudo docker"
 fi
 
-echo "🧠 Detecting system architecture..."
-
+REPO_OWNER="ankitaabad"
+REPO_NAME="zipup"
 LATEST_TAG=$(curl -fsSL \
   "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest" \
   | jq -r '.tag_name') || {
+    echo "$REPO_OWNER/${REPO_NAME}: Failed to fetch latest release tag from GitHub API."
     echo "❌ Failed to fetch latest release (network or GitHub rate limit)."
     exit 1
 }
