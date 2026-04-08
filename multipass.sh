@@ -2,6 +2,7 @@
  multipass shell zipup
  multipass shell unerring-baboon 
  ssh hetzner
+ docker kill $(docker ps -q)
  ls
  ping 172.25.0.2
  curl -fsSL "https://raw.githubusercontent.com/ankitaabad/zipup/master/install.sh" | bash
@@ -20,6 +21,5 @@
  
 
  docker compose down 
- docker kill $(docker ps -q)
 
  clear
