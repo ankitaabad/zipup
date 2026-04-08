@@ -1,9 +1,9 @@
 import fs from "fs";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@backend/db/dbClient";
-import { appsTable, deploymentsTable } from "../db/schema";
+import { appsTable, deploymentsTable, settingsTable } from "../db/schema";
 import { getLogger } from "./logger";
-import { PORT_FOR_USER_APPS } from "./constants";
+import { envVar, PORT_FOR_USER_APPS } from "./constants";
 
 export const updateRouteConfig = async () => {
   const logger = getLogger();
@@ -90,6 +90,23 @@ export const getRouteConfig = async () => {
   // const ip = await publicIpv4();
   // logger.debug(`Public IP: ${ip}`);
   const routes = [];
+  const result = await db
+    .select()
+    .from(settingsTable)
+    .where(eq(settingsTable.key, "domain"))
+    .get();
+  if (result?.value) {
+    const { host, path } = parseDomain(result.value);
+
+    routes.push({
+      host,
+      path,
+      "type": "dynamic",
+      "upstream": `http://zipup:${PORT_FOR_USER_APPS}`,
+      "auth_required": false
+    });
+  }
+
   await Promise.all(
     apps.map(async (app) => {
       // get latest deployment of the app

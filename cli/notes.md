@@ -1,0 +1,1 @@
+run NPM_TOKEN=<token> nr publish

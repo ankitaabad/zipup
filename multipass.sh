@@ -13,7 +13,7 @@
  cd zipup
 
   docker restart zipup
- docker compose -f docker-compose.base.yaml -f docker-compose.release.yaml  down
+ docker compose -f docker-compose.base.yaml -f docker-compose.release.yaml  down -v
 
  docker compose -f docker-compose.base.yaml -f docker-compose.release.yaml up
 
