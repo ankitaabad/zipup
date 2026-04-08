@@ -102,7 +102,7 @@ export const getRouteConfig = async () => {
       host,
       path,
       "type": "dynamic",
-      "upstream": `http://zipup:${PORT_FOR_USER_APPS}`,
+      "upstream": `http://zipup:8080`,
       "auth_required": false
     });
   }
