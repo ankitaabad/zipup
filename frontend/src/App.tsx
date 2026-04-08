@@ -9,6 +9,7 @@ import { Login } from "./components/Login";
 import { Settings } from "./pages/Settings";
 import { Wireguard } from "./components/Wireguard";
 import { AuthGuard } from "./components/AuthGuard";
+import { CustomLoader } from "./components/CustomLoader";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,6 +27,7 @@ export default function App() {
       <BrowserRouter basename="/">
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/loader" element={<CustomLoader />} />
           <Route element={<AuthGuard />}>
             <Route element={<RootLayout />}>
               <Route path="/" element={<AppStatsDashboard />} />

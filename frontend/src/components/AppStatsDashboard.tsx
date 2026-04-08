@@ -80,7 +80,7 @@ export default function AppStatsDashboard() {
   if (isLoading) {
     return (
       <Center h={300}>
-        <CustomLoader label="Loading app stats..." />
+        <CustomLoader  />
       </Center>
     );
   }
