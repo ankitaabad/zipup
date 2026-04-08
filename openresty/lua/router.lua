@@ -14,15 +14,16 @@ ngx.log(ngx.INFO, "==== Incoming request ====")
 ngx.log(ngx.INFO, "Host: ", host, " | URI: ", uri)
 
 -- 🔒 HTTPS enforcement (SAFE: no breaking changes)
+local normalized_host = utils.normalize_host(host)
+local is_ip = utils.is_ip(normalized_host)
 do
-    local normalized_host = utils.normalize_host(host)
 
     -- skip in dev
     if not utils.is_dev() then
         -- skip ACME challenge
         if not uri:find("^/.well%-known") then
             -- only enforce for domains (not IPs)
-            if ngx.var.scheme == "http" and not utils.is_ip(normalized_host) then
+            if ngx.var.scheme == "http" and not is_ip then
                 local host_with_port = ngx.var.http_host or host
                 local redirect_url = "https://" .. host_with_port .. ngx.var.request_uri
                 ngx.log(ngx.INFO, "Redirecting to HTTPS: ", redirect_url)
@@ -71,14 +72,23 @@ end
 
 -- fallback
 if not matched_route then
-    ngx.log(ngx.WARN, "No route matched, falling back to default zipup")
+    ngx.log(ngx.WARN, "No route matched")
 
-    local args = ngx.var.is_args .. (ngx.var.args or "")
-    ngx.var.upstream = "http://zipup:8080"
-    ngx.var.upstream_uri = uri .. args
+    if is_ip or utils.is_dev()then
+        local args = ngx.var.is_args or ""
+        local uri = ngx.var.uri
 
-    ngx.exec("@dynamic_proxy")
-    return
+        ngx.var.upstream = "http://zipup:8080"
+        ngx.var.upstream_uri = uri .. args
+
+        ngx.exec("@dynamic_proxy")
+        return
+    end
+
+    ngx.status = 404
+    ngx.header.content_type = "text/html"
+
+    return ngx.exit(404)
 end
 
 ngx.log(ngx.INFO, "Final matched route: host=", matched_route.host, " path=", matched_route.path, " type=", matched_route.type)

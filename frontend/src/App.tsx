@@ -8,13 +8,14 @@ import AppStatsDashboard from "./components/AppStatsDashboard";
 import { Login } from "./components/Login";
 import { Settings } from "./pages/Settings";
 import { Wireguard } from "./components/Wireguard";
+import { AuthGuard } from "./components/AuthGuard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: false,
       refetchOnWindowFocus: false,
-       staleTime: 0.5 * 60 * 1000,
+      staleTime: 0.5 * 60 * 1000
     }
   }
 });
@@ -25,15 +26,17 @@ export default function App() {
       <BrowserRouter basename="/">
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route element={<RootLayout />}>
-            <Route path="/" element={<AppStatsDashboard />} />
-            {/* <Route path="/dashboard" element={<AppStatsDashboard />} /> */}
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/logs" element={<Logs />} />
-            <Route path="/wireguard" element={<Wireguard />} /> 
-            {/* Apps with tabs */}
-            <Route path="/apps/:type/:appId" element={<AppLayout />} />
-            <Route path="/apps/:type/:appId/:tab" element={<AppLayout />} />
+          <Route element={<AuthGuard />}>
+            <Route element={<RootLayout />}>
+              <Route path="/" element={<AppStatsDashboard />} />
+              {/* <Route path="/dashboard" element={<AppStatsDashboard />} /> */}
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/logs" element={<Logs />} />
+              <Route path="/wireguard" element={<Wireguard />} />
+              {/* Apps with tabs */}
+              <Route path="/apps/:type/:appId" element={<AppLayout />} />
+              <Route path="/apps/:type/:appId/:tab" element={<AppLayout />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>

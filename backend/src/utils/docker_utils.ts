@@ -466,22 +466,22 @@ export async function execInWireguard(cmd: string[]) {
 }
 const WG_DIR = "/config/wg_confs";
 const WG_CONFIG_PATH = "/config/wg_confs/wg0.conf";
-export async function rebuildAndRestartWireguard() {
-  const logger = getLogger();
-  const config = await buildWireguardConfig();
-  await mkdir(WG_DIR, { recursive: true });
-  await writeFile(WG_CONFIG_PATH, config, "utf8");
+// export async function rebuildAndRestartWireguard() {
+//   const logger = getLogger();
+//   const config = await buildWireguardConfig();
+//   await mkdir(WG_DIR, { recursive: true });
+//   await writeFile(WG_CONFIG_PATH, config, "utf8");
 
-  // 3. Restart inside container
-  await execInWireguard(["sh", "-c", "ip link delete wg0 2>/dev/null || true"]);
+//   // 3. Restart inside container
+//   await execInWireguard(["sh", "-c", "ip link delete wg0 2>/dev/null || true"]);
 
-  await execInWireguard(["wg-quick", "up", "wg0"]);
-  // Apply config to running interface
-  // await execInWireguard(["wg", "syncconf", "wg0", WG_CONFIG_PATH]);
-  // await execInWireguard(["wg-quick", "syncconf", "wg0", WG_CONFIG_PATH]);
+//   await execInWireguard(["wg-quick", "up", "wg0"]);
+//   // Apply config to running interface
+//   // await execInWireguard(["wg", "syncconf", "wg0", WG_CONFIG_PATH]);
+//   // await execInWireguard(["wg-quick", "syncconf", "wg0", WG_CONFIG_PATH]);
 
-  logger.info("WireGuard config reloaded");
-}
+//   logger.info("WireGuard config reloaded");
+// }
 // export async function generateWireguardKeys() {
 //   const privateKey = await execInWireguard(["sh", "-c", "wg genkey"]);
 

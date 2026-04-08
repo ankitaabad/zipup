@@ -148,9 +148,10 @@ export function signPayload(
   method: string,
   path: string,
   bodyHash: string,
+  expires: number,
   secretKey: string
 ) {
-  const expires = Math.floor(Date.now() / 1000) + 300; // expires in 5 minutes
+
   const canonical = [method.toUpperCase(), path, expires, bodyHash].join("\n");
 
   const signature = crypto

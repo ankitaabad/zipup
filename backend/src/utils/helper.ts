@@ -311,70 +311,119 @@ export const getArtifactStorageLocation = (
   return artifactPath;
 };
 
-export const addAllTokensToCookie = async (c: Context, userId: string) => {
+export const addAllTokensToCookie = async (
+  c: Context,
+  userId: string,
+  reset: boolean = false
+) => {
   const logger = getLogger();
+
   const scheme = c.get("scheme");
-  const host = c.req.header("host");
-  logger.debug(`Host: ${host}, Scheme: ${scheme}`);
-  logger.info(`setting cookie with scheme: ${scheme}`);
   const secure = scheme !== "http";
-  logger.info(`setting cookie with scheme: ${scheme}`);
+
+  // 🔑 single source of truth for cookie configs
+  const cookieConfigs = {
+    access_token: {
+      httpOnly: true,
+      sameSite: "Lax" as const,
+      path: "/",
+    },
+    refresh_token: {
+      httpOnly: true,
+      path: "/api/admin/refresh",
+    },
+    csrf_token: {
+      httpOnly: false,
+      sameSite: "strict" as const,
+      path: "/",
+    },
+  };
+
+  // 🔁 helper to set OR clear
+  const applyCookie = (
+    name: keyof typeof cookieConfigs,
+    value: string
+  ) => {
+    const config = cookieConfigs[name];
+
+    setCookie(c, name, value, {
+      secure,
+      ...config,
+      ...(reset && {
+        maxAge: 0,
+        expires: new Date(0),
+      }),
+    });
+  };
+
+  // 🔴 Clear cookies
+  if (reset) {
+    logger.info("Clearing cookies");
+
+    (Object.keys(cookieConfigs) as (keyof typeof cookieConfigs)[]).forEach(
+      (key) => applyCookie(key, "")
+    );
+
+    return;
+  }
+
+  // 🟢 Generate tokens
   const [access_token, refresh_token, csrf_token] = await Promise.all([
     generateAccessToken(userId),
     generateRefreshToken(userId),
-    generateCSRFToken(userId)
+    generateCSRFToken(userId),
   ]);
-  setCookie(c, "access_token", access_token, {
-    httpOnly: true,
-    secure,
-    sameSite: "Lax"
-  });
-  setCookie(c, "refresh_token", refresh_token.token, {
-    httpOnly: true,
-    secure,
-    path: "/api/admin/refresh"
-  });
-  setCookie(c, "csrf_token", csrf_token, {
-    httpOnly: false,
-    secure,
-    sameSite: "strict"
-  });
+
+  logger.info("Setting cookies");
+
+  applyCookie("access_token", access_token);
+  applyCookie("refresh_token", refresh_token.token);
+  applyCookie("csrf_token", csrf_token);
 };
 
-export async function buildWireguardConfig() {
-  const peers = await db.select().from(wireguardPeersTable);
+// export async function buildWireguardConfig() {
+//   const peers = await db.select().from(wireguardPeersTable);
 
-  const server = peers.find((p) => p.type === WireguardPeerType.SERVER);
+//   const server = peers.find((p) => p.type === WireguardPeerType.SERVER);
 
-  if (!server) {
-    throw new Error("WireGuard server not found");
-  }
+//   if (!server) {
+//     throw new Error("WireGuard server not found");
+//   }
 
-  let config = `[Interface]
-PrivateKey = ${server.private_key}
-Address = 10.13.13.1/24
-ListenPort = 51820
+//   let config = `[Interface]
+// PrivateKey = ${server.private_key}
+// Address = 10.13.13.1/24
+// ListenPort = 51820
 
-`;
+// PostUp = iptables -A FORWARD -i %i -j ACCEPT; \
+//          iptables -A FORWARD -o %i -j ACCEPT; \
+//          iptables -t nat -A POSTROUTING -o eth+ -j MASQUERADE; \
+//          iptables -t nat -A POSTROUTING -o br+ -j MASQUERADE
 
-  for (const peer of peers) {
-    if (
-      peer.type === WireguardPeerType.CLIENT &&
-      peer.public_key &&
-      peer.ip_index
-    ) {
-      const ip = `10.0.0.${peer.ip_index}`;
+// PostDown = iptables -D FORWARD -i %i -j ACCEPT; \
+//            iptables -D FORWARD -o %i -j ACCEPT; \
+//            iptables -t nat -D POSTROUTING -o eth+ -j MASQUERADE; \
+//            iptables -t nat -D POSTROUTING -o br+ -j MASQUERADE
+// `;
 
-      config += `[Peer]
-PublicKey = ${peer.public_key}
-AllowedIPs = ${ip}/32
+//   for (const peer of peers) {
+//     if (
+//       peer.type === WireguardPeerType.CLIENT &&
+//       peer.public_key &&
+//       peer.ip_index
+//     ) {
+//       const ip = `10.0.0.${peer.ip_index}`;
 
-`;
-    }
-  }
+//       config += `[Peer]
+// PublicKey = ${peer.public_key}
+// AllowedIPs = ${ip}/32
 
-  return config;
-}
+// `;
+//     }
+//   }
+
+//   return config;
+// }
 
 export const getServerAddress = async () => {
   const domainSetting = await db

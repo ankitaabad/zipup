@@ -70,13 +70,16 @@ api.interceptors.response.use(
             await api.post("/admin/refresh");
             return api.request(originalRequest);
           } catch {
-            window.location.href = "/login";
+            // window.location.href = "/login";
             return Promise.reject(error);
           }
         }
       }
     }
-
+    if (status === 401) {
+      // don't show error if it's just an auth issue, handled by AuthGuard
+      return Promise.reject(error);
+    }
     // Show Mantine notification for all API errors
     if (data?.error) {
       const errorPayload = data.error;

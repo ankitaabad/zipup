@@ -106,9 +106,22 @@ export function useChangeAdminPassword() {
   return useMutation({
     mutationFn: async (payload: { new_password: string }) => {
       await api.post(`/admin/change-password`, payload);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["apps", appId] });
     }
+    // onSuccess: () => {
+    //   queryClient.invalidateQueries({ queryKey: ["apps", appId] });
+    // }
+  });
+}
+
+export function useAdminMe() {
+  // should not cache at all
+  return useQuery({
+    queryKey: ["admin", "me"],
+    queryFn: async () => {
+      const res = await api.get("/admin/me");
+      return res.data;
+    },
+    retry: false,
+    staleTime: 0
   });
 }

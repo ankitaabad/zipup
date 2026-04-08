@@ -1,8 +1,11 @@
+import { TokenPayload } from "./../utils/helper";
 import { platformAdminsTable } from "../db/schema";
 import {
   addAllTokensToCookie,
-  consumeRefreshJti, hashPassword,
-  mustBeTrue, verifyAccessToken,
+  consumeRefreshJti,
+  hashPassword,
+  mustBeTrue,
+  verifyAccessToken,
   verifyPasswordHash,
   verifyPasswordStrength
 } from "../utils/helper";
@@ -18,6 +21,12 @@ import {
 } from "@backend/utils/middlewares";
 export const adminAuthRouter = createAuthenticatedRouter();
 
+adminAuthRouter.get("/me", async (c) => {
+  const tokenPayload = c.get("tokenPayload");
+  return c.json({
+    id: tokenPayload.sub
+  });
+});
 adminAuthRouter.post(
   "/login",
   withErrorHandler(async (c) => {
@@ -56,16 +65,7 @@ adminAuthRouter.post(
     const logger = getLogger();
 
     // optional: revoke refresh token in DB if you store them
-    setCookie(c, "access_token", "", {
-      httpOnly: true,
-      secure: true,
-      maxAge: 0
-    });
-    setCookie(c, "refresh_token", "", {
-      httpOnly: true,
-      secure: true,
-      maxAge: 0
-    });
+    addAllTokensToCookie(c, "", true); // clear cookies
 
     return c.json({});
   })
@@ -86,7 +86,7 @@ adminAuthRouter.post(
     }
     const consumed = consumeRefreshJti(payload.jti);
     if (!consumed) {
-      throw new Error("Refresh token already used or invalid");
+      return c.json({ error: "Refresh token already used or invalid" }, 401);
     }
     await addAllTokensToCookie(c, payload.sub);
 

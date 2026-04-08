@@ -31,9 +31,35 @@ artifactsRouter.post("/", async (c) => {
   try {
     const logger = getLogger();
     logger.debug("creating artifact");
-
+    const bodyHashHeader = c.req.header("Zipup-Body-Hash");
+    const signatureHeader = c.req.header("Zipup-Signature");
+    const expiresHeader = c.req.header("Zipup-Expires");
+    if (!bodyHashHeader || !signatureHeader || !expiresHeader) {
+      throw new BadRequest("Missing required headers");
+    }
+    const expires = parseInt(expiresHeader);
+    const currentTime = Math.floor(Date.now() / 1000);
+    if (isNaN(expires) || expires < currentTime) {
+      throw new BadRequest("Request has expired");
+    }
+    const body = await c.req.json();
+    const bodyHash = createBodyHash(JSON.stringify(body));
+    if (bodyHashHeader !== bodyHash) {
+      throw new BadRequest("Invalid body hash");
+    }
     const app = c.get("app");
-    if (!app.start_command) {
+    const signature = signPayload(
+      "POST",
+      "/api/artifacts",
+      bodyHash,
+      expires,
+      app.secret_key
+    );
+    if (!signatureHeader || signatureHeader !== signature) {
+      throw new BadSignature();
+    }
+
+    if (app.type === "DYNAMIC" && !app.start_command) {
       throw new BadRequest("App does not have a start command.");
     }
     const app_id = app.id;
@@ -79,12 +105,19 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
   try {
     const logger = getLogger();
     const artifact_id = c.req.param("artifact_id");
-    
+
     // todo: can get app from context set by appKeyAuthMiddleware
     const bodyHashHeader = c.req.header("Zipup-Body-Hash");
     const signatureHeader = c.req.header("Zipup-Signature");
-    const appKey = c.req.header("Zipup-App-Key");
-
+    const expiresHeader = c.req.header("Zipup-Expires");
+    if (!bodyHashHeader || !signatureHeader || !expiresHeader) {
+      throw new BadRequest("Missing required headers");
+    }
+    const expires = parseInt(expiresHeader);
+    const currentTime = Math.floor(Date.now() / 1000);
+    if (isNaN(expires) || expires < currentTime) {
+      throw new BadRequest("Request has expired");
+    }
     // validate artifact exists
     const artifactResult = await getArtifactWithApp(artifact_id);
     if (!artifactResult.artifact || !artifactResult.app) {
@@ -106,6 +139,7 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
       "POST",
       `/api/artifacts/${artifact_id}/upload`,
       bodyHash,
+      expires,
       app.secret_key
     );
     if (!signatureHeader || signatureHeader !== signature) {

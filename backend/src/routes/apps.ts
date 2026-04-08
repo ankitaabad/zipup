@@ -230,11 +230,11 @@ appsRouter.get(
     if (!app) {
       return c.json({ error: "App not found" }, 404);
     }
-
+    const host = app.domain ? `https://${app.domain}` : "";
     const { app_key, secret_key } = app;
     // create a config.json file that can be downloaded
     const config = {
-      HOST: "",
+      HOST: host,
       APP_KEY: app_key,
       SECRET_KEY: secret_key,
       IGNORES: ["**/zipup.config.json", "**/.git/**"]

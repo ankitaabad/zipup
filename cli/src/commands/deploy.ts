@@ -82,11 +82,12 @@ export const deployCommand = new Command("deploy")
         });
         const timestamp = Date.now().toString();
         const bodyHash = createBodyHash(body);
-
+        const expires = Math.floor(Date.now() / 1000) + 300; // expires in 5 minutes
         const signature = signPayload(
           "POST",
-          "/artifacts",
+          "/api/artifacts",
           bodyHash,
+          expires,
           config.SECRET_KEY
         );
 
@@ -96,8 +97,9 @@ export const deployCommand = new Command("deploy")
             headers: {
               "Content-Type": "application/json",
               "Zipup-App-Key": config.APP_KEY,
-              "Zipup-Timestamp": timestamp,
-              "Zipup-Signature": signature
+              "Zipup-Expires": expires.toString(),
+              "Zipup-Signature": signature,
+              "Zipup-Body-Hash": bodyHash
             },
             body
           });
@@ -138,10 +140,12 @@ export const deployCommand = new Command("deploy")
         async () => {
           const bodyHashForUpload = createBodyHash(buffer); // hash the file contents
           const uploadPath = `/api/artifacts/${artifactId}/upload`;
+          const expires = Math.floor(Date.now() / 1000) + 300; // expires in 5 minutes
           const signatureForUpload = signPayload(
             "POST",
             uploadPath,
             bodyHashForUpload,
+            expires,
             config.SECRET_KEY
           );
           const blob = new Blob([buffer], { type: "application/gzip" });
@@ -157,7 +161,8 @@ export const deployCommand = new Command("deploy")
                   "Zipup-App-Key": config.APP_KEY,
                   // "Zipup-Timestamp": timestamp,
                   "Zipup-Signature": signatureForUpload,
-                  "Zipup-Body-Hash": bodyHashForUpload
+                  "Zipup-Body-Hash": bodyHashForUpload,
+                  "Zipup-Expires": expires.toString()
                 }
               });
             }
