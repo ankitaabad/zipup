@@ -200,7 +200,7 @@ wireguardRouter.get("/peers/:id/config", async (c) => {
     `PublicKey = ${serverPeer.public_key}`,
     peer.preshared_key ? `PresharedKey = ${peer.preshared_key}` : "",
     `Endpoint = ${endpoint}`,
-    `AllowedIPs = 172.25.0.0/24`,
+    `AllowedIPs = 10.13.13.0/24`,
     `PersistentKeepalive = 25`
   ]
     .filter(Boolean)

@@ -285,6 +285,7 @@ export function Settings() {
             <Stack>
               <TextInput
                 label="Domain"
+                data-autofocus
                 value={domain ?? ""}
                 onChange={(e) => setDomain(e.currentTarget.value)}
                 autoFocus

@@ -6,7 +6,7 @@ import { generateId, hashPassword } from "@backend/utils/helper";
 async function initDB() {
   // Initialize the database
   console.log("Initializing database...");
-  const password = "zipup@123";
+  const password = "zipup";
   const password_hash = await hashPassword(password);
   const user = {
     id: generateId(),

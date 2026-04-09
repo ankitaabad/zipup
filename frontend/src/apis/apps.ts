@@ -93,14 +93,14 @@ export function useUpdateApp(appId: string) {
         | { action: "UpdateDomain"; domain: string }
         | { action: "UpdateStartCommand"; start_command: string }
         | { action: "UpdateAppName"; name: string }
-        | { action: "UpdateRedisPrefix"; redis_prefix: string }
     ) => {
       const res = await api.patch(`/apps/${appId}`, payload);
       return res.data;
     },
     onSuccess: () => {
       // queryClient.invalidateQueries({ queryKey: ["apps"] });
-      queryClient.invalidateQueries({ queryKey: ["apps", appId] });
+      // name can be updated which is shown in sidebar, so we need to invalidate the app list query as well.
+      queryClient.invalidateQueries({ queryKey: ["apps"] });
     }
   });
 }
@@ -146,6 +146,3 @@ export function useStopApp(appId: string) {
     }
   });
 }
-
-
-

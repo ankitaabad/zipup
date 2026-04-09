@@ -11,7 +11,7 @@ import { Wireguard } from "./components/Wireguard";
 import { AuthGuard } from "./components/AuthGuard";
 import { CustomLoader } from "./components/CustomLoader";
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: false,

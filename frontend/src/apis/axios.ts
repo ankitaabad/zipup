@@ -1,4 +1,6 @@
+import { queryClient } from "@frontend/App";
 import { notifications } from "@mantine/notifications";
+import { QueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
 export const api = axios.create({
@@ -61,8 +63,8 @@ api.interceptors.response.use(
     const status = error.response.status;
     const data = error.response.data;
 
+    const url = originalRequest.url ?? "";
     if (status === 401) {
-      const url = originalRequest.url ?? "";
       if (!url.includes("/admin/login") && !url.includes("/admin/refresh")) {
         if (!originalRequest._retry) {
           originalRequest._retry = true;
@@ -71,15 +73,19 @@ api.interceptors.response.use(
             return api.request(originalRequest);
           } catch {
             // window.location.href = "/login";
+            queryClient.setQueriesData({ queryKey: ["admin", "me"] }, null);
             return Promise.reject(error);
           }
         }
       }
-    }
-    if (status === 401) {
-      // don't show error if it's just an auth issue, handled by AuthGuard
       return Promise.reject(error);
     }
+    // if (status === 401) {
+    //   console.log(`inside second status 401 ${url}`);
+
+    //   // don't show error if it's just an auth issue, handled by AuthGuard
+    //   return Promise.reject(error);
+    // }
     // Show Mantine notification for all API errors
     if (data?.error) {
       const errorPayload = data.error;

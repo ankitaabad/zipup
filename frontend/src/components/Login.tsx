@@ -21,6 +21,8 @@ import { useAdminLogin } from "../apis/adminAuth";
 import { useNavigate } from "react-router-dom";
 import { zod4Resolver } from "mantine-form-zod-resolver";
 import { AdminLoginSchema } from "@zipup/common";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryClient } from "@frontend/App";
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const theme = useMantineTheme();
@@ -38,7 +40,10 @@ export const Login: React.FC = () => {
     loginMutation.mutate(
       { username, password },
       {
-        onSuccess: () => navigate("/")
+        onSuccess: async() => {
+          await queryClient.refetchQueries({ queryKey: ["admin", "me"] });
+          navigate("/");
+        }
       }
     );
   };
@@ -83,7 +88,7 @@ export const Login: React.FC = () => {
               <span style={{ color: "var(--mantine-primary-color-7)" }}>
                 up
               </span> */}
-                <Image src={logoImage} h={60} w="auto" fit="contain" mx="auto" />
+              <Image src={logoImage} h={60} w="auto" fit="contain" mx="auto" />
             </Text>
           </Box>
 

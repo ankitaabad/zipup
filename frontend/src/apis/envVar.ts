@@ -35,7 +35,6 @@ export function useCreateEnvVar(appId: string) {
       value: string;
       description?: string;
     }) => {
-      console.log({ data });
       const res = await api.post(`/apps/${appId}/env-vars`, data);
       return res.data;
     },

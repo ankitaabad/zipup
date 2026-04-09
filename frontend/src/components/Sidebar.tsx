@@ -54,10 +54,8 @@ const useSidebarRoute = () => {
   };
 };
 export function AppSidebar() {
-  console.log("AppSidebar called");
   const theme = useMantineTheme();
   const sidebarRoute = useSidebarRoute();
-  console.log({ sidebarRoute });
   const appsQuery = useApps();
   const navigate = useNavigate();
   const location = useLocation();

@@ -30,7 +30,6 @@ export default function AppLayout() {
     appId: string;
     tab?: string;
   }>();
-  console.log({ tab });
   const navigate = useNavigate();
 
   const appQuery = useApp(appId!);
@@ -53,7 +52,6 @@ export default function AppLayout() {
   const activeTab = tab || "settings";
 
   const handleTabChange = (newTab: string) => {
-    console.log({ newTab });
     navigate(`/apps/${type}/${appId}/${newTab}`);
   };
 

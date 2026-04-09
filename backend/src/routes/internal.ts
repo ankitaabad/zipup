@@ -32,7 +32,6 @@ internalRouter.get("/domain-whitelist", async (c) => {
     await db.select().from(appsTable).all(),
     db.select().from(settingsTable).where(eq(settingsTable.key, "domain")).get()
   ]);
-  logger.debug(`apps: ${JSON.stringify(apps)}`);
 
   const domains = apps
     .map((app) => app.domain)

@@ -122,6 +122,5 @@ export function useAdminMe() {
       return res.data;
     },
     retry: false,
-    staleTime: 0
   });
 }

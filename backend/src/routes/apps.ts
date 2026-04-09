@@ -155,32 +155,32 @@ appsRouter.post(
 );
 
 appsRouter.get("/:app_id/status", async (c) => {
+  const logger = getLogger();
   const app_id = c.req.param("app_id");
-
-  const isAppRunning = await isAppRunningByAppId(app_id);
-  if (isAppRunning) {
-    return c.json({
-      status: AppStatus.RUNNING
-    });
-  }
   const { app, artifact } = await getAppWithLatestArtifact(app_id);
   if (!app) {
     return c.json({ error: "App not found" }, 404);
   }
+  logger.info(`Checking status for app ${app.name} of type ${app.type}`);
   let status = AppStatus.DRAFT;
   if (app.type === "STATIC") {
+    status = AppStatus.READY;
     if (artifact?.id) {
-      status = AppStatus.STOPPED;
-    } else {
-      status = AppStatus.READY;
+      status = AppStatus.RUNNING;
     }
-  } else {
-    if (app.start_command && artifact?.id) {
-      status = AppStatus.STOPPED;
-    } else if (app.start_command) {
-      status = AppStatus.READY;
-    }
+    return c.json({
+      status
+    });
   }
+  const isAppRunning = await isAppRunningByAppId(app_id);
+  if (isAppRunning) {
+    status = AppStatus.RUNNING;
+  } else if (app.start_command && artifact?.id) {
+    status = AppStatus.STOPPED;
+  } else if (app.start_command) {
+    status = AppStatus.READY;
+  }
+
   return c.json({
     status
   });

@@ -36,14 +36,15 @@ mkdir -p "$OUT_DIR/db"
 cp "$DB_PATH" "$OUT_DIR/db/zipup.db"
 
 # copy open resty folder and docker compose file
-echo "📂 Copying OpenResty and docker-compose.yaml into /out..."
+echo "📂 Copying OpenResty, Redis and docker-compose.yaml and vector.yaml into /out..."
 mkdir -p "$OUT_DIR/openresty"
 cp -r "$ROOT_DIR/openresty/"* "$OUT_DIR/openresty"
 cp "$ROOT_DIR/docker-compose.base.yaml" "$OUT_DIR/docker-compose.base.yaml"
 cp "$ROOT_DIR/docker-compose.release.yaml" "$OUT_DIR/docker-compose.release.yaml"
 # copy vector yaml
 cp "$ROOT_DIR/vector.yaml" "$OUT_DIR/vector.yaml" 
-
+mkdir -p "$OUT_DIR/redis"
+cp -r "$ROOT_DIR/redis/"* "$OUT_DIR/redis"
 # echo "📂 Copying frontend build into /out/app/frontend/dist..."
 # mkdir -p "$FRONTEND_OUT_DIR/dist"
 # cp -r "$FRONTEND_DIR/dist/"* "$FRONTEND_OUT_DIR/dist"

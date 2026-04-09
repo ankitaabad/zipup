@@ -61,20 +61,21 @@ Today:
   ✔ Take acme email as input and set it in openresty container.
   ✔ Check if ports are open before deploying an app.
   ✔ Update logo with underline.
-  ☐ pre warm ssl when domain is updated.
-  ☐ seamless sync your local changes to hetzner server and testing there.
+  ✘ DNS caching can not be used, can we do this by ourselves.
+  ✔ pre warm ssl when domain is updated.
+  ✘ seamless sync your local changes to hetzner server and testing there.
   ☐ cli working with env and command line args.
   ☐ Move app options under action.
   ☐ document cli readme
   ☐ Add Restart option for app.
-  ☐ Remove setting up email for lets encrypt.
+  ✔ Remove setting up email for lets encrypt.
   ☐ logs cleanup.
   ☐ Remove withError wrapper as we are using onError handler in hono.
   ☐ Add more logs.
-  ☐ how to go about creating the whitelist of domain and setting email for lua acme.
+  ✔ how to go about creating the whitelist of domain and setting email for lua acme.
   ☐ should check if user is logged in when the focus comes back to the tab.(https://mantine.dev/hooks/use-document-visibility/)
   ☐ mantine forms should use common zod for validation.
-  ☐ @bug @low changing app name doesn't reflect in sidebar until refresh.
+  ✔ @bug @low changing app name doesn't reflect in sidebar until refresh.
   ☐ use #F0E9E9 and #4B8DF7 as colors in dark theme.
   ☐ Reserved env ZIPUP_PORT
   ☐ postgres accesss.

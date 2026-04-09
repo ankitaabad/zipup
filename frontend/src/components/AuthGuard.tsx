@@ -4,14 +4,13 @@ import { CustomLoader } from "./CustomLoader";
 
 export function AuthGuard() {
   const { data, isLoading, isError } = useAdminMe();
-  console.log("AuthGuard - useAdminMe", { data, isLoading, isError });
   // Show loader while checking
   if (isLoading) {
     return <CustomLoader fullPage={true} />;
   }
 
   // // ❌ Not authenticated → redirect
-  if (isError) {
+  if (isError || data === null) {
     return <Navigate to="/login" replace />;
   }
 
