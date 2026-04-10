@@ -6,7 +6,8 @@ import {
   appsTable,
   appSchema,
   envVarsTable,
-  secretsTable
+  secretsTable,
+  settingsTable
 } from "@backend/db/schema";
 import { generateId, initiateRouteReload } from "@backend/utils/helper";
 import { and, eq } from "drizzle-orm";
@@ -28,6 +29,8 @@ import { withErrorHandler } from "@backend/utils/middlewares";
 import { isAppRunningByAppId } from "@backend/utils/docker_utils";
 import { emitEvent } from "@backend/events/event";
 import { getEncryptionKey } from "@backend/utils/tokenKeys";
+import { publicIpv4 } from "public-ip";
+import { envVar } from "@backend/utils/constants";
 
 export const appsRouter = new Hono();
 
@@ -221,23 +224,34 @@ appsRouter.get(
   "/:app_id/config",
   withErrorHandler(async (c) => {
     const app_id = c.req.param("app_id");
-    const app = await db
-      .select()
-      .from(appsTable)
-      .where(eq(appsTable.id, app_id))
-      .limit(1)
-      .get();
+    const [app, domain] = await Promise.all([
+      db
+        .select()
+        .from(appsTable)
+        .where(eq(appsTable.id, app_id))
+        .limit(1)
+        .get(),
+      db
+        .select()
+        .from(settingsTable)
+        .where(eq(settingsTable.key, "domain"))
+        .get()
+    ]);
     if (!app) {
       return c.json({ error: "App not found" }, 404);
     }
-    const host = app.domain ? `https://${app.domain}` : "";
+    let ipAddress = await publicIpv4();
+    if (envVar.environment === "development") {
+      ipAddress = "http://localhost:8080";
+    }
+    const host = domain?.value ? `https://${domain?.value}` : ipAddress;
     const { app_key, secret_key } = app;
     // create a config.json file that can be downloaded
     const config = {
-      HOST: host,
-      APP_KEY: app_key,
-      SECRET_KEY: secret_key,
-      IGNORES: ["**/zipup.config.json", "**/.git/**"]
+      host: host,
+      appKey: app_key,
+      secretKey: secret_key,
+      ignore: ["**/zipup.config.json", "**/.git/**"]
     };
     c.header("Content-Type", "text/plain");
     c.header("Content-Disposition", 'attachment; filename="zipup.config.json"');

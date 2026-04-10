@@ -18,6 +18,7 @@ local normalized_host = utils.normalize_host(host)
 local is_ip = utils.is_ip(normalized_host)
 do
 
+    ngx.log(ngx.INFO, "Scheme: ", ngx.var.scheme)
     -- skip in dev
     if not utils.is_dev() then
         -- skip ACME challenge

@@ -11,7 +11,8 @@ import {
   Box,
   UnstyledButton,
   Tooltip,
-  TextInput
+  TextInput,
+  Kbd
 } from "@mantine/core";
 import {
   IconDownload,
@@ -41,7 +42,13 @@ import { AppStatusBadge } from "./AppStatusBadge";
 
 /* ------------------- Types ------------------- */
 
-type EditTarget = "appName" | "domain" | "startCommand" | "appKey" | null;
+type EditTarget =
+  | "appName"
+  | "domain"
+  | "startCommand"
+  | "appKey"
+  | "deleteApp"
+  | null;
 
 /* ------------------- Component ------------------- */
 
@@ -90,7 +97,8 @@ export function AppSettings({ app_id }: { app_id: string }) {
       app_name: "",
       domain: "",
       start_command: "",
-      api_key_suffix: ""
+      api_key_suffix: "",
+      delete_app_name: ""
     }
   });
 
@@ -102,7 +110,8 @@ export function AppSettings({ app_id }: { app_id: string }) {
         app_name: app.name || "",
         domain: app.domain || "",
         start_command: app.start_command || "",
-        api_key_suffix: app.api_key_suffix || ""
+        api_key_suffix: app.api_key_suffix || "",
+        delete_app_name: ""
       });
       appForm.reset();
     }
@@ -128,7 +137,10 @@ export function AppSettings({ app_id }: { app_id: string }) {
             <AppStatusBadge status={appStatus?.data! as AppStatus} />
           </Group>
           <Group>
-            <Tooltip label="Download zipup.config.json file. (used for deployment)" withArrow>
+            <Tooltip
+              label="Download zipup.config.json file. (used for deployment)"
+              withArrow
+            >
               <Button
                 variant="light"
                 leftSection={<IconDownload size={16} />}
@@ -169,8 +181,7 @@ export function AppSettings({ app_id }: { app_id: string }) {
               variant="outline"
               leftSection={<IconTrash size={16} />}
               onClick={() => {
-                deleteApp.mutate();
-                navigate("/");
+                setEditTarget("deleteApp");
               }}
             >
               Delete
@@ -184,7 +195,7 @@ export function AppSettings({ app_id }: { app_id: string }) {
         <ConfigurableSettingRow
           label="App Name"
           value={appForm.getInitialValues().app_name}
-          description="Used for identification in dashboards and logs. Changing this does not restart the app."
+          description="Used for app identification. You can also use this to filter your app logs"
           onClick={() => setEditTarget("appName")}
         />
 
@@ -194,7 +205,7 @@ export function AppSettings({ app_id }: { app_id: string }) {
         <ConfigurableSettingRow
           label="Domain"
           value={appForm.getInitialValues().domain}
-          description="Changing the domain updates the public URL. Existing links will stop working. Restart is manual."
+          description="Changing the domain updates the public URL of the App."
           onClick={() => setEditTarget("domain")}
         />
 
@@ -206,7 +217,7 @@ export function AppSettings({ app_id }: { app_id: string }) {
             <ConfigurableSettingRow
               label="Start Command"
               value={appForm.getInitialValues().start_command}
-              description="Command executed when the app starts. Updating this does not restart the app automatically."
+              description="This command is executed when artifact is deployed. like npm run start | node server.js"
               onClick={() => setEditTarget("startCommand")}
             />
 
@@ -259,8 +270,7 @@ export function AppSettings({ app_id }: { app_id: string }) {
 
           {/* Description */}
           <Text size="xs" c="dimmed" mt={6} maw={520}>
-            Used for authenticating API requests. Treat this key like a
-            password.
+            [ Used with the zipup cli to deploy artifacts. ]
           </Text>
 
           {/* Actions */}
@@ -297,7 +307,37 @@ export function AppSettings({ app_id }: { app_id: string }) {
             />
           </CustomModal>
         )}
-
+        {editTarget === "deleteApp" && (
+          <CustomModal
+            opened
+            title="Delete App"
+            onClose={() => setEditTarget(null)}
+          >
+            {/* type the app name to delete the app */}
+            <Text size="sm" c="dimmed" mb="sm">
+              Type the app name to delete the app
+            </Text>
+            <TextInput
+              data-autofocus
+              style={{ width: "100%" }}
+              {...appForm.getInputProps("delete_app_name")}
+            />
+            <Group justify="flex-end" mt="md">
+              <Button
+                onClick={() => {
+                  deleteApp.mutate();
+                  setEditTarget(null);
+                  navigate("/");
+                }}
+                disabled={
+                  appForm.values.delete_app_name !== appQuery?.data?.data?.name
+                }
+              >
+                delete
+              </Button>
+            </Group>
+          </CustomModal>
+        )}
         {editTarget === "appName" && (
           <CustomModal
             opened
@@ -308,7 +348,7 @@ export function AppSettings({ app_id }: { app_id: string }) {
             }}
           >
             <Text size="sm" c="dimmed" mb="sm">
-              Changing the app name does not restart the app.
+              Used for app identification and for filtering logs of your app.
             </Text>
 
             <TextInput
@@ -343,7 +383,7 @@ export function AppSettings({ app_id }: { app_id: string }) {
             }}
           >
             <Text size="sm" c="dimmed" mb="sm">
-              This change updates the public URL. Restart is manual.
+              This change updates the public URL of the App.
             </Text>
 
             <TextInput
@@ -378,7 +418,7 @@ export function AppSettings({ app_id }: { app_id: string }) {
             }}
           >
             <Text size="sm" c="dimmed" mb="sm">
-              This does not restart the app automatically.
+              This command is executed when artifact is deployed.
             </Text>
 
             <TextInput

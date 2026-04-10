@@ -89,7 +89,7 @@ else
     -nodes \
     -keyout "$DEFAULT_KEY" \
     -x509 \
-    -days 365 \
+    -days 3650 \
     -out "$DEFAULT_CERT" \
     -subj "/CN=localhost"
 fi

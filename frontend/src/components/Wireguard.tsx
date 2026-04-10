@@ -99,7 +99,7 @@ export function Wireguard() {
       </Group>
 
       <Text size="sm" c="dimmed" mb="md">
-        Peers that can connect to your private network via WireGuard
+        Peers that can connect to your private network via WireGuard. Used to connect to Postgres, Valkey and Victorialogs.
       </Text>
 
       {!isLoading && (!data || data.length === 0) ? (

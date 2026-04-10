@@ -90,7 +90,7 @@ export function EnvVarsTab({ appId }: { appId: string }) {
       </Group>
 
       <Text size="sm" c="dimmed" mb="md">
-        Changes require redeploy to take effect
+        Changes require app restart to take effect
       </Text>
 
       {!isLoading && (!data || data.length === 0) ? (

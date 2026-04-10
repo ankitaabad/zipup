@@ -20,12 +20,12 @@ function formatBytes(bytes: number, decimals = 2) {
 }
 
 export const deployCommand = new Command("deploy")
-  // .argument("<dir>", "build directory (overrides BUILD_FOLDER)")
-  .description("Deploy an artifact")
-  .option("--host <url>", "API host")
-  .option("--app-key <key>", "Application key")
-  .option("--secret-key <key>", "Secret key (discouraged; prefer env vars)")
-  .option("--build-folder <path>", "Build folder location")
+  // .argument("<dir>", "build directory (overrides buildFolder)")
+  .description("Deploy an artifact, Get api key and secret key from the console")
+  .option("--host <url>", "API host, The server domain/IP address where you installed the app")
+  .option("--app-key <key>", "Application key (discouraged; prefer env var ZIPUP_APP_KEY)")
+  .option("--secret-key <key>", "Secret key (discouraged; prefer env vars ZIPUP_SECRET_KEY)")
+  .option("--build-folder <path>", "Build folder location, content of build folder is uploaded as an artifact")
   .option(
     "--tag <tag>",
     "Tag (repeatable)",
@@ -56,7 +56,6 @@ export const deployCommand = new Command("deploy")
       letterSpacing: 1
     });
     let tarPath: string;
-    let deploymentSuccess = false;
     let deploymentStatus, deploymentLogs;
     try {
       const config = await step<zipupConfig>(
@@ -67,7 +66,7 @@ export const deployCommand = new Command("deploy")
       );
 
       const buildDir = await step("Verifying build folder...", async () => {
-        const buildDir = path.resolve(config.BUILD_FOLDER);
+        const buildDir = path.resolve(config.buildFolder);
 
         if (!fs.existsSync(buildDir)) {
           throw new Error("Build folder does not exist.");
@@ -77,10 +76,9 @@ export const deployCommand = new Command("deploy")
 
       const artifactId = await step("Creating artifact...", async () => {
         const body = JSON.stringify({
-          app_key: config.APP_KEY,
-          tags: config.TAGS
+          app_key: config.appKey,
+          tags: config.tags
         });
-        const timestamp = Date.now().toString();
         const bodyHash = createBodyHash(body);
         const expires = Math.floor(Date.now() / 1000) + 300; // expires in 5 minutes
         const signature = signPayload(
@@ -88,15 +86,15 @@ export const deployCommand = new Command("deploy")
           "/api/artifacts",
           bodyHash,
           expires,
-          config.SECRET_KEY
+          config.secretKey
         );
 
         const res = await callFetch<{ id: string }>(async () => {
-          return await fetch(`${config.HOST}/api/artifacts`, {
+          return await fetch(`${config.host}/api/artifacts`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Zipup-App-Key": config.APP_KEY,
+              "Zipup-App-Key": config.appKey,
               "Zipup-Expires": expires.toString(),
               "Zipup-Signature": signature,
               "Zipup-Body-Hash": bodyHash
@@ -113,7 +111,7 @@ export const deployCommand = new Command("deploy")
       tarPath = await step("Archiving build folder...", async () => {
         const tarPath = path.resolve(`zipup_artifact_${artifactId}.tgz`);
         const files = fs.readdirSync(buildDir);
-        const picoMatches = config.IGNORES.map((x) => pm(x));
+        const picoMatches = config.ignore.map((x) => pm(x));
         await tar.c(
           {
             gzip: true,
@@ -146,19 +144,19 @@ export const deployCommand = new Command("deploy")
             uploadPath,
             bodyHashForUpload,
             expires,
-            config.SECRET_KEY
+            config.secretKey
           );
           const blob = new Blob([buffer], { type: "application/gzip" });
           const form = new FormData();
           form.append("artifact", blob, path.basename(tarPath));
           const { deployment_id } = await callFetch<{ deployment_id: string }>(
             async () => {
-              return await fetch(`${config.HOST}${uploadPath}`, {
+              return await fetch(`${config.host}${uploadPath}`, {
                 method: "POST",
                 body: form,
                 headers: {
                   // "Content-Type": "application/json",
-                  "Zipup-App-Key": config.APP_KEY,
+                  "Zipup-App-Key": config.appKey,
                   // "Zipup-Timestamp": timestamp,
                   "Zipup-Signature": signatureForUpload,
                   "Zipup-Body-Hash": bodyHashForUpload,
@@ -181,7 +179,7 @@ export const deployCommand = new Command("deploy")
             failureLogs: string;
           }>(async () => {
             return await fetch(
-              `${config.HOST}/api/deployments/${deploymentId}`
+              `${config.host}/api/deployments/${deploymentId}`
             );
           });
 
