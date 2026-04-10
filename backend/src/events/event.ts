@@ -212,8 +212,18 @@ PrivateKey = ${server.private_key}
 Address = 10.13.13.1/24
 ListenPort = 51820
 
-PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -A FORWARD -o %i -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE;iptables -t nat -A PREROUTING -i %i -p tcp --dport 5432 -j DNAT --to-destination 172.25.0.2:5432;iptables -t nat -A PREROUTING -i %i -p tcp --dport 6379 -j DNAT --to-destination 172.25.0.3:6379;iptables -t nat -A PREROUTING -i %i -p tcp --dport 9428 -j DNAT --to-destination 172.25.0.4:9428
-PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE;iptables -t nat -D PREROUTING -i %i -p tcp --dport 5432 -j DNAT --to-destination 172.25.0.2:5432;iptables -t nat -D PREROUTING -i %i -p tcp --dport 6379 -j DNAT --to-destination 172.25.0.3:6379;iptables -t nat -D PREROUTING -i %i -p tcp --dport 9428 -j DNAT --to-destination 172.25.0.4:9428
+PostUp = iptables -A FORWARD -i %i -j ACCEPT
+PostUp = iptables -A FORWARD -o %i -j ACCEPT
+PostUp = iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+PostUp = iptables -t nat -A PREROUTING -i %i -p tcp --dport 5432 -j DNAT --to-destination 172.25.0.2:5432
+PostUp = iptables -t nat -A PREROUTING -i %i -p tcp --dport 6379 -j DNAT --to-destination 172.25.0.3:6379
+PostUp = iptables -t nat -A PREROUTING -i %i -p tcp --dport 9428 -j DNAT --to-destination 172.25.0.4:9428
+PostDown = iptables -D FORWARD -i %i -j ACCEPT
+PostDown = iptables -D FORWARD -o %i -j ACCEPT
+PostDown = iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
+PostDown = iptables -t nat -D PREROUTING -i %i -p tcp --dport 5432 -j DNAT --to-destination 172.25.0.2:5432
+PostDown = iptables -t nat -D PREROUTING -i %i -p tcp --dport 6379 -j DNAT --to-destination 172.25.0.3:6379
+PostDown = iptables -t nat -D PREROUTING -i %i -p tcp --dport 9428 -j DNAT --to-destination 172.25.0.4:9428
 `;
   for (const peer of peers) {
     if (

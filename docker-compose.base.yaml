@@ -35,7 +35,8 @@ services:
     volumes:
       - ./openresty/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
       - ./openresty/lua:/lua:ro
-      - ./certs:/etc/openresty:ro
+      - ./certs:/etc/openresty
+      - cert_storage:/etc/ssl/storage
       # - ./config:/config:ro
       - static_artifacts:/static_artifacts
     networks:
@@ -177,6 +178,7 @@ volumes:
   secrets:
   postgres_data:
   wireguard_config:
+  cert_storage:
 
 networks:
   edge_network:
