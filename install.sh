@@ -128,7 +128,7 @@ docker --version
 # pull node:24-bookworm-slim
 echo "⬇️ Pulling base Docker image (node:24-bookworm-slim)..."
 # since user apps uses this image, pull it now to avoid slow first run later
-docker pull node:24-bookworm-slim 
+$DOCKER_CMD pull node:24-bookworm-slim 
 # Verify compose (fail fast if missing)
 if ! docker compose version >/dev/null 2>&1; then
   echo "❌ Docker Compose not found. Something went wrong with Docker install."
