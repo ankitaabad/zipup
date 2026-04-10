@@ -238,12 +238,8 @@ $DOCKER_CMD compose \
   up -d \
   --build
 echo ""
-echo "✅ Zipup installed successfully!"
 echo ""
 echo "📂 Install directory: $INSTALL_DIR"
 echo "🌐 Containers running in background"
-echo ""
-echo "Useful commands:"
-echo "  docker compose ps"
-echo "  docker compose logs -f"
+echo "✅ Zipup installed successfully!"
 echo ""
