@@ -410,7 +410,20 @@ export async function getDockerStats() {
     // throw err;
   }
 }
+export const restartDockerContainer = async (
+  containerName: "wireguard" | "zipup"
+) => {
+  const logger = getLogger();
+  const container = docker.getContainer(containerName);
 
+  try {
+    await container.restart(); // default timeout = 10s
+    logger.info("Container restarted");
+  } catch (err) {
+    logger.error("Failed to restart container:", err);
+    throw err;
+  }
+};
 export const isAppRunningByAppId = async (appId: string) => {
   const containers = await docker.listContainers({ all: false });
   return containers.some((c) => {

@@ -4,6 +4,7 @@ import EventEmitter from "events";
 import https from "https";
 import { desc, eq } from "drizzle-orm";
 import { appLogger, getLogger } from "@backend/utils/logger";
+import { restartDockerContainer } from "@backend/utils/docker_utils";
 import {
   asyncLocalStorage,
   generateId,
@@ -93,7 +94,7 @@ export const emitEvent = <K extends keyof EventMap>(
 ) => {
   const logger = getLogger();
   const requestId = logger.context.requestId || generateId();
-
+  logger.info(`Emitting event : ${name}`);
   eventBus.emit(name, {
     payload,
     metadata: {
@@ -207,7 +208,7 @@ onEvent("update_wireguard_config", async () => {
     throw new Error("WireGuard server not found");
   }
 
-let config = `[Interface]
+  let config = `[Interface]
 PrivateKey = ${server.private_key}
 Address = 10.13.13.1/24
 ListenPort = 51820
@@ -246,6 +247,9 @@ PersistentKeepalive = 25
 
   await mkdir(WG_DIR, { recursive: true });
   await writeFile(WG_CONFIG_PATH, config, "utf8");
+
+  // restart docker container wireguard
+  await restartDockerContainer("wireguard");
   logger.info("Wireguard config successfully updated");
 });
 

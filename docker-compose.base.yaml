@@ -147,8 +147,8 @@ services:
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
-    environment:
-      - WATCH_CHANGES=1
+    # environment:
+    #   - WATCH_CHANGES=1
     volumes:
       # - wireguard_config:/etc/wireguard
       - ./wireguard/wg0.conf:/etc/wireguard/wg0.conf

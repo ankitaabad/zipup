@@ -432,7 +432,7 @@ export const getServerAddress = async () => {
     .where(eq(settingsTable.key, "domain"))
     .get();
   if(envVar.environment === 'development'){
-    return domainSetting?.value || 'http://localhost'
+    return domainSetting?.value || 'localhost'
   }
   // get public ip
   const serverAddress = domainSetting?.value || (await publicIpv4());

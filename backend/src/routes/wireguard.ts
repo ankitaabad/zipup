@@ -185,7 +185,6 @@ wireguardRouter.get("/peers/:id/config", async (c) => {
   const serverAddress = await getServerAddress();
 
   const endpoint = `${serverAddress || "YOUR_SERVER_DOMAIN"}:51820`;
-  const dns = process.env.WIREGUARD_DNS || "1.1.1.1";
 
   const clientIp = `10.13.13.${peer.ip_index}`;
 
