@@ -125,10 +125,7 @@ fi
 echo "🐳 Docker version:"
 docker --version
 
-# pull node:24-bookworm-slim
-echo "⬇️ Pulling base Docker image (node:24-bookworm-slim)..."
-# since user apps uses this image, pull it now to avoid slow first run later
-$DOCKER_CMD pull node:24-bookworm-slim 
+
 # Verify compose (fail fast if missing)
 if ! docker compose version >/dev/null 2>&1; then
   echo "❌ Docker Compose not found. Something went wrong with Docker install."
@@ -152,7 +149,9 @@ else
   echo "⚠️  Using sudo for Docker (group not active yet)"
   DOCKER_CMD="sudo docker"
 fi
-
+echo "⬇️ Pulling base Docker image (node:24-bookworm-slim)..."
+# since user apps uses this image, pull it now to avoid slow first run later
+$DOCKER_CMD pull node:24-bookworm-slim 
 REPO_OWNER="ankitaabad"
 REPO_NAME="zipup"
 LATEST_TAG=$(curl -fsSL \
