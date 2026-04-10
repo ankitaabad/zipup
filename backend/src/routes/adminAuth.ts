@@ -33,7 +33,7 @@ adminAuthRouter.post(
     const logger = getLogger();
 
     logger.debug("Login attempt");
-    const { username, password } = AdminLoginSchema.parse(await c.req.json());
+    const { username, password } = await c.req.json();
     const user = await db
       .select()
       .from(platformAdminsTable)
@@ -172,12 +172,8 @@ adminAuthRouter.post(
       .where(eq(platformAdminsTable.id, user.id));
     logger.debug("Password changed successfully", { user_id: user.id });
     // Optional: force logout everywhere, in case multiple users
-    setCookie(c, CookieType.ACCESS_TOKEN, "", { maxAge: 0 });
-    setCookie(c, CookieType.REFRESH_TOKEN, "", { maxAge: 0 });
+    addAllTokensToCookie(c, tokenPayload.sub, true);
 
-    // redirect to login page on frontend
-    c.set("Location", "/login");
-    c.status(302);
     return c.json({ message: "Password changed successfully" });
   })
 );

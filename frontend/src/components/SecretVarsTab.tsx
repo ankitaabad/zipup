@@ -132,7 +132,7 @@ export function SecretVarsTab({ appId }: { appId: string }) {
       </Group>
 
       <Text size="sm" c="dimmed" mb="md">
-        Secret values are hidden and fetched only when edited.
+        Secret are encrypted at rest. Changes require app restart to take effect.
       </Text>
 
       {!isLoading && (!data || data.length === 0) ? (

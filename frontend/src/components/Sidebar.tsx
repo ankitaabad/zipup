@@ -309,7 +309,7 @@ export function AppSidebar() {
           <TextInput
             data-autofocus
             label="Name"
-            placeholder="eg. marketing-site"
+            placeholder="app-name"
             value={newName}
             onChange={(e) => setNewName(e.currentTarget.value)}
           />

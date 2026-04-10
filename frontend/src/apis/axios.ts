@@ -46,6 +46,7 @@ api.interceptors.response.use((res) => {
 api.interceptors.response.use(
   (res) => res, // return response if ok
   async (error) => {
+    console.log("error intercepted" + error);
     const originalRequest = error.config;
 
     // Network / CORS / timeout

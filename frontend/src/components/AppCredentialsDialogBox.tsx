@@ -60,8 +60,7 @@ export function AppCredentialsDialogBox({
   return (
     <Stack gap="lg">
       <Text size="sm" c="dimmed">
-        These credentials are used to authenticate requests made by this
-        application. Keep them secure and do not share publicly.
+        Used with the zipup cli to deploy artifacts.
       </Text>
 
       {/* App Key */}

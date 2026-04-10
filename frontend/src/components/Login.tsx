@@ -33,7 +33,7 @@ export const Login: React.FC = () => {
       username: "",
       password: ""
     },
-    validate: zod4Resolver(AdminLoginSchema)
+    // validate: zod4Resolver(AdminLoginSchema)
   });
 
   const handleSubmit = ({ username, password }: typeof loginForm.values) => {

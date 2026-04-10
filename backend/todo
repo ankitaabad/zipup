@@ -58,31 +58,18 @@ Cleanup:
     ☐ delete the docker volumes
     
 Today:
-  ✔ Take acme email as input and set it in openresty container.
-  ✔ Check if ports are open before deploying an app.
-  ✔ Update logo with underline.
-  ✘ DNS caching can not be used, can we do this by ourselves.
-  ✔ pre warm ssl when domain is updated.
-  ✘ seamless sync your local changes to hetzner server and testing there.
-  ☐ cli working with env and command line args.
   ☐ Move app options under action.
-  ☐ document cli readme
   ☐ Add Restart option for app.
-  ✔ Remove setting up email for lets encrypt.
   ☐ logs cleanup.
   ☐ Remove withError wrapper as we are using onError handler in hono.
   ☐ Add more logs.
-  ✔ how to go about creating the whitelist of domain and setting email for lua acme.
   ☐ should check if user is logged in when the focus comes back to the tab.(https://mantine.dev/hooks/use-document-visibility/)
   ☐ mantine forms should use common zod for validation.
-  ✔ @bug @low changing app name doesn't reflect in sidebar until refresh.
   ☐ use #F0E9E9 and #4B8DF7 as colors in dark theme.
   ☐ Reserved env ZIPUP_PORT
   ☐ postgres accesss.
   ☐ redis access
-  ☐ new version correctly working
   ☐ Non existing domain gives internal server error, should give a better message. `server: _, request: "GET / HTTP/1.1", host: "fr.localhost:8080" zipup         | Error: ENOENT: no such file or directory, open '/app/backend/frontend/dist/index.html'`
-  ☐ Better messages in UI like fields explanations, dashboard etc.
   ☐ Dashboard stats anything better can be shown?
   ☐ @perf currently the routes is json decoded on each requset, we need to optmize it.
 
@@ -98,6 +85,19 @@ Error Handling:
     ☐ add checks that start command is present before deploying an app.
 
 Done:
+  ✔ new version correctly working
+  ✔ Take acme email as input and set it in openresty container.
+  ✔ Check if ports are open before deploying an app.
+  ✔ Update logo with underline.
+  ✘ DNS caching can not be used, can we do this by ourselves.
+  ✔ pre warm ssl when domain is updated.
+  ✘ seamless sync your local changes to hetzner server and testing there.
+  ✔ cli working with env and command line args.
+  ✔ document cli readme
+  ✔ Remove setting up email for lets encrypt.
+  ✔ how to go about creating the whitelist of domain and setting email for lua acme.
+  ✔ @bug @low changing app name doesn't reflect in sidebar until refresh.
+  ✔ Better messages in UI like fields explanations, dashboard etc.
   ✔ @bug Loader not working in multipass.
   ✔ @bug openresty image not rebuilding on change.
   ✔ @high Create account on hetzner.

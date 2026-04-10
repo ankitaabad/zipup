@@ -26,6 +26,7 @@ import {
   useUpdateCertEmail,
   useUpdateDomain
 } from "@frontend/apis/settings";
+import { useNavigate } from "react-router-dom";
 
 /* ------------------- Types ------------------- */
 
@@ -35,7 +36,7 @@ type EditTarget = "password" | "email" | "domain" | null;
 
 export function Settings() {
   const [editTarget, setEditTarget] = useState<EditTarget>(null);
-
+  const navigate = useNavigate();
   const changePassword = useChangeAdminPassword();
   const updateDomain = useUpdateDomain();
   const updateCertEmail = useUpdateCertEmail();
@@ -111,7 +112,7 @@ export function Settings() {
               <ConfigurableSettingRow
                 label="Platform Domain"
                 value={domain}
-                description="Primary domain used for your platform. Changing this may require DNS updates."
+                description="Admin console domain that must point to the server’s IP address where zipup cloud is installed."
                 onClick={() => setEditTarget("domain")}
               />
             </Stack>
@@ -236,6 +237,7 @@ export function Settings() {
                   onClick={() => {
                     changePassword.mutate({ new_password: password });
                     setEditTarget(null);
+                    navigate("/login");
                   }}
                 >
                   Update Password
