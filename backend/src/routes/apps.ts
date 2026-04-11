@@ -242,7 +242,7 @@ appsRouter.get(
     }
     let ipAddress = await publicIpv4();
     if (envVar.environment === "development") {
-      ipAddress = "http://localhost:8080";
+      ipAddress = "localhost:8080";
     }
     const host = domain?.value
       ? `https://${domain?.value}`

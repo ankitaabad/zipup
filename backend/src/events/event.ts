@@ -134,7 +134,7 @@ onEvent("domain_updated", async (event) => {
   logger.info(`Prewarming SSL for domain: ${domain} , url: ${url}`);
 
   let attempts = 0;
-  const maxAttempts = 3;
+  const maxAttempts = 2;
   if (envVar.environment === "development") {
     logger.info("Skipping SSL prewarm in development mode");
     return;
@@ -150,7 +150,7 @@ onEvent("domain_updated", async (event) => {
     } catch (err) {
       attempts++;
       console.log(`⏳ SSL not ready (${attempts}) for ${domain}`);
-      await new Promise((r) => setTimeout(r, 2000 * attempts)); // backoff
+      await new Promise((r) => setTimeout(r, 5000 * attempts)); // backoff
     }
   }
 

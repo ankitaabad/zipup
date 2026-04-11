@@ -5,8 +5,7 @@ services:
     container_name: valkey
     restart: unless-stopped
     networks:
-      core_network: {}
-      wireguard_network:
+      core_network:
         ipv4_address: 172.25.0.3
     volumes:
       - valkey_data:/data
@@ -58,7 +57,6 @@ services:
     networks:
       - edge_network
       - core_network
-      - wireguard_network
     restart: unless-stopped
     user: root
     volumes:
@@ -86,8 +84,7 @@ services:
     logging:
       driver: none
     networks:
-      core_network: {}
-      wireguard_network:
+      core_network: 
         ipv4_address: 172.25.0.2
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -135,8 +132,7 @@ services:
     logging:
       driver: none
     networks:
-      core_network: {}
-      wireguard_network:
+      core_network:
         ipv4_address: 172.25.0.4
 
   wireguard:
@@ -159,8 +155,7 @@ services:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.src_valid_mark=1
     networks:
-      core_network: {}
-      wireguard_network:
+      core_network:
         ipv4_address: 172.25.0.5
     labels:
       - appType=system
@@ -184,8 +179,6 @@ networks:
   edge_network:
     driver: bridge
   core_network:
-    driver: bridge
-  wireguard_network:
     driver: bridge
     ipam:
       config:
