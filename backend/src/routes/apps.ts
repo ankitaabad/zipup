@@ -244,7 +244,9 @@ appsRouter.get(
     if (envVar.environment === "development") {
       ipAddress = "http://localhost:8080";
     }
-    const host = domain?.value ? `https://${domain?.value}` : ipAddress;
+    const host = domain?.value
+      ? `https://${domain?.value}`
+      : `http://${ipAddress}`;
     const { app_key, secret_key } = app;
     // create a config.json file that can be downloaded
     const config = {

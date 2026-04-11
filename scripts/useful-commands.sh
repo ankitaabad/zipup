@@ -15,7 +15,7 @@ sudo iptables -P FORWARD ACCEPT
 rsync -avz  ./docker-compose.base.yaml ./docker-compose.release.yaml hetzner:/root/zipup/
 docker ps
 sudo docker inspect postgres | grep IPAddress
-sudo docker exec -it openresty sh
+sudo docker exec -it wireguard sh
 apk add tcpdump
 iptables -t nat -L PREROUTING -n -v
 wg-quick up wg0
@@ -36,7 +36,7 @@ docker logs zipup
 docker logs openresty
 docker logs wireguard
 cd zipup
-
+docker container prune
 docker restart wireguard
 cd zipup
 docker compose -f docker-compose.base.yaml -f docker-compose.release.yaml  down -v
