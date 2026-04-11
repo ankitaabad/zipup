@@ -21,11 +21,25 @@ function formatBytes(bytes: number, decimals = 2) {
 
 export const deployCommand = new Command("deploy")
   // .argument("<dir>", "build directory (overrides buildFolder)")
-  .description("Deploy an artifact, Get api key and secret key from the console")
-  .option("--host <url>", "API host, The server domain/IP address where you installed the app")
-  .option("--app-key <key>", "Application key (discouraged; prefer env var ZIPUP_APP_KEY)")
-  .option("--secret-key <key>", "Secret key (discouraged; prefer env vars ZIPUP_SECRET_KEY)")
-  .option("--build-folder <path>", "Build folder location, content of build folder is uploaded as an artifact")
+  .description(
+    "Deploy an artifact, Get api key and secret key from the console"
+  )
+  .option(
+    "--host <url>",
+    "API host, The server domain/IP address where you installed the app"
+  )
+  .option(
+    "--app-key <key>",
+    "Application key (discouraged; prefer env var ZIPUP_APP_KEY)"
+  )
+  .option(
+    "--secret-key <key>",
+    "Secret key (discouraged; prefer env vars ZIPUP_SECRET_KEY)"
+  )
+  .option(
+    "--build-folder <path>",
+    "Build folder location, content of build folder is uploaded as an artifact"
+  )
   .option(
     "--tag <tag>",
     "Tag (repeatable)",
@@ -206,7 +220,7 @@ export const deployCommand = new Command("deploy")
     } finally {
       if (tarPath && fs.existsSync(tarPath)) {
         await step("Cleaning up temporary files...", async () => {
-          fs.unlinkSync(tarPath);
+          fs.rmSync(tarPath, { recursive: true, force: true });
         });
       }
       if (deploymentStatus === DEPLOYMENT_STATUS.SUCCESS) {

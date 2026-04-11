@@ -170,7 +170,7 @@ artifactsRouter.post("/:artifact_id/upload", async (c) => {
 
     await tar.extract({ file: tempPath, cwd: finalDir });
 
-    await fs.unlink(tempPath);
+    await fs.rmSync(tempPath, { recursive: true, force: true });
 
     // update artifact status
     await db

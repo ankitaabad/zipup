@@ -1,5 +1,5 @@
 import axios from "axios";
-import { fs } from "fs";
+import fs from "fs-extra";
 import EventEmitter from "events";
 import https from "https";
 import { desc, eq } from "drizzle-orm";
@@ -193,6 +193,7 @@ onEvent("app_delete_initiated", async (event) => {
     })
   );
   await db.delete(appsTable).where(eq(appsTable.id, app_id));
+  await initiateRouteReload();
 });
 onEvent("update_wireguard_config", async () => {
   const logger = getLogger();
@@ -347,10 +348,11 @@ onEvent("app_stop_initiated", async (event: { app_id: string }) => {
   const { app_id } = event;
   // get containers related to the app and stop them
   await removeAllContainersOfAnApp(app_id);
+  await initiateRouteReload();
 });
 
 const removeArtifactFromStorage = async (artifactLocation: string) => {
-  await fs.unlink(artifactLocation);
+  await fs.rmSync(artifactLocation, { recursive: true, force: true });
 };
 onEvent(
   "artifact_uploaded",

@@ -110,10 +110,10 @@ export const getRouteConfig = async () => {
   await Promise.all(
     apps.map(async (app) => {
       // get latest deployment of the app
-      //todo: get all latest deployment for all apps in one db call
-      if (app.name === "zipup") {
-        return;
-      }
+      // if (app.name === "zipup") {
+      //   return;
+      // }
+      
       const latestDeployment = await db
         .select()
         .from(deploymentsTable)

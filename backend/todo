@@ -69,6 +69,8 @@ Today:
   ☐ Reserved env ZIPUP_PORT
   ☐ postgres accesss.
   ☐ redis access
+  ☐ if app is stopped then routing should update.
+  ☐ cleanup ssl certs when app is deleted.
   ☐ Non existing domain gives internal server error, should give a better message. `server: _, request: "GET / HTTP/1.1", host: "fr.localhost:8080" zipup         | Error: ENOENT: no such file or directory, open '/app/backend/frontend/dist/index.html'`
   ☐ Dashboard stats anything better can be shown?
   ☐ @perf currently the routes is json decoded on each requset, we need to optmize it.

@@ -59,7 +59,7 @@ function getStartTooltip(status: AppStatus) {
     case AppStatus.READY:
       return "No Artifact found. App is not deployable.";
     case AppStatus.RUNNING:
-      return "App is already running";
+      return "This will restart the app.";
     case AppStatus.DRAFT:
       return "Ensure start command is set and artifact is uploaded to start the app.";
   }
@@ -156,7 +156,10 @@ export function AppSettings({ app_id }: { app_id: string }) {
                     variant="light"
                     leftSection={<IconPlayerPlay size={16} />}
                     onClick={() => startApp.mutate()}
-                    disabled={appStatus.data !== AppStatus.STOPPED}
+                    disabled={
+                      appStatus.data === AppStatus.READY ||
+                      appStatus.data === AppStatus.DRAFT
+                    }
                   >
                     Start
                   </Button>
@@ -176,16 +179,19 @@ export function AppSettings({ app_id }: { app_id: string }) {
             {/* <Button variant="outline" leftSection={<IconRefresh size={16} />}>
               Restart
             </Button> */}
-            <Button
-              color="red"
-              variant="outline"
-              leftSection={<IconTrash size={16} />}
-              onClick={() => {
-                setEditTarget("deleteApp");
-              }}
-            >
-              Delete
-            </Button>
+            <Tooltip label="Ensure the app is stopped to delete." withArrow>
+              <Button
+                color="red"
+                variant="outline"
+                leftSection={<IconTrash size={16} />}
+                disabled={appStatus.data === AppStatus.RUNNING}
+                onClick={() => {
+                  setEditTarget("deleteApp");
+                }}
+              >
+                Delete
+              </Button>
+            </Tooltip>
           </Group>
         </Group>
 
