@@ -1,7 +1,5 @@
 multipass list
 multipass shell zipup
-multipass shell unerring-baboon 
-ssh hetzner
 ss -lunp | grep 51820
 docker kill $(docker ps -q)
 docker ps
@@ -9,12 +7,15 @@ ls
 ping 172.25.0.2
 ping 10.13.13.2
 
-curl -fsSL "https://raw.githubusercontent.com/ankitaabad/zipup/master/install.sh" | bash
+code ~/.ssh/config
+ssh hetzner
 
+curl -fsSL "https://raw.githubusercontent.com/ankitaabad/zipup/master/install.sh" | bash
+sudo iptables -P FORWARD ACCEPT
 rsync -avz  ./docker-compose.base.yaml ./docker-compose.release.yaml hetzner:/root/zipup/
 docker ps
-docker inspect postgres | grep IPAddress
-docker exec -it wireguard sh
+sudo docker inspect postgres | grep IPAddress
+sudo docker exec -it postgres sh
 apk add tcpdump
 iptables -t nat -L PREROUTING -n -v
 wg-quick up wg0
@@ -28,6 +29,8 @@ nc -vz 10.13.13.4 9428
 nc -vz 10.13.13.3 6379
 docker exec -it wireguard sysctl net.ipv4.ip_forward
 docker exec -it wireguard wg show
+docker exec -it openresty sh
+cat /etc/openresty/account.key
 ip a | grep wg
 docker logs zipup
 docker logs openresty

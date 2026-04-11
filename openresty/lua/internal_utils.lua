@@ -29,29 +29,48 @@ end
 
 
 function _M.is_whitelisted_domain(host)
+    ngx.log(ngx.INFO, "[whitelist] input host: ", host)
+
     if not host then
+        ngx.log(ngx.WARN, "[whitelist] host is nil")
         return false
     end
 
     host = string.lower(host):gsub(":%d+$", "")
+    ngx.log(ngx.INFO, "[whitelist] normalized host: ", host)
 
     local dict = ngx.shared.whitelist_domains
-    local domains_json = dict:get("domains")
-    if not domains_json then
+    if not dict then
+        ngx.log(ngx.ERR, "[whitelist] shared dict 'whitelist_domains' not found")
         return false
     end
+
+    local domains_json = dict:get("domains")
+    if not domains_json then
+        ngx.log(ngx.WARN, "[whitelist] no domains found in shared dict")
+        return false
+    end
+
+    ngx.log(ngx.INFO, "[whitelist] raw domains_json: ", domains_json)
 
     local domains = cjson.decode(domains_json)
     if not domains then
+        ngx.log(ngx.ERR, "[whitelist] failed to decode domains JSON")
         return false
     end
 
-    for _, domain in ipairs(domains) do
+    ngx.log(ngx.INFO, "[whitelist] decoded domains count: ", #domains)
+
+    for i, domain in ipairs(domains) do
+        ngx.log(ngx.DEBUG, "[whitelist] checking domain[", i, "]: ", domain)
+
         if domain == host then
+            ngx.log(ngx.INFO, "[whitelist] MATCH found: ", host)
             return true
         end
     end
 
+    ngx.log(ngx.WARN, "[whitelist] NO match for host: ", host)
     return false
 end
 
