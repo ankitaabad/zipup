@@ -9,13 +9,13 @@ ping 10.13.13.2
 
 code ~/.ssh/config
 ssh hetzner
-
+redis-cli -h 10.13.13.1 -p 6379
 curl -fsSL "https://raw.githubusercontent.com/ankitaabad/zipup/master/install.sh" | bash
 sudo iptables -P FORWARD ACCEPT
 rsync -avz  ./docker-compose.base.yaml ./docker-compose.release.yaml hetzner:/root/zipup/
 docker ps
 sudo docker inspect postgres | grep IPAddress
-sudo docker exec -it postgres sh
+sudo docker exec -it openresty sh
 apk add tcpdump
 iptables -t nat -L PREROUTING -n -v
 wg-quick up wg0
@@ -38,7 +38,8 @@ docker logs wireguard
 cd zipup
 
 docker restart wireguard
-docker compose -f docker-compose.base.yaml -f docker-compose.release.yaml  down 
+cd zipup
+docker compose -f docker-compose.base.yaml -f docker-compose.release.yaml  down -v
 
 docker compose -f docker-compose.base.yaml -f docker-compose.release.yaml up
 

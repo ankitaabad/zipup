@@ -10,3 +10,8 @@ RUN opm get fffonion/lua-resty-acme
 RUN opm get spacewander/luafilesystem
 # (optional but harmless) clean opm cache
 RUN rm -rf /root/.opm
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
