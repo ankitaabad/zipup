@@ -1,0 +1,97 @@
+Release artifacts (one image per component, one small deploy artifact):
+  ☐ R1  publish `zipup-openresty` as a real image (built in CI, pushed alongside `zipup`). removes the on-host `docker compose ... --build` step in `install.sh:235` and the slow first install.
+  ☐ R2  tag `zipup-wireguard` per release (`ghcr.io/.../zipup-wireguard:<ver>`), not `:latest` (`docker-compose.base.yaml:139`).
+  ☐ R3  slim the tarball to: `docker-compose.yaml` (single file), `.env.example`, `wireguard/wg0.conf`, `vector.yaml`, `redis/users.acl`, `db/` (schema-only, no data), `bin/zipup` (the installer/upgrader binary), `checksums.txt`, `signature.sig` (cosign).
+  ☐ R4  pin every third-party image by digest in compose, not by tag.
+  ☐ R5  eliminate `release.sh` shell logic from CI.
+  ☐ R6  replace `release.sh` with a tiny `scripts/bundle.ts` (pure copy + checksum).
+  ☐ R7  rework `release.yaml` into a parallel matrix: build+push images, run `trivy`/`grype`, sign, then assemble bundle.
+
+Versioning & channels:
+  ☐ R8  use semver tags `vMAJOR.MINOR.PATCH`.
+  ☐ R9  add rolling tags: `stable`, `beta`, `canary` (per push to `main`).
+  ☐ R10 honor env vars on install: `ZIPUP_CHANNEL=stable` (default), `ZIPUP_VERSION=v0.7.3` (pin override).
+  ☐ R11 make the release workflow `bump` input channel-aware; have `canary` build on every merge.
+
+Installer: single self-contained binary (`bin/zipup`):
+  ☐ R12 build a Go (~5 MB) binary, ship it inside the tarball.
+  ☐ R13 replace curl bootstrap with: `curl -fsSL .../v0.7.3/zipup | sh -s install`.
+  ☐ R14 subcommand: `install`.
+  ☐ R15 subcommand: `upgrade`.
+  ☐ R16 subcommand: `uninstall`.
+  ☐ R17 subcommand: `doctor` (preflight).
+  ☐ R18 subcommand: `doctor --fix`.
+  ☐ R19 subcommand: `status`.
+  ☐ R20 subcommand: `logs`.
+  ☐ R21 subcommand: `start`.
+  ☐ R22 subcommand: `stop`.
+  ☐ R23 subcommand: `restart`.
+  ☐ R24 centralize all error UX inside the binary.
+  ☐ R25 reduce `install.sh` to a ~10-line shim: download `zipup`, verify cosign sig, exec.
+
+Idempotent + non-destructive:
+  ☐ R26 default data dir on Linux: `/var/lib/zipup`.
+  ☐ R27 default data dir on macOS: `~/Library/Application Support/zipup`.
+  ☐ R28 remove `rm -rf "$INSTALL_DIR"` on `install.sh:54` (single biggest footgun in current installer).
+  ☐ R29 persist `$DATA_DIR/.zipup-version`.
+  ☐ R30 refuse to clobber on `install`; swap atomically on `upgrade`.
+  ☐ R31 use existing `backend/drizzle/migrations/` for schema changes.
+  ☐ R32 on `upgrade`: run `drizzle-kit migrate` inside the new container before `up -d`.
+  ☐ R33 auto-backup before swap: `db/`, `secrets/`, `wireguard/wg0.conf`, `certs/`. destination: `$DATA_DIR/.backups/<prev>/`.
+  ☐ R34 prune backups to the last 3.
+
+Cross-OS support:
+  ☐ R35 detect platform: `/etc/os-release` / macOS / WSL2.
+  ☐ R36 branch only where required (firewall, service manager).
+  ☐ R37 Linux: install a `zipup.service` systemd unit so the stack survives reboots (current installer leaves compose as an orphan).
+  ☐ R38 macOS: install a `launchd` plist; the in-container WireGuard won't work on Docker Desktop, fall back to host `wireguard-tools` and document it.
+  ☐ R39 WSL2: print the kernel-module caveat explicitly.
+  ☐ R40 move firewall prompts behind an opt-in `--configure-firewall` flag.
+  ☐ R41 default firewall behavior: off; print exact `ufw` / `firewalld` / `nft` commands.
+
+`zipup doctor` (preflight):
+  ☐ R42 check: docker ≥ 24.
+  ☐ R43 check: compose v2.
+  ☐ R44 check: cgroup v2.
+  ☐ R45 check: `CAP_NET_ADMIN`.
+  ☐ R46 check: `/dev/net/tun` exists.
+  ☐ R47 check: `/lib/modules` readable.
+  ☐ R48 check: ports 80/443/51820 free.
+  ☐ R49 check: public IP + reverse DNS.
+  ☐ R50 check: time skew.
+  ☐ R51 check: registry reachability.
+  ☐ R52 check: ACME email set.
+  ☐ R53 on failure: one-line remediation per check + link to docs.
+
+Security:
+  ☐ R54 cosign-sign the install binary and tarball.
+  ☐ R55 bootstrap verifies signature before exec.
+  ☐ R56 move `secrets/encryptionKey.json` and `secrets/tokens.json` generation into the zipup container's first boot (better entropy, rotation tied to image).
+  ☐ R57 encrypt `certs/account.key` at rest with a host key. (currently a 4 KB RSA key sitting in `$HOME/zipup/certs/` with default umask.)
+  ☐ R58 refuse to start if `POSTGRES_PASSWORD` is unset.
+  ☐ R59 generate a postgres password at install time; print once; store in `.env` with mode 0600.
+
+Diagnostics baked in:
+  ☐ R60 `zipup status` returns: container health.
+  ☐ R61 `zipup status` returns: cert expiry.
+  ☐ R62 `zipup status` returns: wg peer count.
+  ☐ R63 `zipup status` returns: per-volume disk usage.
+  ☐ R64 `zipup status` returns: last 50 log lines per service.
+  ☐ R65 after install, print a single "next steps" panel: admin URL.
+  ☐ R66 after install, print a single "next steps" panel: default creds (seeded `zipup` / `zipup`).
+  ☐ R67 after install, print a single "next steps" panel: wireguard setup URL.
+  ☐ R68 after install, print a single "next steps" panel: log locations.
+
+Migration from current setup:
+  ☐ R69 ship the binary alongside `install.sh` in the next release.
+  ☐ R70 shrink `install.sh` to a 10-line shim that `curl`s `zipup` and execs it.
+  ☐ R71 replace the dual `docker-compose.base.yaml` + `docker-compose.release.yaml` with a single `docker-compose.yaml` (the two-file split is the source of the "don't merge them" warning in `AGENTS.md`).
+  ☐ R72 one-time auto-convert for users on the old dual-file layout.
+  ☐ R73 delete `release.sh`; replace with `scripts/bundle.ts`.
+  ☐ R74 move the entire release pipeline into CI.
+
+TL;DR:
+  ☐ R75 stop shipping a half-image, half-tarball hybrid.
+  ☐ R76 treat the install as a product (signed binary, idempotent, cross-OS).
+  ☐ R77 treat the release as a CI-only artifact (images + signed bundle).
+  ☐ R78 end users must never `docker build` on first install.
