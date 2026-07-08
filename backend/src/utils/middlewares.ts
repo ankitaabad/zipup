@@ -101,27 +101,14 @@ export const authMiddleware = createMiddleware(async (c, next) => {
     return;
   }
 
-  // 2️⃣ Refresh route → verify refresh token
-  if (path === refreshTokenPath) {
-    const payload = await verifyPasetoToken(
-      getCookie(c, CookieType.REFRESH_TOKEN),
-      TokenPurpose.REFRESH
-    );
-
-    if (!payload) return c.json({ error: "Unauthorized" }, 401);
-    c.set("tokenPayload", payload);
-    await next();
-    return;
-  }
-
-  // 3️⃣ State-changing methods → verify CSRF token
+  // 2️⃣ State-changing methods → verify CSRF token (runs before refresh so refresh is CSRF-gated too)
   const stateChangingMethods = ["POST", "PATCH", "PUT", "DELETE"];
   if (stateChangingMethods.includes(method)) {
     const csrfTokenFromCookie = getCookie(c, CookieType.CSRF_TOKEN);
     const csrfTokenFromHeader = c.req.header("X-CSRF-TOKEN");
     if (
-      !csrfTokenFromCookie &&
-      !csrfTokenFromHeader &&
+      !csrfTokenFromCookie ||
+      !csrfTokenFromHeader ||
       csrfTokenFromCookie !== csrfTokenFromHeader
     ) {
       return c.json({ error: "Unauthorized" }, 401);
@@ -133,6 +120,19 @@ export const authMiddleware = createMiddleware(async (c, next) => {
     );
 
     if (!csrfPayload) return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  // 3️⃣ Refresh route → verify refresh token
+  if (path === refreshTokenPath) {
+    const payload = await verifyPasetoToken(
+      getCookie(c, CookieType.REFRESH_TOKEN),
+      TokenPurpose.REFRESH
+    );
+
+    if (!payload) return c.json({ error: "Unauthorized" }, 401);
+    c.set("tokenPayload", payload);
+    await next();
+    return;
   }
 
   // 4️⃣ Verify access token for all other routes

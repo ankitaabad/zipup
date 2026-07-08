@@ -10,7 +10,7 @@ ping 10.13.13.2
 code ~/.ssh/config
 ssh hetzner
 redis-cli -h 10.13.13.1 -p 6379
-curl -fsSL "https://raw.githubusercontent.com/ankitaabad/zipup/master/install.sh" | bash
+curl -fsSL "https://raw.githubusercontent.com/ankitaabad/zipup/main/install.sh" | bash
 sudo iptables -P FORWARD ACCEPT
 rsync -avz  ./docker-compose.base.yaml ./docker-compose.release.yaml hetzner:/root/zipup/
 docker ps

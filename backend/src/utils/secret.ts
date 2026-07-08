@@ -1,10 +1,5 @@
 import crypto from "node:crypto";
 
-// 32 bytes = 256 bits (AES-256)
-const key = crypto.randomBytes(32);
-
-const encKey =
-  "1d3352caef90975cef0bcb77f35f8c7bc9e8c8e45e44cf44cc76fe4dfd188285";
 export function createSecretKey() {
   return `zipup_sk_${crypto.randomBytes(32).toString("hex")}`;
 }
@@ -43,27 +38,6 @@ export function decrypt(ciphertextBase64, key) {
 
 export function sha256(data: string | Buffer) {
   return crypto.createHash("sha256").update(data).digest("hex");
-}
-
-export function signPayload(
-  method: string,
-  path: string,
-  timestamp: string,
-  bodyHash: string,
-  secretKey: string
-) {
-  const canonical = [method.toUpperCase(), path, timestamp, bodyHash].join(
-    "\n"
-  );
-
-  return crypto
-    .createHmac("sha256", Buffer.from(secretKey, "hex"))
-    .update(canonical)
-    .digest("hex");
-}
-
-export function generateSigningSecret() {
-  return "zipup_sk" + crypto.randomBytes(64).toString("base64url");
 }
 
 export function generateApiKey() {

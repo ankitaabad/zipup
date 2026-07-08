@@ -90,7 +90,6 @@ Done:
   ✔ new version correctly working
   ✔ Take acme email as input and set it in openresty container.
   ✔ Check if ports are open before deploying an app.
-  ✔ Update logo with underline.
   ✘ DNS caching can not be used, can we do this by ourselves.
   ✔ pre warm ssl when domain is updated.
   ✘ seamless sync your local changes to hetzner server and testing there.

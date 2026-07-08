@@ -59,23 +59,35 @@ export async function verifyPasswordStrength(
 
   const hash = encodeHexLowerCase(sha1(new TextEncoder().encode(password)));
   const hashPrefix = hash.slice(0, 5);
+  const suffixWanted = hash.slice(5);
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 3000);
 
   try {
     const response = await fetch(
-      `https://api.pwnedpasswords.com/range/${hashPrefix}`
+      `https://api.pwnedpasswords.com/range/${hashPrefix}`,
+      { signal: controller.signal }
     );
     const data = await response.text();
     const items = data.split("\n");
 
     for (const item of items) {
       const [suffix] = item.split(":");
-      if (hash.slice(5) === suffix.toLowerCase()) {
+      if (suffixWanted === suffix.toLowerCase()) {
         return false; // password has been pwned
       }
     }
   } catch (e) {
-    console.warn("Could not check pwned passwords:", e);
-    // optionally allow password if API fails
+    // Fail open: log and allow the password through.
+    // HIBP outages are not a reason to lock admins out of their own instance.
+    getLogger().warn(
+      "pwned-password check failed, allowing password through",
+      { err: e instanceof Error ? e.message : String(e) }
+    );
+    return true;
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   return true;
@@ -330,6 +342,7 @@ export const addAllTokensToCookie = async (
     },
     refresh_token: {
       httpOnly: true,
+      sameSite: "Strict" as const,
       path: "/api/admin/refresh",
     },
     csrf_token: {

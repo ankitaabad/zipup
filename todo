@@ -1,0 +1,91 @@
+Security:
+  ✔ A1  delete dead encryption state in backend/src/utils/secret.ts (randomBytes(32) at top, hardcoded encKey constant, dead signPayload, generateSigningSecret).
+  ☐ @decide_later A2  internal API trusts static header. replace internalRoutesAuthMiddleware with HMAC shared-secret between zipup and openresty (or restrict by source IP 172.25.0.x). generate shared secret at install time.
+  ☐ A3  encrypt appsTable.secret_key at rest with getEncryptionKey(); decrypt in appKeyAuthMiddleware and attach to c.set("app", ...).
+  ✔ A4  fix CSRF check in middlewares.ts (the && chain has dead code). use double-submit cookie pattern with constant-time compare.
+  ☐ A5  tls verification is disabled for every domain_updated call in events/event.ts. only disable on the first prewarm attempt per domain, then verify.
+  ✘ A6  move refreshStore from in-memory Map to Valkey (172.25.0.3). SET with ex=REFRESH_TTL, DEL for consume. auto-expires, works across restarts.
+  ✔ A7  /api/admin/refresh bypasses CSRF. CSRF check now runs before the refresh path, so refresh is gated by double-submit cookie.
+  ☐ @decide_later A8  zipup container runs as root in docker-compose.base.yaml. create non-root user in Dockerfile, drop user: root, keep only required caps.
+  ☐ A9  @decide_later no rate limiting on /api/admin/login or /api/artifacts/* and /api/deployment/*. add Redis-backed rate limiter. - may be in memory for now as our app is singlel instance.
+  ☐ A10 openresty server block has no CSP / X-Frame-Options / Permissions-Policy. add more_set_headers in nginx.conf.
+  ✘ A11 default admin password is hardcoded "zipup" in scripts/dbInit.ts. force password change on first login or generate random + print to logs.
+  ✔ A12 HaveIBeenPwned call has no timeout in helper.ts. wrap with AbortController + 3s timeout.
+  ✔ A13 pwned-password check fails open on network error. keep fail-open policy, but log via getLogger().warn so the outage is visible.
+
+Refactoring:
+  ☐ B1  delete dead signPayload / generateSigningSecret from backend/src/utils/secret.ts. canonical is in common/src/index.ts.
+  ☐ B2  delete updateRouteConfig in backend/src/utils/routeConfig.ts. it writes to /config/routes.json which is not mounted. only getRouteConfig is used.
+  ☐ B3  remove backend/src/events/queue.ts (empty BullMQ stub) or wire it into the deployment pipeline.
+  ☐ B4  remove commented-out wireguard helpers in backend/src/utils/docker_utils.ts (rebuildAndRestartWireguard, generateWireguardKeys v1).
+  ☐ B5  remove commented-out buildWireguardConfig in backend/src/utils/helper.ts.
+  ☐ B6  replace hand-rolled Docker log stream parsing (getMergedContainerLogs) with dockerode demuxStream.
+  ☐ B7  split routes/apps.ts (546 lines) into apps.ts / appEnvVars.ts / appSecrets.ts / appLifecycle.ts / appConfig.ts.
+  ☐ B8  move HMAC verification (bodyHash + signature + expires) out of routes/artifact.ts and into a verifyHmacSignatureMiddleware. route handlers just read validated body.
+  ☐ B9  standardise :appId vs :app_id path params. pick snake_case, match db schema. update all env-vars and secrets routes.
+  ☐ B10 standardize response envelopes. one shape: { data, error, meta }. add respond() and respondError() helpers, make errorHandler produce the same shape.
+  ☐ B11 backend/drizzle.config.ts has dead process.env.isLocal branch. remove.
+  ☐ B12 frontend/tsconfig.json has invalid "jsonImports": "true". replace with "resolveJsonModule": true.
+  ✔ B13 common/src/index.ts:1 self-imports from @zipup/common. delete the line.
+  ☐ B14 extract app_key.slice(-4) into a maskKey() helper. used in apps.ts:75,100.
+  ☐ B15 single source of truth for the wg0.conf template. extract buildWg0Conf(serverPeer, peers) into a shared file used by both event.ts:212 and wireguard.ts:191.
+  ☐ B16 remove the empty users.acl/ directory at repo root. real ACL is redis/users.acl.
+
+Features:
+  Static apps:
+    ☐ C-bonus-1 long-cache and immutable headers are set only on /assets/* via Hono. extend the same caching to /static/<artifact_id>/* served by OpenResty. (C2 cache handling is in backend/todo already)
+  Dynamic apps:
+    ☐ C5  per-app custom image, cpu_limit, memory_limit. add columns to appsTable. default image=node:24-bookworm-slim. set HostConfig.Resources.
+    ☐ C14 add Docker Healthcheck on every dynamic container so failed apps get restarted and the router stops pointing to a dead container.
+  zipup:
+    ☐ C1  TOTP 2FA. schema already has is_2fa_enabled and authenticator_secret. use otplib. encrypt authenticator_secret with getEncryptionKey(). recovery codes.
+    ☐ C2  rollback to previous deployment. POST /api/apps/:id/rollback emits deploy_latest_app for the previous artifact version. zipup rollback --app-key ... UI button.
+    ☐ C3  CLI --env KEY=VALUE flag for per-deploy env vars. backend upserts into envVarsTable for the duration of the deploy.
+    ☐ C6  /api/healthz and /api/readyz endpoints. readyz checks db, docker socket, valkey.
+    ☐ C7  auto-migration on boot. run drizzle-kit push programmatically in main() if migrations table is out of date.
+    ☐ C8  persistent multi-instance backend: use valkey for refresh-store (see A6), rate-limiter, session cache, deployment job queue.
+    ☐ C9  audit log table. actor_id, action, target, payload_json, created_at. wire into POST/PATCH/DELETE on apps, secrets, env-vars, settings, wireguard/peers. read-only view in admin UI.
+    ☐ C10 webhooks / email on deployment failure. webhooks table, per-app URL. POST JSON on DEPLOYMENT_STATUS.FAILED. optional SMTP integration.
+    ☐ C11 multi-tenant RBAC. usersTable, groupsTable, groupAppsTable exist in schema. build routes/users.ts, routes/groups.ts. role-aware authMiddleware.
+    ☐ C12 CLI bulk / monorepo deploy. zipup deploy --workspace reads zipup.workspace.json, runs N deploys in parallel.
+    ☐ C13 CLI --dry-run flag. tar + checksum + sign locally, print JSON manifest without POSTing.
+    ☐ C16 px-style preview URLs for PRs. routing https://<deployment-id>.preview.<your-domain> to a specific deployment. add a preview route type in router.lua.
+    ☐ C17 S3 / object-storage backed artifact storage. adapter interface; default to local; add an S3 adapter (MinIO compatible). document in install.sh.
+  openresty:
+    ☐ Auth from lua side with paseto. (already in backend/todo)
+  frontend:
+    ☐ C4  real-time log tailing. SSE endpoint GET /api/apps/:id/logs/stream. Logs.tsx subscribes and renders container stdout/stderr in a virtualized list with appName filter.
+    ☐ C-bonus-2 use common zod schemas for mantine form validation instead of redefining fields in the components. (also in backend/todo)
+  Auth Proxy:
+    ☐ Maintain session in openresty for user apps. (already in backend/todo)
+    ☐ User Apis. (already in backend/todo)
+    ☐ Apis for User Groups. (already in backend/todo)
+    ☐ Forward Auth Proxy @next. (already in backend/todo)
+
+CI/CD:
+  ☐ C-bonus-3 e2e test cases before releasing artifacts. (already in backend/todo)
+  ☐ C-bonus-4 split release.yaml into build + publish + attach, so a failed attach does not leave the registry image orphaned.
+
+Integrity and Constraints:
+  ☐ only one deployment at a time for a given app (concurrency with bullmq). (already in backend/todo)
+
+Alarms:
+  ☐ set and send notifications to the user on deployment success/failure. (C10 covers failure; add success as a second event)
+
+Quick Wins (no behavior change, low risk):
+  ☐ D1  delete lines 4, 6-7, 48-67 in backend/src/utils/secret.ts (dead code).
+  ☐ D2  delete updateRouteConfig in backend/src/utils/routeConfig.ts:8-76.
+  ☐ D3  delete backend/src/events/queue.ts (or wire into pipeline).
+  ☐ D4  delete lines 458-527 in backend/src/utils/docker_utils.ts (commented-out wg helpers).
+  ☐ D5  delete lines 384-426 in backend/src/utils/helper.ts (commented-out wg template).
+  ☐ D6  fix CSRF chain in backend/src/utils/middlewares.ts:120-128.
+  ☐ D7  remove isLocal branch in backend/drizzle.config.ts:2.
+  ☐ D8  fix frontend/tsconfig.json jsonImports.
+  ☐ D9  delete common/src/index.ts:1 self-import.
+  ☐ D10 add /api/healthz route in backend/src/index.ts.
+  ☐ D11 add HostConfig.Resources default in docker_utils.ts:132-192.
+  ☐ D12 add more_set_headers for X-Frame-Options / X-Content-Type-Options / CSP in openresty/nginx.conf.
+  ☐ D13 drop user: root, add non-root user in Dockerfile.
+  ☐ D14 delete empty users.acl/ directory at repo root.
+
+Done:
